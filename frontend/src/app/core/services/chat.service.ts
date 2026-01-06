@@ -1,6 +1,7 @@
 import { Injectable, inject, signal, computed } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, Subject, catchError, of, tap } from 'rxjs';
+import { environment } from '../../../environments/environment';
 
 export interface ChatMessage {
   id: string;
@@ -44,7 +45,7 @@ export interface StreamEvent {
 @Injectable({ providedIn: 'root' })
 export class ChatService {
   private http = inject(HttpClient);
-  private apiUrl = 'http://localhost:3000/api/chat';
+  private apiUrl = `${environment.apiUrl}/chat`;
 
   // State signals
   conversations = signal<Conversation[]>([]);

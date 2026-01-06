@@ -1,6 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { environment } from '../../../environments/environment';
 
 export interface DashboardEvent {
   id: string;
@@ -36,7 +37,7 @@ export interface DashboardStats {
 })
 export class DashboardService {
   private http = inject(HttpClient);
-  private apiUrl = 'http://localhost:3000/api/dashboard';
+  private apiUrl = `${environment.apiUrl}/dashboard`;
 
   getEvents(): Observable<DashboardEvent[]> {
     return this.http.get<DashboardEvent[]>(`${this.apiUrl}/events`);

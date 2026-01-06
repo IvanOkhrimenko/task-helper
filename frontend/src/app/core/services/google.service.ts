@@ -1,6 +1,7 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, tap, catchError, of } from 'rxjs';
+import { environment } from '../../../environments/environment';
 
 export interface GoogleAccount {
   id: string;
@@ -28,7 +29,7 @@ export interface CreateDraftResponse {
 })
 export class GoogleService {
   private http = inject(HttpClient);
-  private apiUrl = 'http://localhost:3000/api/google';
+  private apiUrl = `${environment.apiUrl}/google`;
 
   // Signals for reactive state
   accounts = signal<GoogleAccount[]>([]);

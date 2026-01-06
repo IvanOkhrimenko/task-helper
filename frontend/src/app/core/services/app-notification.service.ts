@@ -1,6 +1,7 @@
 import { Injectable, inject, signal, computed, OnDestroy } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, interval, Subscription, tap, catchError, of } from 'rxjs';
+import { environment } from '../../../environments/environment';
 
 export type NotificationType = 'IN_APP' | 'BROWSER_PUSH' | 'EMAIL';
 export type NotificationStatus = 'PENDING' | 'SENT' | 'READ' | 'FAILED';
@@ -45,7 +46,7 @@ export interface PushSubscriptionData {
 })
 export class AppNotificationService implements OnDestroy {
   private http = inject(HttpClient);
-  private apiUrl = 'http://localhost:3000/api/notifications';
+  private apiUrl = `${environment.apiUrl}/notifications`;
 
   private pollSubscription?: Subscription;
   private readonly POLL_INTERVAL = 30000; // 30 seconds
