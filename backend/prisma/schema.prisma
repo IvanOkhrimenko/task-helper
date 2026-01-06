@@ -226,6 +226,22 @@ enum ActionStatus {
   EXPIRED
 }
 
+// Integration Settings (global, app-level - Google, etc.)
+model IntegrationSettings {
+  id                  String   @id @default(uuid())
+
+  // Google OAuth credentials
+  googleClientId      String?  @db.Text
+  googleClientSecret  String?  @db.Text
+  googleRedirectUri   String?  @db.Text
+
+  // Status
+  googleEnabled       Boolean  @default(false)
+
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+}
+
 // AI Chat Settings (global, app-level)
 model AIChatSettings {
   id          String     @id @default(uuid())

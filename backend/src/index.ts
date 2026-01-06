@@ -9,6 +9,7 @@ import notificationRoutes from './routes/notification.routes.js';
 import dashboardRoutes from './routes/dashboard.routes.js';
 import googleRoutes from './routes/google.routes.js';
 import chatRoutes from './routes/chat.routes.js';
+import integrationsRoutes from './routes/integrations.routes.js';
 import { initScheduler } from './services/scheduler.service.js';
 
 const app = express();
@@ -33,6 +34,7 @@ app.use('/api/notifications', notificationRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/google', googleRoutes);
 app.use('/api/chat', chatRoutes);
+app.use('/api/integrations', integrationsRoutes);
 
 // Health check
 app.get('/api/health', (_, res) => {

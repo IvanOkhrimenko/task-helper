@@ -33,23 +33,32 @@ export async function getGoogleAccounts(req: AuthRequest, res: Response): Promis
 }
 
 export async function initiateGoogleAuth(req: AuthRequest, res: Response): Promise<void> {
+  const prisma: PrismaClient = req.app.get('prisma');
+
   try {
     // Include userId in state for the callback
     const state = Buffer.from(JSON.stringify({ userId: req.userId })).toString('base64');
-    const authUrl = getAuthUrl(state);
+    const authUrl = await getAuthUrl(prisma, state);
 
     res.json({ authUrl });
-  } catch (error) {
+  } catch (error: any) {
     console.error('InitiateGoogleAuth error:', error);
-    res.status(500).json({ error: 'Failed to initiate Google auth' });
+    res.status(500).json({ error: error.message || 'Failed to initiate Google auth' });
   }
 }
 
 export async function handleGoogleCallback(req: AuthRequest, res: Response): Promise<void> {
   const prisma: PrismaClient = req.app.get('prisma');
-  const { code, state } = req.query;
+  const { code, state, error: oauthError } = req.query;
 
   try {
+    // Handle OAuth errors
+    if (oauthError) {
+      console.error('OAuth error:', oauthError);
+      res.redirect(`${FRONTEND_URL}/profile?google=error&message=${encodeURIComponent(oauthError as string)}`);
+      return;
+    }
+
     if (!code || typeof code !== 'string') {
       res.redirect(`${FRONTEND_URL}/profile?google=error&message=No authorization code`);
       return;
@@ -66,7 +75,7 @@ export async function handleGoogleCallback(req: AuthRequest, res: Response): Pro
     }
 
     // Exchange code for tokens
-    const tokens = await exchangeCodeForTokens(code);
+    const tokens = await exchangeCodeForTokens(prisma, code);
 
     if (!tokens.access_token || !tokens.refresh_token) {
       res.redirect(`${FRONTEND_URL}/profile?google=error&message=Failed to get tokens`);
@@ -74,7 +83,7 @@ export async function handleGoogleCallback(req: AuthRequest, res: Response): Pro
     }
 
     // Get user info from Google
-    const userInfo = await getUserInfo(tokens.access_token);
+    const userInfo = await getUserInfo(prisma, tokens.access_token);
 
     if (!userInfo.email) {
       res.redirect(`${FRONTEND_URL}/profile?google=error&message=Failed to get email`);
@@ -104,9 +113,9 @@ export async function handleGoogleCallback(req: AuthRequest, res: Response): Pro
     });
 
     res.redirect(`${FRONTEND_URL}/profile?google=success&email=${encodeURIComponent(userInfo.email)}`);
-  } catch (error) {
+  } catch (error: any) {
     console.error('HandleGoogleCallback error:', error);
-    res.redirect(`${FRONTEND_URL}/profile?google=error&message=Authentication failed`);
+    res.redirect(`${FRONTEND_URL}/profile?google=error&message=${encodeURIComponent(error.message || 'Authentication failed')}`);
   }
 }
 

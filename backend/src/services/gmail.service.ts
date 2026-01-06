@@ -1,33 +1,95 @@
 import { google, gmail_v1 } from 'googleapis';
 import { PrismaClient, GoogleAccount } from '@prisma/client';
 
-const oauth2Client = new google.auth.OAuth2(
-  process.env.GOOGLE_CLIENT_ID,
-  process.env.GOOGLE_CLIENT_SECRET,
-  process.env.GOOGLE_REDIRECT_URI || 'http://localhost:3000/api/google/callback'
-);
-
 const SCOPES = [
   'https://www.googleapis.com/auth/gmail.compose',
   'https://www.googleapis.com/auth/userinfo.email',
   'https://www.googleapis.com/auth/userinfo.profile'
 ];
 
-export function getAuthUrl(state: string): string {
-  return oauth2Client.generateAuthUrl({
+// Cache for OAuth2 client to avoid recreating on every request
+let cachedOAuth2Client: InstanceType<typeof google.auth.OAuth2> | null = null;
+let cachedCredentials: { clientId: string; clientSecret: string; redirectUri: string } | null = null;
+
+async function getIntegrationSettings(prisma: PrismaClient) {
+  console.log('[Gmail Service] Fetching integration settings from database...');
+  const settings = await prisma.integrationSettings.findFirst();
+
+  console.log('[Gmail Service] Settings found:', {
+    hasSettings: !!settings,
+    hasClientId: !!settings?.googleClientId,
+    hasClientSecret: !!settings?.googleClientSecret,
+    googleEnabled: settings?.googleEnabled,
+    clientIdLength: settings?.googleClientId?.length || 0
+  });
+
+  if (!settings || !settings.googleClientId || !settings.googleClientSecret) {
+    throw new Error('Google integration not configured. Please configure Google credentials in Settings.');
+  }
+
+  if (!settings.googleEnabled) {
+    throw new Error('Google integration is disabled.');
+  }
+
+  const redirectUri = settings.googleRedirectUri || `${process.env.BACKEND_URL || 'http://localhost:3000'}/api/google/callback`;
+
+  console.log('[Gmail Service] Using credentials:', {
+    clientId: settings.googleClientId.substring(0, 20) + '...',
+    redirectUri
+  });
+
+  return {
+    clientId: settings.googleClientId,
+    clientSecret: settings.googleClientSecret,
+    redirectUri
+  };
+}
+
+async function getOAuth2Client(prisma: PrismaClient) {
+  const settings = await getIntegrationSettings(prisma);
+
+  // Check if we can reuse cached client
+  if (cachedOAuth2Client && cachedCredentials &&
+      cachedCredentials.clientId === settings.clientId &&
+      cachedCredentials.clientSecret === settings.clientSecret &&
+      cachedCredentials.redirectUri === settings.redirectUri) {
+    return cachedOAuth2Client;
+  }
+
+  // Create new OAuth2 client
+  cachedOAuth2Client = new google.auth.OAuth2(
+    settings.clientId,
+    settings.clientSecret,
+    settings.redirectUri
+  );
+  cachedCredentials = settings;
+
+  return cachedOAuth2Client;
+}
+
+export async function getAuthUrl(prisma: PrismaClient, state: string): Promise<string> {
+  console.log('[Gmail Service] Generating auth URL...');
+  const oauth2Client = await getOAuth2Client(prisma);
+
+  const authUrl = oauth2Client.generateAuthUrl({
     access_type: 'offline',
     scope: SCOPES,
     prompt: 'consent',
     state
   });
+
+  console.log('[Gmail Service] Generated auth URL:', authUrl.substring(0, 100) + '...');
+  return authUrl;
 }
 
-export async function exchangeCodeForTokens(code: string) {
+export async function exchangeCodeForTokens(prisma: PrismaClient, code: string) {
+  const oauth2Client = await getOAuth2Client(prisma);
   const { tokens } = await oauth2Client.getToken(code);
   return tokens;
 }
 
-export async function getUserInfo(accessToken: string) {
+export async function getUserInfo(prisma: PrismaClient, accessToken: string) {
+  const oauth2Client = await getOAuth2Client(prisma);
   oauth2Client.setCredentials({ access_token: accessToken });
   const oauth2 = google.oauth2({ version: 'v2', auth: oauth2Client });
   const { data } = await oauth2.userinfo.get();
@@ -39,6 +101,7 @@ export async function getValidAccessToken(
   googleAccount: GoogleAccount
 ): Promise<string> {
   const now = new Date();
+  const oauth2Client = await getOAuth2Client(prisma);
 
   // Check if token is expired (with 5 minute buffer)
   const expiresAt = new Date(googleAccount.expiresAt);
@@ -81,6 +144,7 @@ export async function createGmailDraft(
   params: CreateDraftParams
 ): Promise<{ draftId: string; webLink: string }> {
   const accessToken = await getValidAccessToken(prisma, googleAccount);
+  const oauth2Client = await getOAuth2Client(prisma);
 
   oauth2Client.setCredentials({ access_token: accessToken });
   const gmail = google.gmail({ version: 'v1', auth: oauth2Client });

@@ -94,6 +94,12 @@ export const routes: Routes = [
         path: 'settings/ai',
         loadComponent: () => import('./features/settings/ai-settings/ai-settings.component').then(m => m.AISettingsComponent),
         canActivate: [adminGuard]
+      },
+      // Admin: Google Integration Settings
+      {
+        path: 'settings/google',
+        loadComponent: () => import('./features/settings/google-settings/google-settings.component').then(m => m.GoogleSettingsComponent),
+        canActivate: [adminGuard]
       }
     ]
   },
