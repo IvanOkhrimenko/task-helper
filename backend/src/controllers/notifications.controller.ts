@@ -192,7 +192,7 @@ export async function unsubscribeFromPush(req: AuthRequest, res: Response): Prom
     await prisma.user.update({
       where: { id: req.userId },
       data: {
-        pushSubscription: null,
+        pushSubscription: { set: null },
         pushNotifications: false
       }
     });

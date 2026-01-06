@@ -164,7 +164,6 @@ async function getAnalyticsHandler(
     case 'hours': {
       const invoices = await prisma.invoice.findMany({
         where: baseWhere,
-        include: { task: { select: { clientName: true } } },
         select: { hoursWorked: true, hourlyRate: true, task: { select: { clientName: true } } }
       });
 
