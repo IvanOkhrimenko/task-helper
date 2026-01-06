@@ -41,6 +41,15 @@ app.get('/api/health', (_, res) => {
   res.json({ status: 'ok' });
 });
 
+// Version endpoint
+app.get('/api/version', (_, res) => {
+  res.json({
+    version: process.env.APP_VERSION || '1.0.0',
+    commit: process.env.COMMIT_SHA || 'local',
+    deployedAt: process.env.DEPLOYED_AT || new Date().toISOString()
+  });
+});
+
 // Error handler
 app.use((err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
   console.error(err.stack);
