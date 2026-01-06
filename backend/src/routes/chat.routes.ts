@@ -12,7 +12,8 @@ import {
   rejectAction,
   getChatSettings,
   updateChatSettings,
-  getSettingsForAdmin
+  getSettingsForAdmin,
+  generateEmailTemplate
 } from '../controllers/chat.controller.js';
 
 const router = Router();
@@ -40,5 +41,8 @@ router.get('/settings', getChatSettings);
 // Admin-only settings endpoints
 router.get('/settings/admin', adminMiddleware, getSettingsForAdmin);
 router.put('/settings', adminMiddleware, updateChatSettings);
+
+// AI utilities
+router.post('/generate-email-template', generateEmailTemplate);
 
 export default router;

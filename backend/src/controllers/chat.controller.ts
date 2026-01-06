@@ -278,6 +278,108 @@ export async function getSettingsForAdmin(req: AuthRequest, res: Response): Prom
   }
 }
 
+// Generate email template with AI based on user prompt
+export async function generateEmailTemplate(req: AuthRequest, res: Response): Promise<void> {
+  const prisma: PrismaClient = req.app.get('prisma');
+  const { prompt } = req.body;
+
+  if (!prompt) {
+    res.status(400).json({ error: 'prompt is required' });
+    return;
+  }
+
+  try {
+    const chatService = new AIChatService(prisma);
+    const settings = await chatService.getSettings();
+
+    if (!settings.isActive || !settings.claudeApiKey) {
+      res.status(400).json({ error: 'AI is not configured. Please set up AI settings first.' });
+      return;
+    }
+
+    // Import Anthropic SDK dynamically
+    const Anthropic = (await import('@anthropic-ai/sdk')).default;
+    const client = new Anthropic({ apiKey: settings.claudeApiKey });
+
+    const systemPrompt = `You are an expert email template generator. Generate email templates for invoice/billing purposes.
+
+IMPORTANT RULES:
+1. Use these placeholders in your templates (wrap in double curly braces):
+   - {{clientName}} - Client/company name
+   - {{invoiceNumber}} - Invoice number
+   - {{invoiceAmount}} - Formatted amount with currency
+   - {{invoicePeriod}} - Month and year
+   - {{taskName}} - Task/project name
+   - {{description}} - Work description
+   - {{sellerName}} - Sender's name
+   - {{bankName}} - Bank name
+   - {{bankIban}} - IBAN number
+   - {{bankSwift}} - SWIFT code
+   - {{currency}} - Currency code
+   - {{hoursWorked}} - Hours worked
+   - {{hourlyRate}} - Hourly rate
+
+2. ALWAYS respond with valid JSON in this exact format:
+{
+  "subject": "your email subject template here",
+  "body": "your email body template here"
+}
+
+3. The templates should be professional and ready to use.
+4. Include appropriate placeholders based on what the user requests.
+5. Match the language/tone the user requests.`;
+
+    const response = await client.messages.create({
+      model: settings.modelId || 'claude-sonnet-4-20250514',
+      max_tokens: 2000,
+      messages: [
+        {
+          role: 'user',
+          content: `Generate an email template based on this request:\n\n${prompt}`
+        }
+      ],
+      system: systemPrompt
+    });
+
+    // Extract text from response
+    const textContent = response.content.find(c => c.type === 'text');
+    if (!textContent || textContent.type !== 'text') {
+      throw new Error('No text response from AI');
+    }
+
+    // Parse JSON from response
+    const responseText = textContent.text;
+
+    // Try to extract JSON from the response
+    let template: { subject: string; body: string };
+    try {
+      // First try direct JSON parse
+      template = JSON.parse(responseText);
+    } catch {
+      // Try to find JSON in the response
+      const jsonMatch = responseText.match(/\{[\s\S]*"subject"[\s\S]*"body"[\s\S]*\}/);
+      if (jsonMatch) {
+        template = JSON.parse(jsonMatch[0]);
+      } else {
+        throw new Error('Could not parse AI response as JSON');
+      }
+    }
+
+    if (!template.subject || !template.body) {
+      throw new Error('AI response missing subject or body');
+    }
+
+    res.json({
+      success: true,
+      subject: template.subject,
+      body: template.body
+    });
+  } catch (error: any) {
+    console.error('Email template generation error:', error);
+    res.status(500).json({ error: error.message || 'Failed to generate template' });
+  }
+}
+
 // Update chat settings (admin only)
 export async function updateChatSettings(req: AuthRequest, res: Response): Promise<void> {
   const prisma: PrismaClient = req.app.get('prisma');

@@ -15,12 +15,14 @@ import { registerAnalyticsTools } from './tools/analytics.tools';
 import { registerTaskTools } from './tools/task.tools';
 import { registerInvoiceTools } from './tools/invoice.tools';
 import { registerReminderTools } from './tools/reminder.tools';
+import { registerEmailTemplateTools } from './tools/email-template.tools';
 
 // Initialize tools
 registerAnalyticsTools();
 registerTaskTools();
 registerInvoiceTools();
 registerReminderTools();
+registerEmailTemplateTools();
 
 const SYSTEM_PROMPT = `You are a helpful AI assistant for Daily Helper, a task and invoice management application.
 You help users manage their invoices, tasks, and reminders through natural conversation.
@@ -75,6 +77,7 @@ Available capabilities:
 - Track tasks and update their details
 - Set up reminders with various schedules
 - Provide analytics on earnings, hours worked, and client activity
+- Generate custom email templates for invoice emails (formal, casual, brief, or detailed styles)
 - Answer questions about app features
 
 Guidelines:

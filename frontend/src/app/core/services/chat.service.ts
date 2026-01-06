@@ -274,4 +274,12 @@ export class ChatService {
     this.messages.set([]);
     this.pendingActions.set([]);
   }
+
+  // Generate email template with AI
+  generateEmailTemplate(prompt: string): Observable<{ success: boolean; subject: string; body: string }> {
+    return this.http.post<{ success: boolean; subject: string; body: string }>(
+      `${this.apiUrl}/generate-email-template`,
+      { prompt }
+    );
+  }
 }

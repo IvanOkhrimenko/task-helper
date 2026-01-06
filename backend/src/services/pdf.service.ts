@@ -478,6 +478,15 @@ function generateStandardInvoice(data: InvoiceData): Promise<string> {
   });
 }
 
+// Process email template by replacing placeholders with actual values
+function processEmailTemplate(template: string, placeholders: Record<string, string>): string {
+  let result = template;
+  for (const [key, value] of Object.entries(placeholders)) {
+    result = result.replace(new RegExp(`\\{\\{${key}\\}\\}`, 'g'), value);
+  }
+  return result;
+}
+
 export function generateEmailDraft(task: Task, invoice: Invoice, user: User, period?: PeriodInfo, language: string = 'PL') {
   const periodText = period
     ? `${monthNames[period.month]} ${period.year}`
@@ -489,7 +498,35 @@ export function generateEmailDraft(task: Task, invoice: Invoice, user: User, per
 
   const amount = Number(invoice.amount);
   const currency = task.currency || 'USD';
+  const hoursWorked = period?.hours || Number(task.hoursWorked) || 0;
+  const hourlyRate = Number(task.hourlyRate) || 0;
 
+  // Check if task has custom email template
+  if (task.useCustomEmailTemplate && task.emailSubjectTemplate && task.emailBodyTemplate) {
+    // Build placeholders map
+    const placeholders: Record<string, string> = {
+      clientName: task.clientName || 'Client',
+      invoiceNumber: invoice.number,
+      invoiceAmount: `${amount.toLocaleString('en-US', { minimumFractionDigits: 2 })} ${currency}`,
+      invoicePeriod: language === 'EN' ? periodText : periodTextPL,
+      taskName: task.name,
+      description: task.description || (language === 'EN' ? 'Professional Services' : 'Usługi profesjonalne'),
+      sellerName: user.name,
+      bankName: user.bankName || '',
+      bankIban: user.bankIban || '',
+      bankSwift: user.bankSwift || '',
+      currency: currency,
+      hoursWorked: hoursWorked.toString(),
+      hourlyRate: hourlyRate.toString()
+    };
+
+    const subject = processEmailTemplate(task.emailSubjectTemplate, placeholders);
+    const body = processEmailTemplate(task.emailBodyTemplate, placeholders);
+
+    return { subject, body };
+  }
+
+  // Default templates below
   if (language === 'EN') {
     const subject = `Invoice #${invoice.number} - ${task.name} (${periodText})`;
     const body = `Dear ${task.clientName || 'Client'},

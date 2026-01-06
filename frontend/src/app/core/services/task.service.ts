@@ -23,6 +23,10 @@ export interface Task {
   defaultLanguage: string;
   invoiceTemplate: InvoiceTemplate;
   googleAccountId?: string;
+  // Email template fields
+  emailSubjectTemplate?: string;
+  emailBodyTemplate?: string;
+  useCustomEmailTemplate?: boolean;
   userId: string;
   createdAt: string;
   updatedAt: string;
@@ -68,6 +72,10 @@ export interface CreateTaskDto {
   defaultLanguage?: string;
   invoiceTemplate?: InvoiceTemplate;
   googleAccountId?: string;
+  // Email template fields
+  emailSubjectTemplate?: string;
+  emailBodyTemplate?: string;
+  useCustomEmailTemplate?: boolean;
 }
 
 @Injectable({

@@ -71,6 +71,11 @@ model Task {
   googleAccountId   String?
   googleAccount     GoogleAccount? @relation(fields: [googleAccountId], references: [id], onDelete: SetNull)
 
+  // Email template fields for custom invoice emails
+  emailSubjectTemplate   String?  @db.Text  // Custom subject template with placeholders
+  emailBodyTemplate      String?  @db.Text  // Custom body template with placeholders
+  useCustomEmailTemplate Boolean  @default(false)
+
   userId        String
   user          User              @relation(fields: [userId], references: [id], onDelete: Cascade)
   invoices      Invoice[]

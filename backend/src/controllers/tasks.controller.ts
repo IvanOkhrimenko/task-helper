@@ -68,7 +68,12 @@ export async function createTask(req: AuthRequest, res: Response): Promise<void>
     hoursWorked,
     description,
     currency,
-    defaultLanguage
+    defaultLanguage,
+    invoiceTemplate,
+    googleAccountId,
+    emailSubjectTemplate,
+    emailBodyTemplate,
+    useCustomEmailTemplate
   } = req.body;
 
   if (!name || !warningDate || !deadlineDate) {
@@ -92,6 +97,11 @@ export async function createTask(req: AuthRequest, res: Response): Promise<void>
         description,
         currency: currency || 'USD',
         defaultLanguage: defaultLanguage || 'PL',
+        invoiceTemplate: invoiceTemplate || 'STANDARD',
+        googleAccountId: googleAccountId || null,
+        emailSubjectTemplate: emailSubjectTemplate || null,
+        emailBodyTemplate: emailBodyTemplate || null,
+        useCustomEmailTemplate: useCustomEmailTemplate || false,
         userId: req.userId!
       }
     });
@@ -118,7 +128,12 @@ export async function updateTask(req: AuthRequest, res: Response): Promise<void>
     hoursWorked,
     description,
     currency,
-    defaultLanguage
+    defaultLanguage,
+    invoiceTemplate,
+    googleAccountId,
+    emailSubjectTemplate,
+    emailBodyTemplate,
+    useCustomEmailTemplate
   } = req.body;
 
   try {
@@ -145,7 +160,12 @@ export async function updateTask(req: AuthRequest, res: Response): Promise<void>
         hoursWorked: hoursWorked !== undefined ? parseFloat(hoursWorked) : undefined,
         description,
         currency,
-        defaultLanguage
+        defaultLanguage,
+        invoiceTemplate,
+        googleAccountId: googleAccountId || null,
+        emailSubjectTemplate,
+        emailBodyTemplate,
+        useCustomEmailTemplate
       }
     });
 
