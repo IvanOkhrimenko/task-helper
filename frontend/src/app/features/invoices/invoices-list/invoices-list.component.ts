@@ -137,22 +137,37 @@ interface TaskOption {
                 </button>
               </div>
 
-              <button
-                class="advanced-toggle"
-                [class.advanced-toggle--active]="showAdvancedFilters()"
-                (click)="toggleAdvancedFilters()"
-              >
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
-                </svg>
-                Filters
-                @if (hasActiveFilters()) {
-                  <span class="active-filter-badge">{{ activeFilterCount() }}</span>
-                }
-                <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <polyline points="6 9 12 15 18 9"/>
-                </svg>
-              </button>
+              <div class="filter-actions">
+                <label class="archive-toggle" [class.archive-toggle--active]="showArchived()">
+                  <input
+                    type="checkbox"
+                    [checked]="showArchived()"
+                    (change)="toggleShowArchived()"
+                  />
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="21 8 21 21 3 21 3 8"/>
+                    <rect x="1" y="3" width="22" height="5"/>
+                    <line x1="10" y1="12" x2="14" y2="12"/>
+                  </svg>
+                  Show Archived
+                </label>
+                <button
+                  class="advanced-toggle"
+                  [class.advanced-toggle--active]="showAdvancedFilters()"
+                  (click)="toggleAdvancedFilters()"
+                >
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
+                  </svg>
+                  Filters
+                  @if (hasActiveFilters()) {
+                    <span class="active-filter-badge">{{ activeFilterCount() }}</span>
+                  }
+                  <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="6 9 12 15 18 9"/>
+                  </svg>
+                </button>
+              </div>
             </div>
 
             <!-- Advanced Filters Panel -->
@@ -316,6 +331,14 @@ interface TaskOption {
                       </a>
                     </div>
                     <div class="header-badges">
+                      @if (invoice.isArchived) {
+                        <span class="archived-badge" title="Archived">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="21 8 21 21 3 21 3 8"/>
+                            <rect x="1" y="3" width="22" height="5"/>
+                          </svg>
+                        </span>
+                      }
                       @if (invoice.createdByAI) {
                         <span class="ai-badge" title="Created by AI Assistant">
                           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -621,6 +644,47 @@ interface TaskOption {
       justify-content: space-between;
       gap: var(--space-lg);
       flex-wrap: wrap;
+    }
+
+    .filter-actions {
+      display: flex;
+      align-items: center;
+      gap: var(--space-md);
+    }
+
+    .archive-toggle {
+      display: flex;
+      align-items: center;
+      gap: var(--space-sm);
+      padding: var(--space-md) var(--space-lg);
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: var(--color-text-secondary);
+      background: var(--color-surface);
+      border: 1px solid var(--color-border-subtle);
+      border-radius: var(--radius-lg);
+      cursor: pointer;
+      transition: all var(--transition-fast);
+
+      input {
+        display: none;
+      }
+
+      svg {
+        width: 16px;
+        height: 16px;
+      }
+
+      &:hover {
+        color: var(--color-text);
+        border-color: var(--color-border);
+      }
+
+      &--active {
+        color: var(--color-warning);
+        border-color: var(--color-warning);
+        background: var(--color-warning-subtle);
+      }
     }
 
     .filter-tabs {
@@ -1097,6 +1161,22 @@ interface TaskOption {
       }
     }
 
+    .archived-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 24px;
+      height: 24px;
+      border-radius: var(--radius-sm);
+      background: var(--color-warning-subtle);
+      color: var(--color-warning);
+
+      svg {
+        width: 14px;
+        height: 14px;
+      }
+    }
+
     .ai-badge {
       display: inline-flex;
       align-items: center;
@@ -1319,6 +1399,7 @@ export class InvoicesListComponent implements OnInit {
   invoices = signal<Invoice[]>([]);
   isLoading = signal(true);
   activeFilter = signal<StatusFilter>('ALL');
+  showArchived = signal(false);
 
   // Advanced filter signals
   showAdvancedFilters = signal(false);
@@ -1399,7 +1480,11 @@ export class InvoicesListComponent implements OnInit {
   }
 
   loadInvoices() {
-    this.invoiceService.getInvoices().subscribe({
+    const filters: InvoiceFilters = {
+      includeArchived: this.showArchived()
+    };
+
+    this.invoiceService.getInvoices(filters).subscribe({
       next: (invoices) => {
         // Sort by createdAt descending (newest first)
         const sorted = invoices.sort((a, b) =>
@@ -1412,6 +1497,12 @@ export class InvoicesListComponent implements OnInit {
         this.isLoading.set(false);
       }
     });
+  }
+
+  toggleShowArchived() {
+    this.showArchived.update(v => !v);
+    this.isLoading.set(true);
+    this.loadInvoices();
   }
 
   setFilter(filter: StatusFilter) {

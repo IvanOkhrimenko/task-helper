@@ -38,6 +38,7 @@ model Task {
   type          TaskType  @default(INVOICE)
   name          String
   isActive      Boolean   @default(true)
+  isArchived    Boolean   @default(false)
 
   // Shared date fields (for INVOICE type - day of month)
   warningDate   Int?      // day of month for warning (1-31)
@@ -87,6 +88,7 @@ model Task {
   @@index([googleAccountId])
   @@index([nextOccurrence])
   @@index([isActive, nextOccurrence])
+  @@index([userId, isArchived])
 }
 
 model Invoice {
@@ -95,6 +97,7 @@ model Invoice {
   amount       Decimal       @db.Decimal(10, 2)
   currency     String        @default("USD")
   status       InvoiceStatus @default(DRAFT)
+  isArchived   Boolean       @default(false)
   pdfPath      String?
   emailSubject String?
   emailBody    String?       @db.Text
@@ -116,6 +119,7 @@ model Invoice {
   @@index([userId])
   @@index([taskId])
   @@index([status])
+  @@index([userId, isArchived])
 }
 
 model Notification {

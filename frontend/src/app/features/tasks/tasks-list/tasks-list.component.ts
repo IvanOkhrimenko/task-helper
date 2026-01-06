@@ -24,13 +24,28 @@ import { InvoiceModalComponent, InvoiceGenerationData } from '../../../shared/co
           <h1 class="page-title">Invoice Tasks</h1>
           <p class="page-subtitle">Manage your client projects and generate invoices</p>
         </div>
-        <a routerLink="/tasks/invoices/new" class="btn btn--primary">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <line x1="12" y1="5" x2="12" y2="19"/>
-            <line x1="5" y1="12" x2="19" y2="12"/>
-          </svg>
-          New Task
-        </a>
+        <div class="header-actions">
+          <label class="archive-toggle" [class.archive-toggle--active]="showArchived()">
+            <input
+              type="checkbox"
+              [checked]="showArchived()"
+              (change)="toggleShowArchived()"
+            />
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="21 8 21 21 3 21 3 8"/>
+              <rect x="1" y="3" width="22" height="5"/>
+              <line x1="10" y1="12" x2="14" y2="12"/>
+            </svg>
+            Show Archived
+          </label>
+          <a routerLink="/tasks/invoices/new" class="btn btn--primary">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="12" y1="5" x2="12" y2="19"/>
+              <line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+            New Task
+          </a>
+        </div>
       </header>
 
       <!-- Stats Row -->
@@ -94,6 +109,14 @@ import { InvoiceModalComponent, InvoiceGenerationData } from '../../../shared/co
                   </div>
                 </div>
                 <div class="task-card__status">
+                  @if (task.isArchived) {
+                    <span class="archived-badge" title="Archived">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="21 8 21 21 3 21 3 8"/>
+                        <rect x="1" y="3" width="22" height="5"/>
+                      </svg>
+                    </span>
+                  }
                   <span class="status-badge" [class.status-badge--active]="task.isActive" [class.status-badge--inactive]="!task.isActive">
                     {{ task.isActive ? 'Active' : 'Inactive' }}
                   </span>
@@ -197,6 +220,63 @@ import { InvoiceModalComponent, InvoiceGenerationData } from '../../../shared/co
       align-items: flex-start;
       justify-content: space-between;
       margin-bottom: 32px;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .archive-toggle {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 10px 16px;
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: var(--color-text-secondary);
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      transition: all var(--transition-fast);
+
+      input {
+        display: none;
+      }
+
+      svg {
+        width: 16px;
+        height: 16px;
+      }
+
+      &:hover {
+        color: var(--color-text);
+        border-color: var(--color-text-muted);
+      }
+
+      &--active {
+        color: var(--color-warning);
+        border-color: var(--color-warning);
+        background: var(--color-warning-bg);
+      }
+    }
+
+    .archived-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 24px;
+      height: 24px;
+      border-radius: var(--radius-sm);
+      background: var(--color-warning-bg);
+      color: var(--color-warning);
+
+      svg {
+        width: 14px;
+        height: 14px;
+      }
     }
 
     .page-title {
@@ -552,6 +632,7 @@ export class TasksListComponent implements OnInit {
 
   tasks = signal<Task[]>([]);
   isLoading = signal(true);
+  showArchived = signal(false);
   selectedTask = signal<Task | null>(null);
 
   sortedTasks = computed(() => {
@@ -583,7 +664,7 @@ export class TasksListComponent implements OnInit {
   }
 
   loadTasks(): void {
-    this.taskService.getTasks().subscribe({
+    this.taskService.getTasks(this.showArchived()).subscribe({
       next: (tasks) => {
         this.tasks.set(tasks);
         this.isLoading.set(false);
@@ -592,6 +673,12 @@ export class TasksListComponent implements OnInit {
         this.isLoading.set(false);
       }
     });
+  }
+
+  toggleShowArchived(): void {
+    this.showArchived.update(v => !v);
+    this.isLoading.set(true);
+    this.loadTasks();
   }
 
   getClientInitials(name: string | null | undefined): string {

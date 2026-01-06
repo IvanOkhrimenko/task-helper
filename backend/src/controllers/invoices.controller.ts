@@ -107,11 +107,16 @@ export async function generateInvoice(req: AuthRequest, res: Response): Promise<
 
 export async function getInvoices(req: AuthRequest, res: Response): Promise<void> {
   const prisma: PrismaClient = req.app.get('prisma');
-  const { taskId, status, startDate, endDate, clientName } = req.query;
+  const { taskId, status, startDate, endDate, clientName, includeArchived } = req.query;
 
   try {
     // Build where clause
     const where: any = { userId: req.userId };
+
+    // By default, exclude archived invoices unless explicitly requested
+    if (includeArchived !== 'true') {
+      where.isArchived = false;
+    }
 
     // Filter by task
     if (taskId && typeof taskId === 'string') {
@@ -308,5 +313,84 @@ export async function updateInvoiceComments(req: AuthRequest, res: Response): Pr
   } catch (error) {
     console.error('UpdateInvoiceComments error:', error);
     res.status(500).json({ error: 'Failed to update invoice comments' });
+  }
+}
+
+export async function archiveInvoice(req: AuthRequest, res: Response): Promise<void> {
+  const prisma: PrismaClient = req.app.get('prisma');
+  const { id } = req.params;
+
+  try {
+    const existing = await prisma.invoice.findFirst({
+      where: { id, userId: req.userId }
+    });
+
+    if (!existing) {
+      res.status(404).json({ error: 'Invoice not found' });
+      return;
+    }
+
+    const invoice = await prisma.invoice.update({
+      where: { id },
+      data: { isArchived: true }
+    });
+
+    res.json(invoice);
+  } catch (error) {
+    console.error('ArchiveInvoice error:', error);
+    res.status(500).json({ error: 'Failed to archive invoice' });
+  }
+}
+
+export async function unarchiveInvoice(req: AuthRequest, res: Response): Promise<void> {
+  const prisma: PrismaClient = req.app.get('prisma');
+  const { id } = req.params;
+
+  try {
+    const existing = await prisma.invoice.findFirst({
+      where: { id, userId: req.userId }
+    });
+
+    if (!existing) {
+      res.status(404).json({ error: 'Invoice not found' });
+      return;
+    }
+
+    const invoice = await prisma.invoice.update({
+      where: { id },
+      data: { isArchived: false }
+    });
+
+    res.json(invoice);
+  } catch (error) {
+    console.error('UnarchiveInvoice error:', error);
+    res.status(500).json({ error: 'Failed to unarchive invoice' });
+  }
+}
+
+export async function deleteInvoice(req: AuthRequest, res: Response): Promise<void> {
+  const prisma: PrismaClient = req.app.get('prisma');
+  const { id } = req.params;
+
+  try {
+    const existing = await prisma.invoice.findFirst({
+      where: { id, userId: req.userId }
+    });
+
+    if (!existing) {
+      res.status(404).json({ error: 'Invoice not found' });
+      return;
+    }
+
+    // Delete PDF from storage if exists
+    if (existing.pdfPath) {
+      await StorageService.deleteFile(existing.pdfPath);
+    }
+
+    await prisma.invoice.delete({ where: { id } });
+    res.status(204).send();
+  } catch (error) {
+    console.error('DeleteInvoice error:', error);
+    res.status(500).json({ error: 'Failed to delete invoice' });
   }
 }

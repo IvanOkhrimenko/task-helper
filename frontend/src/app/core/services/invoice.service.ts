@@ -16,6 +16,7 @@ export interface InvoiceFilters {
   startDate?: string;
   endDate?: string;
   clientName?: string;
+  includeArchived?: boolean;
 }
 
 @Injectable({
@@ -35,6 +36,7 @@ export class InvoiceService {
       if (filters.startDate) params = params.set('startDate', filters.startDate);
       if (filters.endDate) params = params.set('endDate', filters.endDate);
       if (filters.clientName) params = params.set('clientName', filters.clientName);
+      if (filters.includeArchived) params = params.set('includeArchived', 'true');
     }
 
     return this.http.get<Invoice[]>(this.apiUrl, { params });
@@ -62,5 +64,17 @@ export class InvoiceService {
 
   getPdfUrl(id: string): string {
     return `${this.apiUrl}/${id}/pdf`;
+  }
+
+  archiveInvoice(id: string): Observable<Invoice> {
+    return this.http.patch<Invoice>(`${this.apiUrl}/${id}/archive`, {});
+  }
+
+  unarchiveInvoice(id: string): Observable<Invoice> {
+    return this.http.patch<Invoice>(`${this.apiUrl}/${id}/unarchive`, {});
+  }
+
+  deleteInvoice(id: string): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/${id}`);
   }
 }

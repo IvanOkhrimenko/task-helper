@@ -4,13 +4,21 @@ import { AuthRequest } from '../middleware/auth.middleware.js';
 
 export async function getTasks(req: AuthRequest, res: Response): Promise<void> {
   const prisma: PrismaClient = req.app.get('prisma');
+  const { includeArchived } = req.query;
 
   try {
+    const where: any = {
+      userId: req.userId,
+      type: 'INVOICE'  // Only return INVOICE tasks, not REMINDERs
+    };
+
+    // By default, exclude archived tasks unless explicitly requested
+    if (includeArchived !== 'true') {
+      where.isArchived = false;
+    }
+
     const tasks = await prisma.task.findMany({
-      where: {
-        userId: req.userId,
-        type: 'INVOICE'  // Only return INVOICE tasks, not REMINDERs
-      },
+      where,
       include: {
         invoices: {
           orderBy: { createdAt: 'desc' },
@@ -221,5 +229,57 @@ export async function toggleTask(req: AuthRequest, res: Response): Promise<void>
   } catch (error) {
     console.error('ToggleTask error:', error);
     res.status(500).json({ error: 'Failed to toggle task' });
+  }
+}
+
+export async function archiveTask(req: AuthRequest, res: Response): Promise<void> {
+  const prisma: PrismaClient = req.app.get('prisma');
+  const { id } = req.params;
+
+  try {
+    const existing = await prisma.task.findFirst({
+      where: { id, userId: req.userId }
+    });
+
+    if (!existing) {
+      res.status(404).json({ error: 'Task not found' });
+      return;
+    }
+
+    const task = await prisma.task.update({
+      where: { id },
+      data: { isArchived: true }
+    });
+
+    res.json(task);
+  } catch (error) {
+    console.error('ArchiveTask error:', error);
+    res.status(500).json({ error: 'Failed to archive task' });
+  }
+}
+
+export async function unarchiveTask(req: AuthRequest, res: Response): Promise<void> {
+  const prisma: PrismaClient = req.app.get('prisma');
+  const { id } = req.params;
+
+  try {
+    const existing = await prisma.task.findFirst({
+      where: { id, userId: req.userId }
+    });
+
+    if (!existing) {
+      res.status(404).json({ error: 'Task not found' });
+      return;
+    }
+
+    const task = await prisma.task.update({
+      where: { id },
+      data: { isArchived: false }
+    });
+
+    res.json(task);
+  } catch (error) {
+    console.error('UnarchiveTask error:', error);
+    res.status(500).json({ error: 'Failed to unarchive task' });
   }
 }

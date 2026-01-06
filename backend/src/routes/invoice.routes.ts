@@ -5,7 +5,10 @@ import {
   downloadInvoicePDF,
   getEmailDraft,
   updateInvoiceStatus,
-  updateInvoiceComments
+  updateInvoiceComments,
+  archiveInvoice,
+  unarchiveInvoice,
+  deleteInvoice
 } from '../controllers/invoices.controller.js';
 import { authMiddleware } from '../middleware/auth.middleware.js';
 
@@ -19,5 +22,8 @@ router.get('/:id/pdf', downloadInvoicePDF);
 router.get('/:id/email-draft', getEmailDraft);
 router.patch('/:id/status', updateInvoiceStatus);
 router.patch('/:id/comments', updateInvoiceComments);
+router.patch('/:id/archive', archiveInvoice);
+router.patch('/:id/unarchive', unarchiveInvoice);
+router.delete('/:id', deleteInvoice);
 
 export default router;

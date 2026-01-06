@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 
@@ -10,6 +10,7 @@ export interface Task {
   type: 'INVOICE';
   name: string;
   isActive: boolean;
+  isArchived: boolean;
   warningDate: number;
   deadlineDate: number;
   clientName?: string;
@@ -40,6 +41,7 @@ export interface Invoice {
   currency: string;
   language: string;
   status: 'DRAFT' | 'SENT' | 'PAID' | 'CANCELLED';
+  isArchived: boolean;
   pdfPath?: string;
   emailSubject?: string;
   emailBody?: string;
@@ -86,8 +88,12 @@ export class TaskService {
 
   constructor(private http: HttpClient) {}
 
-  getTasks(): Observable<Task[]> {
-    return this.http.get<Task[]>(this.apiUrl);
+  getTasks(includeArchived = false): Observable<Task[]> {
+    let params = new HttpParams();
+    if (includeArchived) {
+      params = params.set('includeArchived', 'true');
+    }
+    return this.http.get<Task[]>(this.apiUrl, { params });
   }
 
   getTask(id: string): Observable<Task> {
@@ -108,6 +114,14 @@ export class TaskService {
 
   toggleTask(id: string): Observable<Task> {
     return this.http.patch<Task>(`${this.apiUrl}/${id}/toggle`, {});
+  }
+
+  archiveTask(id: string): Observable<Task> {
+    return this.http.patch<Task>(`${this.apiUrl}/${id}/archive`, {});
+  }
+
+  unarchiveTask(id: string): Observable<Task> {
+    return this.http.patch<Task>(`${this.apiUrl}/${id}/unarchive`, {});
   }
 
   generateInvoice(

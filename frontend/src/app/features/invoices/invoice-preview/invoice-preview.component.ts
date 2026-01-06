@@ -1,6 +1,6 @@
 import { Component, inject, signal, OnInit, computed, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute, RouterLink, Router } from '@angular/router';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { FormsModule } from '@angular/forms';
 import { InvoiceService, EmailDraft } from '../../../core/services/invoice.service';
@@ -323,6 +323,83 @@ import { ToastComponent } from '../../../shared/components/toast/toast.component
                     Paid
                   </button>
                 </div>
+              </div>
+
+              <!-- Archive/Delete Actions -->
+              <div class="card card--actions">
+                <h3 class="card__title">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/>
+                    <path d="M12 6v6l4 2"/>
+                  </svg>
+                  Actions
+                </h3>
+                <div class="action-buttons">
+                  @if (!invoice()!.isArchived) {
+                    <button
+                      class="btn btn--warning"
+                      (click)="archiveInvoice()"
+                      [disabled]="isArchiving()"
+                    >
+                      @if (isArchiving()) {
+                        <span class="btn__spinner btn__spinner--dark"></span>
+                        Archiving...
+                      } @else {
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                          <polyline points="21 8 21 21 3 21 3 8"/>
+                          <rect x="1" y="3" width="22" height="5"/>
+                          <line x1="10" y1="12" x2="14" y2="12"/>
+                        </svg>
+                        Archive Invoice
+                      }
+                    </button>
+                  } @else {
+                    <button
+                      class="btn btn--ghost"
+                      (click)="unarchiveInvoice()"
+                      [disabled]="isArchiving()"
+                    >
+                      @if (isArchiving()) {
+                        <span class="btn__spinner btn__spinner--dark"></span>
+                        Restoring...
+                      } @else {
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                          <polyline points="1 4 1 10 7 10"/>
+                          <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/>
+                        </svg>
+                        Restore from Archive
+                      }
+                    </button>
+                  }
+                  <button
+                    class="btn btn--danger"
+                    (click)="deleteInvoice()"
+                    [disabled]="isDeleting()"
+                  >
+                    @if (isDeleting()) {
+                      <span class="btn__spinner btn__spinner--dark"></span>
+                      Deleting...
+                    } @else {
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="3 6 5 6 21 6"/>
+                        <path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
+                        <line x1="10" y1="11" x2="10" y2="17"/>
+                        <line x1="14" y1="11" x2="14" y2="17"/>
+                      </svg>
+                      Delete Invoice
+                    }
+                  </button>
+                </div>
+                @if (invoice()!.isArchived) {
+                  <div class="archived-notice">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <circle cx="12" cy="12" r="10"/>
+                      <line x1="12" y1="8" x2="12" y2="12"/>
+                      <line x1="12" y1="16" x2="12.01" y2="16"/>
+                    </svg>
+                    This invoice is archived
+                  </div>
+                }
               </div>
             </div>
 
@@ -1101,9 +1178,57 @@ import { ToastComponent } from '../../../shared/components/toast/toast.component
         }
       }
 
+      &--warning {
+        background: var(--color-warning);
+        color: white;
+
+        &:hover:not(:disabled) {
+          background: #d97706;
+        }
+      }
+
+      &--danger {
+        background: var(--color-danger);
+        color: white;
+
+        &:hover:not(:disabled) {
+          background: #dc2626;
+        }
+      }
+
       &:disabled {
         opacity: 0.6;
         cursor: not-allowed;
+      }
+    }
+
+    /* Action Buttons */
+    .card--actions {
+      background: var(--color-bg);
+      border: 1px dashed var(--color-border);
+    }
+
+    .action-buttons {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-sm);
+    }
+
+    .archived-notice {
+      display: flex;
+      align-items: center;
+      gap: var(--space-sm);
+      margin-top: var(--space-md);
+      padding: var(--space-md);
+      background: var(--color-warning-subtle);
+      color: var(--color-warning);
+      font-size: 0.875rem;
+      font-weight: 500;
+      border-radius: var(--radius-md);
+
+      svg {
+        width: 16px;
+        height: 16px;
       }
     }
 
@@ -1172,6 +1297,7 @@ import { ToastComponent } from '../../../shared/components/toast/toast.component
 })
 export class InvoicePreviewComponent implements OnInit, OnDestroy {
   private route = inject(ActivatedRoute);
+  private router = inject(Router);
   private invoiceService = inject(InvoiceService);
   private notificationService = inject(NotificationService);
   googleService = inject(GoogleService);
@@ -1183,6 +1309,8 @@ export class InvoicePreviewComponent implements OnInit, OnDestroy {
   isDownloading = signal(false);
   isPdfLoading = signal(false);
   isCreatingDraft = signal(false);
+  isArchiving = signal(false);
+  isDeleting = signal(false);
   selectedGoogleAccountId = signal<string | null>(null);
 
   private rawPdfUrl = signal<string | null>(null);
@@ -1372,5 +1500,63 @@ export class InvoicePreviewComponent implements OnInit, OnDestroy {
 
   selectGoogleAccount(accountId: string) {
     this.selectedGoogleAccountId.set(accountId);
+  }
+
+  archiveInvoice() {
+    const inv = this.invoice();
+    if (!inv) return;
+
+    if (!confirm('Are you sure you want to archive this invoice?')) return;
+
+    this.isArchiving.set(true);
+    this.invoiceService.archiveInvoice(inv.id).subscribe({
+      next: (updated) => {
+        this.invoice.set(updated);
+        this.isArchiving.set(false);
+        this.notificationService.success('Invoice archived');
+      },
+      error: () => {
+        this.isArchiving.set(false);
+        this.notificationService.error('Failed to archive invoice');
+      }
+    });
+  }
+
+  unarchiveInvoice() {
+    const inv = this.invoice();
+    if (!inv) return;
+
+    this.isArchiving.set(true);
+    this.invoiceService.unarchiveInvoice(inv.id).subscribe({
+      next: (updated) => {
+        this.invoice.set(updated);
+        this.isArchiving.set(false);
+        this.notificationService.success('Invoice restored from archive');
+      },
+      error: () => {
+        this.isArchiving.set(false);
+        this.notificationService.error('Failed to restore invoice');
+      }
+    });
+  }
+
+  deleteInvoice() {
+    const inv = this.invoice();
+    if (!inv) return;
+
+    if (!confirm('Are you sure you want to permanently delete this invoice? This action cannot be undone.')) return;
+
+    this.isDeleting.set(true);
+    this.invoiceService.deleteInvoice(inv.id).subscribe({
+      next: () => {
+        this.isDeleting.set(false);
+        this.notificationService.success('Invoice deleted');
+        this.router.navigate(['/invoices']);
+      },
+      error: () => {
+        this.isDeleting.set(false);
+        this.notificationService.error('Failed to delete invoice');
+      }
+    });
   }
 }

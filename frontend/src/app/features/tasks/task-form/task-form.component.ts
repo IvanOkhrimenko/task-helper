@@ -405,6 +405,90 @@ import { TemplateSelectorComponent } from '../../../shared/components/template-s
             </div>
           </section>
 
+          @if (isEditing()) {
+            <section class="form-section form-section--danger">
+              <h2 class="section-title section-title--danger">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="10"/>
+                  <line x1="12" y1="8" x2="12" y2="12"/>
+                  <line x1="12" y1="16" x2="12.01" y2="16"/>
+                </svg>
+                Danger Zone
+              </h2>
+
+              @if (isArchived()) {
+                <div class="archived-banner">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="21 8 21 21 3 21 3 8"/>
+                    <rect x="1" y="3" width="22" height="5"/>
+                    <line x1="10" y1="12" x2="14" y2="12"/>
+                  </svg>
+                  This task is archived
+                </div>
+              }
+
+              <div class="danger-buttons">
+                @if (!isArchived()) {
+                  <button
+                    type="button"
+                    class="btn btn--warning"
+                    (click)="archiveTask()"
+                    [disabled]="isArchiving()"
+                  >
+                    @if (isArchiving()) {
+                      <span class="btn__spinner btn__spinner--dark"></span>
+                      Archiving...
+                    } @else {
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="21 8 21 21 3 21 3 8"/>
+                        <rect x="1" y="3" width="22" height="5"/>
+                        <line x1="10" y1="12" x2="14" y2="12"/>
+                      </svg>
+                      Archive Task
+                    }
+                  </button>
+                } @else {
+                  <button
+                    type="button"
+                    class="btn btn--ghost"
+                    (click)="unarchiveTask()"
+                    [disabled]="isArchiving()"
+                  >
+                    @if (isArchiving()) {
+                      <span class="btn__spinner btn__spinner--dark"></span>
+                      Restoring...
+                    } @else {
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="1 4 1 10 7 10"/>
+                        <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/>
+                      </svg>
+                      Restore from Archive
+                    }
+                  </button>
+                }
+                <button
+                  type="button"
+                  class="btn btn--danger"
+                  (click)="deleteTask()"
+                  [disabled]="isDeleting()"
+                >
+                  @if (isDeleting()) {
+                    <span class="btn__spinner btn__spinner--dark"></span>
+                    Deleting...
+                  } @else {
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <polyline points="3 6 5 6 21 6"/>
+                      <path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
+                      <line x1="10" y1="11" x2="10" y2="17"/>
+                      <line x1="14" y1="11" x2="14" y2="17"/>
+                    </svg>
+                    Delete Task
+                  }
+                </button>
+              </div>
+            </section>
+          }
+
           <div class="form-actions">
             <a routerLink="/dashboard" class="btn btn--secondary">Cancel</a>
             <button
@@ -1054,6 +1138,101 @@ import { TemplateSelectorComponent } from '../../../shared/components/template-s
       0% { background-position: 200% 0; }
       100% { background-position: -200% 0; }
     }
+
+    /* Danger Zone Styles */
+    .form-section--danger {
+      background: rgba(239, 68, 68, 0.03);
+      border: 1px dashed rgba(239, 68, 68, 0.3);
+      border-radius: var(--radius-lg);
+      margin: var(--space-lg);
+    }
+
+    .section-title--danger {
+      display: flex;
+      align-items: center;
+      gap: var(--space-sm);
+      color: var(--color-danger);
+      border-bottom-color: rgba(239, 68, 68, 0.2);
+
+      svg {
+        width: 18px;
+        height: 18px;
+      }
+    }
+
+    .archived-banner {
+      display: flex;
+      align-items: center;
+      gap: var(--space-sm);
+      padding: var(--space-md);
+      background: var(--color-warning-subtle);
+      color: var(--color-warning);
+      font-size: 0.875rem;
+      font-weight: 500;
+      border-radius: var(--radius-md);
+      margin-bottom: var(--space-lg);
+
+      svg {
+        width: 16px;
+        height: 16px;
+      }
+    }
+
+    .danger-buttons {
+      display: flex;
+      gap: var(--space-md);
+      flex-wrap: wrap;
+    }
+
+    .btn--warning {
+      background: var(--color-warning);
+      color: white;
+      border: none;
+
+      svg {
+        width: 16px;
+        height: 16px;
+      }
+
+      &:hover:not(:disabled) {
+        background: #d97706;
+      }
+    }
+
+    .btn--danger {
+      background: var(--color-danger);
+      color: white;
+      border: none;
+
+      svg {
+        width: 16px;
+        height: 16px;
+      }
+
+      &:hover:not(:disabled) {
+        background: #dc2626;
+      }
+    }
+
+    .btn--ghost {
+      background: var(--color-surface);
+      color: var(--color-text);
+      border: 1px solid var(--color-border);
+
+      svg {
+        width: 16px;
+        height: 16px;
+      }
+
+      &:hover:not(:disabled) {
+        background: var(--color-bg-subtle);
+      }
+    }
+
+    .btn__spinner--dark {
+      border-color: rgba(0, 0, 0, 0.2);
+      border-top-color: currentColor;
+    }
   `]
 })
 export class TaskFormComponent implements OnInit {
@@ -1073,6 +1252,9 @@ export class TaskFormComponent implements OnInit {
   isEditing = signal(false);
   isLoadingTask = signal(false);
   isLoadingAccounts = signal(true);
+  isArchiving = signal(false);
+  isDeleting = signal(false);
+  isArchived = signal(false);
   taskId: string | null = null;
   googleAccounts = this.googleService.accounts;
   selectedTemplate = signal<InvoiceTemplate>('STANDARD');
@@ -1333,6 +1515,9 @@ Best regards,
           emailBodyTemplate: task.emailBodyTemplate || ''
         });
 
+        // Update archive state
+        this.isArchived.set(task.isArchived || false);
+
         // Update preview after loading task with templates
         this.updatePreview();
         this.isLoadingTask.set(false);
@@ -1341,6 +1526,61 @@ Best regards,
         this.isLoadingTask.set(false);
         this.notificationService.error('Failed to load task');
         this.router.navigate(['/dashboard']);
+      }
+    });
+  }
+
+  archiveTask() {
+    if (!this.taskId) return;
+
+    if (!confirm('Are you sure you want to archive this task?')) return;
+
+    this.isArchiving.set(true);
+    this.taskService.archiveTask(this.taskId).subscribe({
+      next: () => {
+        this.isArchived.set(true);
+        this.isArchiving.set(false);
+        this.notificationService.success('Task archived');
+      },
+      error: () => {
+        this.isArchiving.set(false);
+        this.notificationService.error('Failed to archive task');
+      }
+    });
+  }
+
+  unarchiveTask() {
+    if (!this.taskId) return;
+
+    this.isArchiving.set(true);
+    this.taskService.unarchiveTask(this.taskId).subscribe({
+      next: () => {
+        this.isArchived.set(false);
+        this.isArchiving.set(false);
+        this.notificationService.success('Task restored from archive');
+      },
+      error: () => {
+        this.isArchiving.set(false);
+        this.notificationService.error('Failed to restore task');
+      }
+    });
+  }
+
+  deleteTask() {
+    if (!this.taskId) return;
+
+    if (!confirm('Are you sure you want to permanently delete this task? This will also delete all associated invoices. This action cannot be undone.')) return;
+
+    this.isDeleting.set(true);
+    this.taskService.deleteTask(this.taskId).subscribe({
+      next: () => {
+        this.isDeleting.set(false);
+        this.notificationService.success('Task deleted');
+        this.router.navigate(['/dashboard']);
+      },
+      error: () => {
+        this.isDeleting.set(false);
+        this.notificationService.error('Failed to delete task');
       }
     });
   }
