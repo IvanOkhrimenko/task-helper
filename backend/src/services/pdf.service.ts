@@ -2,6 +2,7 @@ import PDFDocument from 'pdfkit';
 import fs from 'fs';
 import path from 'path';
 import { Task, Invoice, User, InvoiceTemplate } from '@prisma/client';
+import { StorageService } from './storage.service.js';
 
 interface PeriodInfo {
   month: number;
@@ -218,6 +219,25 @@ function numberToWords(num: number): { pl: string; en: string } {
     pl: convertThousands(wholePart, 'pl'),
     en: convertThousands(wholePart, 'en')
   };
+}
+
+/**
+ * Helper function to upload locally created PDF to cloud storage
+ * If cloud storage is not configured, returns the local path as-is
+ */
+async function uploadToStorage(localFilePath: string, fileName: string): Promise<string> {
+  if (StorageService.isCloudEnabled()) {
+    // Read the local file and upload to R2
+    const fileBuffer = fs.readFileSync(localFilePath);
+    const storagePath = await StorageService.uploadFile(fileBuffer, fileName, 'application/pdf');
+
+    // Delete the local file after successful upload
+    fs.unlinkSync(localFilePath);
+
+    return storagePath;
+  }
+  // Return local path if cloud storage is not configured
+  return localFilePath;
 }
 
 export function generateInvoicePDF(data: InvoiceData): Promise<string> {
@@ -473,7 +493,14 @@ function generateStandardInvoice(data: InvoiceData): Promise<string> {
 
     doc.end();
 
-    stream.on('finish', () => resolve(filePath));
+    stream.on('finish', async () => {
+      try {
+        const storagePath = await uploadToStorage(filePath, fileName);
+        resolve(storagePath);
+      } catch (err) {
+        reject(err);
+      }
+    });
     stream.on('error', reject);
   });
 }
@@ -694,7 +721,14 @@ function generateMinimalInvoice(data: InvoiceData): Promise<string> {
 
     doc.end();
 
-    stream.on('finish', () => resolve(filePath));
+    stream.on('finish', async () => {
+      try {
+        const storagePath = await uploadToStorage(filePath, fileName);
+        resolve(storagePath);
+      } catch (err) {
+        reject(err);
+      }
+    });
     stream.on('error', reject);
   });
 }
@@ -868,7 +902,14 @@ function generateModernInvoice(data: InvoiceData): Promise<string> {
 
     doc.end();
 
-    stream.on('finish', () => resolve(filePath));
+    stream.on('finish', async () => {
+      try {
+        const storagePath = await uploadToStorage(filePath, fileName);
+        resolve(storagePath);
+      } catch (err) {
+        reject(err);
+      }
+    });
     stream.on('error', reject);
   });
 }
@@ -1045,7 +1086,14 @@ function generateCorporateInvoice(data: InvoiceData): Promise<string> {
 
     doc.end();
 
-    stream.on('finish', () => resolve(filePath));
+    stream.on('finish', async () => {
+      try {
+        const storagePath = await uploadToStorage(filePath, fileName);
+        resolve(storagePath);
+      } catch (err) {
+        reject(err);
+      }
+    });
     stream.on('error', reject);
   });
 }
@@ -1205,7 +1253,14 @@ function generateCreativeInvoice(data: InvoiceData): Promise<string> {
 
     doc.end();
 
-    stream.on('finish', () => resolve(filePath));
+    stream.on('finish', async () => {
+      try {
+        const storagePath = await uploadToStorage(filePath, fileName);
+        resolve(storagePath);
+      } catch (err) {
+        reject(err);
+      }
+    });
     stream.on('error', reject);
   });
 }
@@ -1390,7 +1445,14 @@ function generateElegantInvoice(data: InvoiceData): Promise<string> {
 
     doc.end();
 
-    stream.on('finish', () => resolve(filePath));
+    stream.on('finish', async () => {
+      try {
+        const storagePath = await uploadToStorage(filePath, fileName);
+        resolve(storagePath);
+      } catch (err) {
+        reject(err);
+      }
+    });
     stream.on('error', reject);
   });
 }

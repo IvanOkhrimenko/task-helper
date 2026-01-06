@@ -5,6 +5,7 @@ import path from 'path';
 import fs from 'fs';
 import { AuthRequest } from '../middleware/auth.middleware.js';
 import { generateInvoicePDF, generateEmailDraft } from '../services/pdf.service.js';
+import { StorageService } from '../services/storage.service.js';
 
 export async function generateInvoice(req: AuthRequest, res: Response): Promise<void> {
   const prisma: PrismaClient = req.app.get('prisma');
@@ -195,14 +196,30 @@ export async function downloadInvoicePDF(req: AuthRequest, res: Response): Promi
       return;
     }
 
-    if (!fs.existsSync(invoice.pdfPath)) {
-      res.status(404).json({ error: 'PDF file not found' });
-      return;
-    }
+    const fileName = StorageService.getFileName(invoice.pdfPath);
 
-    // Extract filename from path for download
-    const fileName = invoice.pdfPath.split('/').pop() || `invoice-${invoice.number}.pdf`;
-    res.download(invoice.pdfPath, fileName);
+    // Check if file is in cloud storage (R2)
+    if (invoice.pdfPath.startsWith('r2://')) {
+      // Fetch from cloud storage
+      const fileBuffer = await StorageService.getFile(invoice.pdfPath);
+
+      if (!fileBuffer) {
+        res.status(404).json({ error: 'PDF file not found in storage' });
+        return;
+      }
+
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
+      res.send(fileBuffer);
+    } else {
+      // Local file - use existing logic
+      if (!fs.existsSync(invoice.pdfPath)) {
+        res.status(404).json({ error: 'PDF file not found' });
+        return;
+      }
+
+      res.download(invoice.pdfPath, fileName);
+    }
   } catch (error) {
     console.error('DownloadInvoicePDF error:', error);
     res.status(500).json({ error: 'Failed to download PDF' });

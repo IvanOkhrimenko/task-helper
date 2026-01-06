@@ -7,6 +7,7 @@ import {
   getUserInfo,
   createGmailDraft
 } from '../services/gmail.service.js';
+import { StorageService } from '../services/storage.service.js';
 
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:4200';
 
@@ -188,14 +189,13 @@ export async function createDraft(req: AuthRequest, res: Response): Promise<void
       });
 
       if (invoice?.pdfPath) {
-        // Read PDF file and convert to base64
-        const fs = await import('fs/promises');
-        const path = await import('path');
-
+        // Read PDF file from storage (local or R2) and convert to base64
         try {
-          const pdfBuffer = await fs.readFile(invoice.pdfPath);
-          attachmentBase64 = pdfBuffer.toString('base64');
-          attachmentFilename = path.basename(invoice.pdfPath);
+          const pdfBuffer = await StorageService.getFile(invoice.pdfPath);
+          if (pdfBuffer) {
+            attachmentBase64 = pdfBuffer.toString('base64');
+            attachmentFilename = StorageService.getFileName(invoice.pdfPath);
+          }
         } catch (err) {
           console.error('Failed to read PDF:', err);
           // Continue without attachment
