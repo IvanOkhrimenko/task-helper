@@ -83,7 +83,7 @@ export class NBPExchangeService {
       const response = await fetch(url);
 
       if (response.ok) {
-        const data: NBPRateResponse = await response.json();
+        const data = await response.json() as NBPRateResponse;
         return data.rates[0].mid;
       }
 
@@ -118,7 +118,7 @@ export class NBPExchangeService {
         const response = await fetch(url);
 
         if (response.ok) {
-          const data: NBPRateResponse = await response.json();
+          const data = await response.json() as NBPRateResponse;
           console.log(`[NBP] Found rate on ${dateStr}: ${data.rates[0].mid}`);
           return data.rates[0].mid;
         }
