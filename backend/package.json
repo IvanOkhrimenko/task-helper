@@ -1,7 +1,7 @@
 {
-  "name": "daily-helper-backend",
+  "name": "daylium-backend",
   "version": "1.0.0",
-  "description": "Daily Helper API",
+  "description": "Daylium API",
   "main": "dist/index.js",
   "scripts": {
     "dev": "tsx watch src/index.ts",

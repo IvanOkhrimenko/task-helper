@@ -1,4 +1,5 @@
 import Anthropic from '@anthropic-ai/sdk';
+import fetch from 'node-fetch';
 import {
   AIProvider,
   AIMessage,
@@ -14,7 +15,10 @@ export class ClaudeProvider implements AIProvider {
 
   private getClient(apiKey: string): Anthropic {
     if (!this.client) {
-      this.client = new Anthropic({ apiKey });
+      this.client = new Anthropic({
+        apiKey,
+        fetch: fetch as unknown as typeof globalThis.fetch
+      });
     }
     return this.client;
   }
@@ -113,7 +117,10 @@ export class ClaudeProvider implements AIProvider {
     if (!config.apiKey) return false;
 
     try {
-      const client = new Anthropic({ apiKey: config.apiKey });
+      const client = new Anthropic({
+        apiKey: config.apiKey,
+        fetch: fetch as unknown as typeof globalThis.fetch
+      });
       // Make a minimal request to validate the API key
       await client.messages.create({
         model: config.modelId || 'claude-sonnet-4-20250514',

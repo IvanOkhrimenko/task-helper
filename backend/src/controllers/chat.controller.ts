@@ -297,9 +297,13 @@ export async function generateEmailTemplate(req: AuthRequest, res: Response): Pr
       return;
     }
 
-    // Import Anthropic SDK dynamically
+    // Import Anthropic SDK and fetch dynamically
     const Anthropic = (await import('@anthropic-ai/sdk')).default;
-    const client = new Anthropic({ apiKey: settings.claudeApiKey });
+    const fetch = (await import('node-fetch')).default;
+    const client = new Anthropic({
+      apiKey: settings.claudeApiKey,
+      fetch: fetch as unknown as typeof globalThis.fetch
+    });
 
     const systemPrompt = `You are an expert email template generator. Generate email templates for invoice/billing purposes.
 

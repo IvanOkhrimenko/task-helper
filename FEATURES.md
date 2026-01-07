@@ -1,8 +1,8 @@
-# Daily Helper - Features Documentation
+# Daylium - Features Documentation
 
 ## Overview
 
-Daily Helper is a comprehensive task management application with support for invoice tracking, reminders, and notifications.
+Daylium is a comprehensive task management application with support for invoice tracking, reminders, and notifications.
 
 ---
 

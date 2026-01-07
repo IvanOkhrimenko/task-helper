@@ -284,8 +284,8 @@ import { ReminderService, Reminder, ScheduleType, ScheduleConfig, CreateReminder
     :host {
       display: block;
       font-family: 'Outfit', sans-serif;
-      --color-primary: #2563EB;
-      --color-primary-hover: #1d4ed8;
+      --color-primary: #10B981;
+      --color-primary-hover: #059669;
       --color-bg: #FAFBFC;
       --color-surface: #FFFFFF;
       --color-border: #E5E7EB;
@@ -396,7 +396,7 @@ import { ReminderService, Reminder, ScheduleType, ScheduleConfig, CreateReminder
       &:focus {
         outline: none;
         border-color: var(--color-primary);
-        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
       }
 
       &::placeholder {
@@ -473,7 +473,7 @@ import { ReminderService, Reminder, ScheduleType, ScheduleConfig, CreateReminder
 
       &--active {
         border-color: var(--color-primary);
-        background: rgba(37, 99, 235, 0.05);
+        background: rgba(16, 185, 129, 0.05);
 
         .schedule-type-btn__icon {
           color: var(--color-primary);

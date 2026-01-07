@@ -24,7 +24,7 @@ registerInvoiceTools();
 registerReminderTools();
 registerEmailTemplateTools();
 
-const SYSTEM_PROMPT = `You are a helpful AI assistant for Daily Helper, a task and invoice management application.
+const SYSTEM_PROMPT = `You are a helpful AI assistant for Daylium, a task and invoice management application.
 You help users manage their invoices, tasks, and reminders through natural conversation.
 
 LANGUAGE RULE:

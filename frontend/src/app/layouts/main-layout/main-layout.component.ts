@@ -4,6 +4,7 @@ import { Router, RouterOutlet, RouterLink, RouterLinkActive, NavigationEnd } fro
 import { AuthService } from '../../core/services/auth.service';
 import { AppNotificationService, AppNotification } from '../../core/services/app-notification.service';
 import { AISettingsService } from '../../core/services/ai-settings.service';
+import { ThemeService } from '../../core/services/theme.service';
 import { ChatComponent } from '../../features/chat/chat.component';
 import { filter, Subscription } from 'rxjs';
 
@@ -33,12 +34,14 @@ interface NavSection {
             <div class="logo__icon">
               <svg viewBox="0 0 32 32" fill="none">
                 <rect width="32" height="32" rx="8" fill="currentColor"/>
-                <path d="M10 16L14 20L22 12" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                <circle cx="16" cy="16" r="8" stroke="white" stroke-width="2" fill="none"/>
+                <path d="M16 10V16L20 18" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <circle cx="16" cy="6" r="1.5" fill="white"/>
               </svg>
             </div>
             <div class="logo__text">
-              <span class="logo__title">Daily Helper</span>
-              <span class="logo__subtitle">Invoice & Reminders</span>
+              <span class="logo__title">Daylium</span>
+              <span class="logo__subtitle">Invoice & Tasks</span>
             </div>
           </div>
           <button class="sidebar__toggle" (click)="toggleSidebar()" title="Toggle sidebar">
@@ -72,7 +75,6 @@ interface NavSection {
                   >
                     <span class="nav-item__icon" [innerHTML]="item.icon"></span>
                     <span class="nav-item__label">{{ item.label }}</span>
-                    <span class="nav-item__indicator"></span>
                   </a>
                 }
               </div>
@@ -111,6 +113,30 @@ interface NavSection {
           </div>
 
           <div class="header__right">
+            <!-- Theme Toggle -->
+            <button class="theme-toggle" (click)="themeService.cycle()" [title]="'Theme: ' + themeService.mode()">
+              @if (themeService.currentTheme() === 'light') {
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="5"/>
+                  <line x1="12" y1="1" x2="12" y2="3"/>
+                  <line x1="12" y1="21" x2="12" y2="23"/>
+                  <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
+                  <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+                  <line x1="1" y1="12" x2="3" y2="12"/>
+                  <line x1="21" y1="12" x2="23" y2="12"/>
+                  <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
+                  <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+                </svg>
+              } @else {
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+                </svg>
+              }
+              @if (themeService.mode() === 'system') {
+                <span class="theme-toggle__badge">A</span>
+              }
+            </button>
+
             <!-- Notification Bell -->
             <div class="notification-wrapper">
               <button
@@ -201,40 +227,20 @@ interface NavSection {
     }
   `,
   styles: [`
-    @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
-
     :host {
       --sidebar-width: 260px;
       --sidebar-collapsed-width: 72px;
-      --header-height: 64px;
-      --color-primary: #2563EB;
-      --color-primary-subtle: rgba(37, 99, 235, 0.08);
-      --color-primary-hover: #1d4ed8;
-      --color-surface: #FFFFFF;
-      --color-bg: #F8FAFC;
-      --color-border: #E5E7EB;
-      --color-border-subtle: #F1F5F9;
-      --color-text: #0F172A;
-      --color-text-secondary: #64748B;
-      --color-text-muted: #94A3B8;
-      --color-danger: #EF4444;
-      --radius-sm: 6px;
-      --radius-md: 8px;
-      --radius-lg: 12px;
-      --transition-fast: 0.15s ease;
-      --transition-base: 0.2s ease;
-      --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
-      --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
-      --shadow-dropdown: 0 10px 40px rgba(0, 0, 0, 0.12);
+      --header-height: 56px;
 
       display: block;
-      font-family: 'Outfit', sans-serif;
+      font-family: var(--font-body);
     }
 
     .layout {
       display: flex;
       min-height: 100vh;
       background: var(--color-bg);
+      transition: background-color var(--transition-slow);
     }
 
     /* ========== SIDEBAR ========== */
@@ -249,18 +255,7 @@ interface NavSection {
       display: flex;
       flex-direction: column;
       z-index: 100;
-      transition: width var(--transition-base), transform var(--transition-base);
-
-      /* Subtle texture */
-      &::before {
-        content: '';
-        position: absolute;
-        inset: 0;
-        background:
-          radial-gradient(circle at 20% 80%, rgba(37, 99, 235, 0.02) 0%, transparent 50%),
-          radial-gradient(circle at 80% 20%, rgba(37, 99, 235, 0.015) 0%, transparent 40%);
-        pointer-events: none;
-      }
+      transition: width var(--transition-base), background-color var(--transition-slow), border-color var(--transition-slow);
     }
 
     .sidebar--collapsed {
@@ -293,21 +288,23 @@ interface NavSection {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 20px;
-      border-bottom: 1px solid var(--color-border-subtle);
+      padding: var(--space-lg) var(--space-lg);
+      border-bottom: 1px solid var(--color-border);
+      transition: border-color var(--transition-slow);
     }
 
     .logo {
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: var(--space-md);
     }
 
     .logo__icon {
-      width: 36px;
-      height: 36px;
+      width: 32px;
+      height: 32px;
       color: var(--color-primary);
       flex-shrink: 0;
+      transition: color var(--transition-slow);
 
       svg {
         width: 100%;
@@ -327,12 +324,14 @@ interface NavSection {
       color: var(--color-text);
       line-height: 1.2;
       letter-spacing: -0.01em;
+      transition: color var(--transition-slow);
     }
 
     .logo__subtitle {
       font-size: 0.6875rem;
-      color: var(--color-text-muted);
-      letter-spacing: 0.02em;
+      color: var(--color-text-tertiary);
+      letter-spacing: 0.01em;
+      transition: color var(--transition-slow);
     }
 
     .sidebar__toggle {
@@ -342,17 +341,18 @@ interface NavSection {
       align-items: center;
       justify-content: center;
       border-radius: var(--radius-sm);
-      color: var(--color-text-muted);
+      color: var(--color-text-secondary);
+      background: transparent;
       transition: all var(--transition-fast);
 
       svg {
-        width: 16px;
-        height: 16px;
+        width: 14px;
+        height: 14px;
         transition: transform var(--transition-base);
       }
 
       &:hover {
-        background: var(--color-bg);
+        background: var(--color-fill-tertiary);
         color: var(--color-text);
       }
     }
@@ -360,36 +360,25 @@ interface NavSection {
     .sidebar__nav {
       flex: 1;
       overflow-y: auto;
-      padding: 16px 12px;
-
-      /* Custom scrollbar */
-      &::-webkit-scrollbar {
-        width: 4px;
-      }
-      &::-webkit-scrollbar-track {
-        background: transparent;
-      }
-      &::-webkit-scrollbar-thumb {
-        background: var(--color-border);
-        border-radius: 4px;
-      }
+      padding: var(--space-md) var(--space-sm);
     }
 
     .nav-section {
-      margin-bottom: 8px;
+      margin-bottom: var(--space-sm);
     }
 
     .nav-section__header {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 8px 12px;
+      padding: var(--space-sm) var(--space-md);
       width: 100%;
       border-radius: var(--radius-sm);
+      background: transparent;
       transition: background var(--transition-fast);
 
       &:hover {
-        background: var(--color-bg);
+        background: var(--color-fill-quaternary);
       }
     }
 
@@ -397,16 +386,16 @@ interface NavSection {
       font-size: 0.6875rem;
       font-weight: 600;
       text-transform: uppercase;
-      letter-spacing: 0.08em;
-      color: var(--color-text-muted);
-      transition: opacity var(--transition-base), visibility var(--transition-base);
+      letter-spacing: 0.06em;
+      color: var(--color-text-tertiary);
+      transition: opacity var(--transition-base), visibility var(--transition-base), color var(--transition-slow);
     }
 
     .nav-section__chevron {
-      width: 14px;
-      height: 14px;
-      color: var(--color-text-muted);
-      transition: transform var(--transition-base), opacity var(--transition-base), visibility var(--transition-base);
+      width: 12px;
+      height: 12px;
+      color: var(--color-text-tertiary);
+      transition: transform var(--transition-base), opacity var(--transition-base), visibility var(--transition-base), color var(--transition-slow);
     }
 
     .nav-section__header--collapsed .nav-section__chevron {
@@ -417,7 +406,7 @@ interface NavSection {
       display: flex;
       flex-direction: column;
       gap: 2px;
-      margin-top: 4px;
+      margin-top: var(--space-xs);
       overflow: hidden;
       max-height: 500px;
       transition: max-height 0.3s ease, opacity 0.2s ease;
@@ -432,8 +421,8 @@ interface NavSection {
     .nav-item {
       display: flex;
       align-items: center;
-      gap: 12px;
-      padding: 10px 12px;
+      gap: var(--space-md);
+      padding: var(--space-sm) var(--space-md);
       border-radius: var(--radius-md);
       color: var(--color-text-secondary);
       text-decoration: none;
@@ -441,19 +430,14 @@ interface NavSection {
       transition: all var(--transition-fast);
 
       &:hover {
-        background: var(--color-bg);
+        background: var(--color-fill-quaternary);
         color: var(--color-text);
       }
     }
 
     .nav-item--active {
-      background: var(--color-primary-subtle);
-      color: var(--color-primary);
-
-      .nav-item__indicator {
-        opacity: 1;
-        transform: scaleY(1);
-      }
+      background: var(--color-fill-tertiary);
+      color: var(--color-text);
 
       .nav-item__icon {
         color: var(--color-primary);
@@ -467,6 +451,7 @@ interface NavSection {
       display: flex;
       align-items: center;
       justify-content: center;
+      transition: color var(--transition-fast);
 
       :host ::ng-deep svg {
         width: 100%;
@@ -481,31 +466,19 @@ interface NavSection {
       white-space: nowrap;
     }
 
-    .nav-item__indicator {
-      position: absolute;
-      left: 0;
-      top: 50%;
-      transform: translateY(-50%) scaleY(0);
-      width: 3px;
-      height: 20px;
-      background: var(--color-primary);
-      border-radius: 0 3px 3px 0;
-      opacity: 0;
-      transition: all var(--transition-fast);
-    }
-
     .sidebar__footer {
-      padding: 16px;
-      border-top: 1px solid var(--color-border-subtle);
+      padding: var(--space-md);
+      border-top: 1px solid var(--color-border);
       margin-top: auto;
+      transition: border-color var(--transition-slow);
     }
 
     .user-card {
       display: flex;
       align-items: center;
-      gap: 12px;
-      padding: 12px;
-      background: var(--color-bg);
+      gap: var(--space-md);
+      padding: var(--space-md);
+      background: var(--color-fill-quaternary);
       border-radius: var(--radius-md);
       transition: all var(--transition-base);
     }
@@ -514,7 +487,7 @@ interface NavSection {
       width: 36px;
       height: 36px;
       border-radius: var(--radius-md);
-      background: linear-gradient(135deg, var(--color-primary) 0%, #3b82f6 100%);
+      background: var(--color-primary);
       color: white;
       display: flex;
       align-items: center;
@@ -523,6 +496,7 @@ interface NavSection {
       font-weight: 600;
       flex-shrink: 0;
       text-transform: uppercase;
+      transition: background-color var(--transition-slow);
     }
 
     .user-card__info {
@@ -540,14 +514,16 @@ interface NavSection {
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+      transition: color var(--transition-slow);
     }
 
     .user-card__email {
       font-size: 0.75rem;
-      color: var(--color-text-muted);
+      color: var(--color-text-tertiary);
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+      transition: color var(--transition-slow);
     }
 
     .user-card__logout {
@@ -557,7 +533,8 @@ interface NavSection {
       align-items: center;
       justify-content: center;
       border-radius: var(--radius-sm);
-      color: var(--color-text-muted);
+      color: var(--color-text-secondary);
+      background: transparent;
       transition: all var(--transition-fast);
       flex-shrink: 0;
 
@@ -567,7 +544,7 @@ interface NavSection {
       }
 
       &:hover {
-        background: rgba(239, 68, 68, 0.1);
+        background: var(--color-danger-subtle);
         color: var(--color-danger);
       }
     }
@@ -594,10 +571,11 @@ interface NavSection {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 0 24px;
+      padding: 0 var(--space-xl);
       position: sticky;
       top: 0;
       z-index: 50;
+      transition: background-color var(--transition-slow), border-color var(--transition-slow);
     }
 
     .header__left {
@@ -606,16 +584,63 @@ interface NavSection {
     }
 
     .breadcrumb__page {
-      font-size: 1.125rem;
+      font-size: 1rem;
       font-weight: 600;
       color: var(--color-text);
       letter-spacing: -0.01em;
+      transition: color var(--transition-slow);
     }
 
     .header__right {
       display: flex;
       align-items: center;
-      gap: 16px;
+      gap: var(--space-sm);
+    }
+
+    /* Theme Toggle */
+    .theme-toggle {
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: var(--radius-md);
+      color: var(--color-text-secondary);
+      background: transparent;
+      position: relative;
+      transition: all var(--transition-fast);
+
+      svg {
+        width: 20px;
+        height: 20px;
+        transition: transform var(--transition-base);
+      }
+
+      &:hover {
+        background: var(--color-fill-tertiary);
+        color: var(--color-text);
+
+        svg {
+          transform: rotate(15deg);
+        }
+      }
+    }
+
+    .theme-toggle__badge {
+      position: absolute;
+      bottom: 4px;
+      right: 4px;
+      width: 14px;
+      height: 14px;
+      background: var(--color-primary);
+      color: white;
+      font-size: 0.5rem;
+      font-weight: 700;
+      border-radius: var(--radius-full);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 2px solid var(--color-surface);
     }
 
     .notification-wrapper {
@@ -624,13 +649,14 @@ interface NavSection {
     }
 
     .notification-bell {
-      width: 40px;
-      height: 40px;
+      width: 36px;
+      height: 36px;
       display: flex;
       align-items: center;
       justify-content: center;
       border-radius: var(--radius-md);
       color: var(--color-text-secondary);
+      background: transparent;
       position: relative;
       transition: all var(--transition-fast);
 
@@ -641,7 +667,7 @@ interface NavSection {
       }
 
       &:hover {
-        background: var(--color-bg);
+        background: var(--color-fill-tertiary);
         color: var(--color-text);
 
         svg {
@@ -651,22 +677,22 @@ interface NavSection {
     }
 
     .notification-bell--active {
-      background: var(--color-bg);
+      background: var(--color-fill-tertiary);
       color: var(--color-primary);
     }
 
     .notification-badge {
       position: absolute;
-      top: 6px;
-      right: 6px;
-      min-width: 18px;
-      height: 18px;
-      padding: 0 5px;
+      top: 4px;
+      right: 4px;
+      min-width: 16px;
+      height: 16px;
+      padding: 0 4px;
       background: var(--color-danger);
       color: white;
       font-size: 0.625rem;
       font-weight: 600;
-      border-radius: 9px;
+      border-radius: var(--radius-full);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -687,11 +713,12 @@ interface NavSection {
       width: 360px;
       background: var(--color-surface);
       border-radius: var(--radius-lg);
-      box-shadow: var(--shadow-dropdown);
+      box-shadow: var(--shadow-xl);
       border: 1px solid var(--color-border);
       animation: dropdownSlide 0.2s ease;
       z-index: 300;
       overflow: hidden;
+      transition: background-color var(--transition-slow), border-color var(--transition-slow);
     }
 
     @keyframes dropdownSlide {
@@ -709,19 +736,21 @@ interface NavSection {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 16px 20px;
-      border-bottom: 1px solid var(--color-border-subtle);
+      padding: var(--space-lg) var(--space-xl);
+      border-bottom: 1px solid var(--color-border);
+      transition: border-color var(--transition-slow);
 
       span {
         font-size: 0.9375rem;
         font-weight: 600;
         color: var(--color-text);
+        transition: color var(--transition-slow);
       }
     }
 
     .notification-dropdown__actions {
       display: flex;
-      gap: 12px;
+      gap: var(--space-md);
     }
 
     .notification-dropdown__action {
@@ -732,6 +761,7 @@ interface NavSection {
       border: none;
       cursor: pointer;
       font-family: inherit;
+      transition: color var(--transition-slow);
 
       &:hover {
         text-decoration: underline;
@@ -746,28 +776,18 @@ interface NavSection {
       max-height: 320px;
       overflow-y: auto;
       overflow-x: hidden;
-
-      &::-webkit-scrollbar {
-        width: 6px;
-      }
-      &::-webkit-scrollbar-track {
-        background: transparent;
-      }
-      &::-webkit-scrollbar-thumb {
-        background: var(--color-border);
-        border-radius: 3px;
-      }
     }
 
     .notification-dropdown__empty {
-      padding: 40px 20px;
+      padding: 40px var(--space-xl);
       text-align: center;
-      color: var(--color-text-muted);
+      color: var(--color-text-tertiary);
+      transition: color var(--transition-slow);
 
       svg {
         width: 40px;
         height: 40px;
-        margin-bottom: 12px;
+        margin-bottom: var(--space-md);
         opacity: 0.5;
       }
 
@@ -777,20 +797,20 @@ interface NavSection {
     }
 
     .notification-dropdown__list {
-      padding: 8px;
+      padding: var(--space-sm);
     }
 
     .notification-item {
       display: flex;
       align-items: flex-start;
-      gap: 12px;
-      padding: 12px;
+      gap: var(--space-md);
+      padding: var(--space-md);
       border-radius: var(--radius-md);
       transition: background var(--transition-fast);
       cursor: pointer;
 
       &:hover {
-        background: var(--color-bg);
+        background: var(--color-fill-quaternary);
       }
     }
 
@@ -801,10 +821,11 @@ interface NavSection {
     .notification-item__dot {
       width: 8px;
       height: 8px;
-      border-radius: 50%;
+      border-radius: var(--radius-full);
       background: var(--color-primary);
       flex-shrink: 0;
       margin-top: 6px;
+      transition: background-color var(--transition-slow);
     }
 
     .notification-item__content {
@@ -817,19 +838,22 @@ interface NavSection {
       font-weight: 500;
       color: var(--color-text);
       margin-bottom: 2px;
+      transition: color var(--transition-slow);
     }
 
     .notification-item__message {
       font-size: 0.8125rem;
       color: var(--color-text-secondary);
       display: block;
-      margin-bottom: 4px;
+      margin-bottom: var(--space-xs);
       line-height: 1.4;
+      transition: color var(--transition-slow);
     }
 
     .notification-item__time {
       font-size: 0.75rem;
-      color: var(--color-text-muted);
+      color: var(--color-text-tertiary);
+      transition: color var(--transition-slow);
     }
 
     .notification-item__dot--read {
@@ -838,19 +862,22 @@ interface NavSection {
 
     .notification-dropdown__count {
       font-size: 0.8125rem;
-      color: var(--color-text-muted);
+      color: var(--color-text-tertiary);
+      transition: color var(--transition-slow);
     }
 
     .notification-dropdown__footer {
-      padding: 12px 20px;
-      border-top: 1px solid var(--color-border-subtle);
+      padding: var(--space-md) var(--space-xl);
+      border-top: 1px solid var(--color-border);
       text-align: center;
+      transition: border-color var(--transition-slow);
 
       a {
         font-size: 0.8125rem;
         color: var(--color-primary);
         font-weight: 500;
         text-decoration: none;
+        transition: color var(--transition-slow);
 
         &:hover {
           text-decoration: underline;
@@ -859,20 +886,22 @@ interface NavSection {
     }
 
     .header-avatar {
-      width: 36px;
-      height: 36px;
+      width: 32px;
+      height: 32px;
       border-radius: var(--radius-md);
-      background: linear-gradient(135deg, #64748B 0%, #475569 100%);
+      background: var(--color-fill-secondary);
       display: flex;
       align-items: center;
       justify-content: center;
+      transition: background-color var(--transition-slow);
     }
 
     .header-avatar__initial {
-      color: white;
-      font-size: 0.875rem;
+      color: var(--color-text-secondary);
+      font-size: 0.8125rem;
       font-weight: 600;
       text-transform: uppercase;
+      transition: color var(--transition-slow);
     }
 
     /* ========== MAIN CONTENT ========== */
@@ -906,6 +935,7 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
   private authService = inject(AuthService);
   notificationService = inject(AppNotificationService);
   private aiSettingsService = inject(AISettingsService);
+  themeService = inject(ThemeService);
   private routerSubscription?: Subscription;
 
   sidebarCollapsed = signal(false);
@@ -927,6 +957,11 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
             route: '/dashboard',
             icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>',
             exactMatch: true
+          },
+          {
+            label: 'Clients',
+            route: '/clients',
+            icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>'
           }
         ]
       },
@@ -971,11 +1006,6 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
             route: '/settings/crm',
             icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>'
           },
-          {
-            label: 'Bank Accounts',
-            route: '/settings/bank-accounts',
-            icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18"/><path d="M3 10h18"/><path d="M5 6l7-3 7 3"/><path d="M4 10v11"/><path d="M20 10v11"/><path d="M8 10v11"/><path d="M12 10v11"/><path d="M16 10v11"/></svg>'
-          },
           // AI Settings - only shown to admins
           ...(this.isAdmin() ? [{
             label: 'AI Settings',
@@ -996,13 +1026,14 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
 
   pageTitles: Record<string, string> = {
     '/dashboard': 'Dashboard',
+    '/clients': 'Clients',
+    '/clients/new': 'New Client',
     '/tasks/invoices': 'Invoice Tasks',
     '/tasks/reminders': 'Reminders',
     '/tasks/new': 'New Task',
     '/invoices': 'Invoices',
     '/profile': 'Profile',
     '/settings/crm': 'CRM Integrations',
-    '/settings/bank-accounts': 'Bank Accounts',
     '/settings/ai': 'AI Settings',
     '/settings/google': 'Google Integration'
   };
@@ -1022,7 +1053,7 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
         return title;
       }
     }
-    return 'Daily Helper';
+    return 'Daylium';
   });
 
   userName = computed(() => this.user()?.name || 'User');

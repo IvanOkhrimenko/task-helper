@@ -99,16 +99,29 @@ import { InvoiceModalComponent, InvoiceGenerationData } from '../../../shared/co
               <div class="task-card__header">
                 <div class="task-card__client">
                   <div class="client-avatar">
-                    {{ getClientInitials(task.clientName) }}
+                    {{ getClientInitials(task.client?.name) }}
                   </div>
                   <div class="client-info">
-                    <span class="client-name">{{ task.clientName || 'No client' }}</span>
-                    @if (task.currency && task.hourlyRate) {
-                      <span class="client-rate">{{ getCurrencySymbol(task.currency) }}{{ task.hourlyRate }}/hr</span>
+                    @if (task.client) {
+                      <a [routerLink]="['/clients', task.client.id]" class="client-name client-name--link">{{ task.client.name }}</a>
+                    } @else {
+                      <span class="client-name">No client</span>
+                    }
+                    @if (task.client?.currency && task.client?.hourlyRate) {
+                      <span class="client-rate">{{ getCurrencySymbol(task.client!.currency) }}{{ task.client!.hourlyRate }}/hr</span>
                     }
                   </div>
                 </div>
                 <div class="task-card__status">
+                  @if (task.client?.crmIntegration) {
+                    <span class="crm-badge" title="CRM: {{ task.client!.crmIntegration!.name }}">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+                        <path d="M2 17l10 5 10-5"/>
+                        <path d="M2 12l10 5 10-5"/>
+                      </svg>
+                    </span>
+                  }
                   @if (task.isArchived) {
                     <span class="archived-badge" title="Archived">
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -128,8 +141,8 @@ import { InvoiceModalComponent, InvoiceGenerationData } from '../../../shared/co
                   <h3 class="task-card__name">{{ task.name }}</h3>
                 </a>
 
-                @if (task.description) {
-                  <p class="task-card__description">{{ task.description }}</p>
+                @if (task.client?.description) {
+                  <p class="task-card__description">{{ task.client!.description }}</p>
                 }
 
                 <div class="task-card__meta">
@@ -181,58 +194,38 @@ import { InvoiceModalComponent, InvoiceGenerationData } from '../../../shared/co
     </div>
   `,
   styles: [`
-    @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
-
     :host {
       display: block;
-      font-family: 'Outfit', sans-serif;
-      --color-primary: #2563EB;
-      --color-primary-hover: #1d4ed8;
-      --color-primary-subtle: rgba(37, 99, 235, 0.08);
-      --color-bg: #FAFBFC;
-      --color-surface: #FFFFFF;
-      --color-border: #E5E7EB;
-      --color-text: #0F172A;
-      --color-text-secondary: #64748B;
-      --color-text-muted: #94A3B8;
-      --color-success: #10B981;
-      --color-success-bg: rgba(16, 185, 129, 0.1);
-      --color-warning: #F59E0B;
-      --color-warning-bg: rgba(245, 158, 11, 0.1);
-      --color-danger: #EF4444;
-      --radius-sm: 6px;
-      --radius-md: 8px;
-      --radius-lg: 12px;
-      --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.06);
-      --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
-      --transition-fast: 0.15s ease;
-      --transition-base: 0.2s ease;
+      font-family: var(--font-body);
     }
 
     .tasks-page {
-      padding: 32px;
+      padding: var(--space-2xl);
       max-width: 1200px;
       margin: 0 auto;
+      background: var(--color-bg);
+      min-height: 100%;
+      transition: background-color var(--transition-slow);
     }
 
     .page-header {
       display: flex;
       align-items: flex-start;
       justify-content: space-between;
-      margin-bottom: 32px;
+      margin-bottom: var(--space-2xl);
     }
 
     .header-actions {
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: var(--space-md);
     }
 
     .archive-toggle {
       display: flex;
       align-items: center;
-      gap: 6px;
-      padding: 10px 16px;
+      gap: var(--space-sm);
+      padding: var(--space-sm) var(--space-lg);
       font-size: 0.875rem;
       font-weight: 500;
       color: var(--color-text-secondary);
@@ -253,13 +246,13 @@ import { InvoiceModalComponent, InvoiceGenerationData } from '../../../shared/co
 
       &:hover {
         color: var(--color-text);
-        border-color: var(--color-text-muted);
+        border-color: var(--color-text-tertiary);
       }
 
       &--active {
         color: var(--color-warning);
         border-color: var(--color-warning);
-        background: var(--color-warning-bg);
+        background: var(--color-warning-subtle);
       }
     }
 
@@ -270,7 +263,7 @@ import { InvoiceModalComponent, InvoiceGenerationData } from '../../../shared/co
       width: 24px;
       height: 24px;
       border-radius: var(--radius-sm);
-      background: var(--color-warning-bg);
+      background: var(--color-warning-subtle);
       color: var(--color-warning);
 
       svg {
@@ -279,26 +272,44 @@ import { InvoiceModalComponent, InvoiceGenerationData } from '../../../shared/co
       }
     }
 
+    .crm-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 24px;
+      height: 24px;
+      border-radius: var(--radius-sm);
+      background: var(--color-indigo);
+      color: white;
+
+      svg {
+        width: 12px;
+        height: 12px;
+      }
+    }
+
     .page-title {
-      font-size: 1.75rem;
+      font-size: 1.5rem;
       font-weight: 600;
       color: var(--color-text);
-      margin-bottom: 4px;
+      margin-bottom: var(--space-xs);
       letter-spacing: -0.02em;
+      transition: color var(--transition-slow);
     }
 
     .page-subtitle {
       font-size: 0.9375rem;
       color: var(--color-text-secondary);
+      transition: color var(--transition-slow);
     }
 
     .btn {
       display: inline-flex;
       align-items: center;
-      gap: 8px;
-      padding: 10px 18px;
-      font-size: 0.9375rem;
-      font-weight: 500;
+      gap: var(--space-sm);
+      padding: var(--space-sm) var(--space-lg);
+      font-size: 0.875rem;
+      font-weight: 600;
       font-family: inherit;
       border: none;
       border-radius: var(--radius-md);
@@ -313,7 +324,7 @@ import { InvoiceModalComponent, InvoiceGenerationData } from '../../../shared/co
 
       &--primary {
         background: var(--color-primary);
-        color: white;
+        color: var(--color-primary-text);
 
         &:hover {
           background: var(--color-primary-hover);
@@ -326,13 +337,13 @@ import { InvoiceModalComponent, InvoiceGenerationData } from '../../../shared/co
         color: var(--color-text-secondary);
 
         &:hover {
-          background: var(--color-bg);
+          background: var(--color-fill-tertiary);
           color: var(--color-text);
         }
       }
 
       &--sm {
-        padding: 8px 14px;
+        padding: var(--space-sm) var(--space-md);
         font-size: 0.8125rem;
 
         svg {
@@ -346,16 +357,17 @@ import { InvoiceModalComponent, InvoiceGenerationData } from '../../../shared/co
     .stats-row {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
-      gap: 16px;
-      margin-bottom: 32px;
+      gap: var(--space-lg);
+      margin-bottom: var(--space-2xl);
     }
 
     .stat-card {
       background: var(--color-surface);
       border: 1px solid var(--color-border);
       border-radius: var(--radius-lg);
-      padding: 20px;
+      padding: var(--space-xl);
       text-align: center;
+      transition: background-color var(--transition-slow), border-color var(--transition-slow);
 
       &--active .stat-value { color: var(--color-success); }
       &--clients .stat-value { color: var(--color-primary); }
@@ -364,18 +376,20 @@ import { InvoiceModalComponent, InvoiceGenerationData } from '../../../shared/co
 
     .stat-value {
       display: block;
-      font-size: 1.75rem;
+      font-size: 1.5rem;
       font-weight: 600;
       color: var(--color-text);
       line-height: 1;
-      margin-bottom: 6px;
+      margin-bottom: var(--space-sm);
+      transition: color var(--transition-slow);
     }
 
     .stat-label {
-      font-size: 0.8125rem;
+      font-size: 0.75rem;
       color: var(--color-text-secondary);
       text-transform: uppercase;
       letter-spacing: 0.05em;
+      transition: color var(--transition-slow);
     }
 
     /* Loading State */
@@ -386,6 +400,7 @@ import { InvoiceModalComponent, InvoiceGenerationData } from '../../../shared/co
       justify-content: center;
       padding: 80px 20px;
       color: var(--color-text-secondary);
+      transition: color var(--transition-slow);
     }
 
     .loading-spinner {
@@ -395,7 +410,7 @@ import { InvoiceModalComponent, InvoiceGenerationData } from '../../../shared/co
       border-top-color: var(--color-primary);
       border-radius: 50%;
       animation: spin 0.8s linear infinite;
-      margin-bottom: 16px;
+      margin-bottom: var(--space-lg);
     }
 
     @keyframes spin {
@@ -405,17 +420,19 @@ import { InvoiceModalComponent, InvoiceGenerationData } from '../../../shared/co
     /* Empty State */
     .empty-state {
       text-align: center;
-      padding: 80px 20px;
+      padding: 80px var(--space-xl);
       background: var(--color-surface);
       border-radius: var(--radius-lg);
       border: 2px dashed var(--color-border);
+      transition: background-color var(--transition-slow), border-color var(--transition-slow);
     }
 
     .empty-state__icon {
       width: 64px;
       height: 64px;
-      margin: 0 auto 20px;
-      color: var(--color-text-muted);
+      margin: 0 auto var(--space-xl);
+      color: var(--color-text-tertiary);
+      transition: color var(--transition-slow);
 
       svg {
         width: 100%;
@@ -424,22 +441,24 @@ import { InvoiceModalComponent, InvoiceGenerationData } from '../../../shared/co
     }
 
     .empty-state h3 {
-      font-size: 1.25rem;
+      font-size: 1.125rem;
       font-weight: 600;
       color: var(--color-text);
-      margin-bottom: 8px;
+      margin-bottom: var(--space-sm);
+      transition: color var(--transition-slow);
     }
 
     .empty-state p {
       color: var(--color-text-secondary);
-      margin-bottom: 24px;
+      margin-bottom: var(--space-xl);
+      transition: color var(--transition-slow);
     }
 
     /* Tasks Grid */
     .tasks-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
-      gap: 20px;
+      gap: var(--space-xl);
     }
 
     .task-card {
@@ -450,6 +469,9 @@ import { InvoiceModalComponent, InvoiceGenerationData } from '../../../shared/co
       box-shadow: var(--shadow-card);
       animation: slideUp 0.4s ease both;
       transition: all var(--transition-base);
+      display: flex;
+      flex-direction: column;
+      height: 100%;
 
       &:hover {
         box-shadow: var(--shadow-md);
@@ -476,29 +498,31 @@ import { InvoiceModalComponent, InvoiceGenerationData } from '../../../shared/co
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 16px 20px;
+      padding: var(--space-lg) var(--space-xl);
       border-bottom: 1px solid var(--color-border);
-      background: var(--color-bg);
+      background: var(--color-fill-quaternary);
+      transition: background-color var(--transition-slow), border-color var(--transition-slow);
     }
 
     .task-card__client {
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: var(--space-md);
     }
 
     .client-avatar {
       width: 40px;
       height: 40px;
       border-radius: var(--radius-md);
-      background: linear-gradient(135deg, var(--color-primary) 0%, #3b82f6 100%);
-      color: white;
+      background: var(--color-primary);
+      color: var(--color-primary-text);
       display: flex;
       align-items: center;
       justify-content: center;
       font-size: 0.875rem;
       font-weight: 600;
       text-transform: uppercase;
+      transition: background-color var(--transition-slow), color var(--transition-slow);
     }
 
     .client-info {
@@ -510,34 +534,54 @@ import { InvoiceModalComponent, InvoiceGenerationData } from '../../../shared/co
       font-size: 0.9375rem;
       font-weight: 500;
       color: var(--color-text);
+      transition: color var(--transition-slow);
+
+      &--link {
+        text-decoration: none;
+
+        &:hover {
+          color: var(--color-primary);
+        }
+      }
     }
 
     .client-rate {
       font-size: 0.75rem;
-      color: var(--color-text-muted);
+      color: var(--color-text-tertiary);
+      transition: color var(--transition-slow);
+    }
+
+    .task-card__status {
+      display: flex;
+      align-items: center;
+      gap: var(--space-sm);
     }
 
     .status-badge {
-      padding: 4px 10px;
+      padding: var(--space-xs) var(--space-md);
       font-size: 0.6875rem;
       font-weight: 600;
       text-transform: uppercase;
       letter-spacing: 0.05em;
-      border-radius: 4px;
+      border-radius: var(--radius-sm);
 
       &--active {
-        background: var(--color-success-bg);
+        background: var(--color-success-subtle);
         color: var(--color-success);
       }
 
       &--inactive {
-        background: var(--color-bg);
-        color: var(--color-text-muted);
+        background: var(--color-fill-tertiary);
+        color: var(--color-text-tertiary);
       }
     }
 
     .task-card__body {
-      padding: 20px;
+      padding: var(--space-xl);
+      transition: background-color var(--transition-slow);
+      flex: 1;
+      display: flex;
+      flex-direction: column;
     }
 
     .task-card__name-link {
@@ -549,7 +593,7 @@ import { InvoiceModalComponent, InvoiceGenerationData } from '../../../shared/co
       font-size: 1.0625rem;
       font-weight: 600;
       color: var(--color-text);
-      margin-bottom: 8px;
+      margin-bottom: var(--space-sm);
       transition: color var(--transition-fast);
 
       &:hover {
@@ -560,30 +604,35 @@ import { InvoiceModalComponent, InvoiceGenerationData } from '../../../shared/co
     .task-card__description {
       font-size: 0.875rem;
       color: var(--color-text-secondary);
-      margin-bottom: 16px;
+      margin-bottom: var(--space-lg);
       display: -webkit-box;
       -webkit-line-clamp: 2;
       -webkit-box-orient: vertical;
       overflow: hidden;
+      transition: color var(--transition-slow);
     }
 
     .task-card__meta {
       display: flex;
       flex-direction: column;
-      gap: 8px;
+      gap: var(--space-sm);
+      margin-top: auto;
+      padding-top: var(--space-md);
     }
 
     .meta-item {
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: var(--space-sm);
       font-size: 0.8125rem;
       color: var(--color-text-secondary);
+      transition: color var(--transition-slow);
 
       svg {
         width: 14px;
         height: 14px;
-        color: var(--color-text-muted);
+        color: var(--color-text-tertiary);
+        transition: color var(--transition-slow);
       }
 
       &--warning {
@@ -597,15 +646,16 @@ import { InvoiceModalComponent, InvoiceGenerationData } from '../../../shared/co
 
     .task-card__footer {
       display: flex;
-      gap: 8px;
-      padding: 12px 20px;
-      background: var(--color-bg);
+      gap: var(--space-sm);
+      padding: var(--space-md) var(--space-xl);
+      background: var(--color-fill-quaternary);
       border-top: 1px solid var(--color-border);
+      transition: background-color var(--transition-slow), border-color var(--transition-slow);
     }
 
     @media (max-width: 768px) {
       .tasks-page {
-        padding: 20px;
+        padding: var(--space-lg);
       }
 
       .stats-row {
@@ -618,7 +668,7 @@ import { InvoiceModalComponent, InvoiceGenerationData } from '../../../shared/co
 
       .page-header {
         flex-direction: column;
-        gap: 16px;
+        gap: var(--space-lg);
       }
     }
   `]
@@ -637,7 +687,6 @@ export class TasksListComponent implements OnInit {
 
   sortedTasks = computed(() => {
     return [...this.tasks()].sort((a, b) => {
-      // Sort by active status first, then by name
       if (a.isActive !== b.isActive) return a.isActive ? -1 : 1;
       return a.name.localeCompare(b.name);
     });
@@ -646,15 +695,14 @@ export class TasksListComponent implements OnInit {
   activeCount = computed(() => this.tasks().filter(t => t.isActive).length);
 
   uniqueClientsCount = computed(() => {
-    const clients = new Set(this.tasks().map(t => t.clientName).filter(Boolean));
+    const clients = new Set(this.tasks().map(t => t.clientId).filter(Boolean));
     return clients.size;
   });
 
   totalRevenue = computed(() => {
-    // This would ideally come from the backend
     return this.tasks().reduce((sum, t) => {
-      const rate = t.hourlyRate || 0;
-      const hours = t.hoursWorked || 0;
+      const rate = t.client?.hourlyRate || 0;
+      const hours = t.client?.hoursWorked || 0;
       return sum + (rate * hours);
     }, 0);
   });
@@ -713,15 +761,22 @@ export class TasksListComponent implements OnInit {
   handleInvoiceGenerate(data: InvoiceGenerationData): void {
     this.invoiceModal.setGenerating(true);
 
-    this.taskService.generateInvoice(
-      data.taskId,
-      data.hoursWorked,
-      data.hourlyRate,
-      data.month,
-      data.year,
-      data.description,
-      data.language
-    ).subscribe({
+    this.taskService.generateInvoice(data.taskId, {
+      hoursWorked: data.hoursWorked,
+      hourlyRate: data.hourlyRate,
+      fixedAmount: data.fixedAmount,
+      month: data.month,
+      year: data.year,
+      description: data.description,
+      language: data.language,
+      currency: data.currency,
+      invoiceTemplate: data.invoiceTemplate,
+      bankAccountId: data.bankAccountId,
+      googleAccountId: data.googleAccountId,
+      useCustomEmailTemplate: data.useCustomEmailTemplate,
+      emailSubject: data.emailSubject,
+      emailBody: data.emailBody
+    }).subscribe({
       next: (invoice) => {
         this.invoiceModal.setGenerating(false);
         this.invoiceModal.close();

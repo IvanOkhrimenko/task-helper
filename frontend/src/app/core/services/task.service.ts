@@ -2,9 +2,9 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
+import { Client, InvoiceTemplate } from './client.service';
 import { BankAccount } from './bank-account.service';
-
-export type InvoiceTemplate = 'STANDARD' | 'MINIMAL' | 'MODERN' | 'CORPORATE' | 'CREATIVE' | 'ELEGANT';
+import { GoogleAccount } from './google.service';
 
 export interface Task {
   id: string;
@@ -14,40 +14,24 @@ export interface Task {
   isArchived: boolean;
   warningDate: number;
   deadlineDate: number;
-  // Client info
-  clientName?: string;
-  clientNip?: string;
-  clientStreetAddress?: string;
-  clientPostcode?: string;
-  clientCity?: string;
-  clientCountry?: string;
-  clientAddress?: string;  // deprecated - use split fields
-  clientEmail?: string;
-  clientBankAccount?: string;
-  // CRM integration
-  crmClientId?: string;
-  crmIntegrationId?: string;
-  crmIntegration?: {
-    id: string;
-    name: string;
-    isActive: boolean;
-  };
+  // Client relation
+  clientId?: string;
+  client?: Client;
   // Invoice defaults
-  hourlyRate?: number;
-  hoursWorked?: number;
-  description?: string;
-  defaultServiceName?: string;  // Default service name for CRM invoices
   currency: string;
   defaultLanguage: string;
   invoiceTemplate: InvoiceTemplate;
-  googleAccountId?: string;
-  // Bank account for invoices
+  hourlyRate?: number;
+  hoursWorked?: number;
+  fixedMonthlyAmount?: number;
   bankAccountId?: string;
   bankAccount?: BankAccount;
-  // Email template fields
+  googleAccountId?: string;
+  googleAccount?: GoogleAccount;
+  useCustomEmailTemplate?: boolean;
   emailSubjectTemplate?: string;
   emailBodyTemplate?: string;
-  useCustomEmailTemplate?: boolean;
+  // Metadata
   userId: string;
   createdAt: string;
   updatedAt: string;
@@ -70,16 +54,18 @@ export interface Invoice {
   invoiceYear?: number;
   hoursWorked?: number;
   hourlyRate?: number;
-  createdByAI?: boolean;  // True if created via AI assistant
-  crmInvoiceId?: string;  // ID in external CRM system
-  crmSyncedAt?: string;   // When synced to CRM
-  crmPdfUrl?: string;     // URL to PDF in external CRM system
-  crmPdfPath?: string;    // Local path to downloaded CRM PDF
+  createdByAI?: boolean;
+  crmInvoiceId?: string;
+  crmSyncedAt?: string;
+  crmPdfUrl?: string;
+  crmPdfPath?: string;
   taskId: string;
+  clientId?: string;
   userId: string;
   createdAt: string;
   updatedAt?: string;
   task?: Task;
+  client?: Client;
 }
 
 export interface CreateTaskDto {
@@ -87,33 +73,19 @@ export interface CreateTaskDto {
   type?: 'INVOICE';
   warningDate: number;
   deadlineDate: number;
-  // Client info
-  clientName?: string;
-  clientNip?: string;
-  clientStreetAddress?: string;
-  clientPostcode?: string;
-  clientCity?: string;
-  clientCountry?: string;
-  clientAddress?: string;  // deprecated
-  clientEmail?: string;
-  clientBankAccount?: string;
-  // CRM integration
-  crmClientId?: string;
-  crmIntegrationId?: string;
+  clientId: string;
   // Invoice defaults
-  hourlyRate?: number;
-  hoursWorked?: number;
-  description?: string;
-  defaultServiceName?: string;
   currency?: string;
   defaultLanguage?: string;
   invoiceTemplate?: InvoiceTemplate;
-  googleAccountId?: string;
+  hourlyRate?: number;
+  hoursWorked?: number;
+  fixedMonthlyAmount?: number;
   bankAccountId?: string;
-  // Email template fields
+  googleAccountId?: string;
+  useCustomEmailTemplate?: boolean;
   emailSubjectTemplate?: string;
   emailBodyTemplate?: string;
-  useCustomEmailTemplate?: boolean;
 }
 
 @Injectable({
@@ -162,20 +134,23 @@ export class TaskService {
 
   generateInvoice(
     taskId: string,
-    hoursWorked?: number,
-    hourlyRate?: number,
-    month?: number,
-    year?: number,
-    description?: string,
-    language?: string
+    data: {
+      hoursWorked?: number;
+      hourlyRate?: number;
+      fixedAmount?: number;
+      month?: number;
+      year?: number;
+      description?: string;
+      language?: string;
+      currency?: string;
+      invoiceTemplate?: InvoiceTemplate;
+      bankAccountId?: string;
+      googleAccountId?: string;
+      useCustomEmailTemplate?: boolean;
+      emailSubject?: string;
+      emailBody?: string;
+    }
   ): Observable<Invoice> {
-    return this.http.post<Invoice>(`${this.apiUrl}/${taskId}/generate-invoice`, {
-      hoursWorked,
-      hourlyRate,
-      month,
-      year,
-      description,
-      language
-    });
+    return this.http.post<Invoice>(`${this.apiUrl}/${taskId}/generate-invoice`, data);
   }
 }

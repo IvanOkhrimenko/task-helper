@@ -25,14 +25,8 @@ interface TaskOption {
         <!-- Header -->
         <header class="page-header">
           <div class="header-content">
-            <a routerLink="/dashboard" class="back-link">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M19 12H5M12 19l-7-7 7-7"/>
-              </svg>
-              Dashboard
-            </a>
             <div class="header-title">
-              <h1>Your Invoices</h1>
+              <h1>Invoices</h1>
               <p class="header-subtitle">Manage and track all your generated invoices</p>
             </div>
           </div>
@@ -326,9 +320,7 @@ interface TaskOption {
                   <div class="invoice-card__header">
                     <div class="invoice-number">
                       <span class="invoice-number__label">Invoice</span>
-                      <a [routerLink]="['/invoices', invoice.id]" class="invoice-number__link" (click)="$event.stopPropagation()">
-                        #{{ invoice.number }}
-                      </a>
+                      <span class="invoice-number__value">#{{ invoice.number }}</span>
                     </div>
                     <div class="header-badges">
                       @if (invoice.isArchived) {
@@ -362,7 +354,7 @@ interface TaskOption {
                     </div>
                     <div class="invoice-detail">
                       <span class="detail-label">Client</span>
-                      <span class="detail-value">{{ invoice.task?.clientName || '—' }}</span>
+                      <span class="detail-value">{{ invoice.task?.client?.name || '—' }}</span>
                     </div>
                     <div class="invoice-detail">
                       <span class="detail-label">Period</span>
@@ -393,57 +385,16 @@ interface TaskOption {
     </div>
   `,
   styles: [`
-    @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
-
     :host {
-      --color-bg: #FAFBFC;
-      --color-surface: #FFFFFF;
-      --color-primary: #2563EB;
-      --color-primary-hover: #1D4ED8;
-      --color-primary-subtle: rgba(37, 99, 235, 0.08);
-      --color-text: #1F2937;
-      --color-text-secondary: #6B7280;
-      --color-text-muted: #9CA3AF;
-      --color-border: #E5E7EB;
-      --color-border-subtle: #F3F4F6;
-      --color-success: #10B981;
-      --color-success-subtle: rgba(16, 185, 129, 0.1);
-      --color-warning: #F59E0B;
-      --color-warning-subtle: rgba(245, 158, 11, 0.1);
-      --color-danger: #EF4444;
-
-      --font-display: 'Outfit', system-ui, sans-serif;
-      --font-body: 'Outfit', system-ui, sans-serif;
-
-      --space-xs: 4px;
-      --space-sm: 8px;
-      --space-md: 12px;
-      --space-lg: 16px;
-      --space-xl: 24px;
-      --space-2xl: 32px;
-      --space-3xl: 48px;
-
-      --radius-sm: 6px;
-      --radius-md: 10px;
-      --radius-lg: 14px;
-      --radius-xl: 20px;
-      --radius-full: 9999px;
-
-      --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
-      --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.06);
-      --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.08);
-
-      --transition-fast: 0.15s ease;
-      --transition-normal: 0.25s ease;
-
       display: block;
       font-family: var(--font-body);
     }
 
     .invoices-page {
-      min-height: 100vh;
+      min-height: 100%;
       background: var(--color-bg);
-      padding: var(--space-2xl) 0 var(--space-3xl);
+      padding: var(--space-2xl) 0;
+      transition: background-color var(--transition-slow);
     }
 
     .container {
@@ -469,49 +420,20 @@ interface TaskOption {
       }
     }
 
-    .header-content {
-      display: flex;
-      flex-direction: column;
-      gap: var(--space-lg);
-    }
-
-    .back-link {
-      display: inline-flex;
-      align-items: center;
-      gap: var(--space-sm);
-      color: var(--color-text-secondary);
-      font-size: 0.875rem;
-      font-weight: 500;
-      text-decoration: none;
-      padding: var(--space-sm) var(--space-md);
-      margin-left: calc(-1 * var(--space-md));
-      border-radius: var(--radius-md);
-      transition: all var(--transition-fast);
-
-      svg {
-        width: 16px;
-        height: 16px;
-      }
-
-      &:hover {
-        color: var(--color-primary);
-        background: var(--color-primary-subtle);
-      }
-    }
-
     .header-title h1 {
-      font-family: var(--font-display);
-      font-size: 2rem;
-      font-weight: 700;
+      font-size: 1.5rem;
+      font-weight: 600;
       color: var(--color-text);
       margin: 0 0 var(--space-xs);
-      letter-spacing: -0.5px;
+      letter-spacing: -0.02em;
+      transition: color var(--transition-slow);
     }
 
     .header-subtitle {
       color: var(--color-text-secondary);
-      font-size: 1rem;
+      font-size: 0.9375rem;
       margin: 0;
+      transition: color var(--transition-slow);
     }
 
     /* Loading State */
@@ -520,8 +442,9 @@ interface TaskOption {
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      padding: var(--space-3xl);
+      padding: 80px;
       color: var(--color-text-secondary);
+      transition: color var(--transition-slow);
 
       p {
         margin-top: var(--space-md);
@@ -557,9 +480,10 @@ interface TaskOption {
       background: var(--color-surface);
       border-radius: var(--radius-lg);
       padding: var(--space-lg) var(--space-xl);
-      box-shadow: var(--shadow-sm);
-      border: 1px solid var(--color-border-subtle);
+      box-shadow: var(--shadow-xs);
+      border: 1px solid var(--color-border);
       animation: fadeInUp 0.4s ease backwards;
+      transition: background-color var(--transition-slow), border-color var(--transition-slow);
 
       &:nth-child(1) { animation-delay: 0.1s; }
       &:nth-child(2) { animation-delay: 0.15s; }
@@ -585,6 +509,7 @@ interface TaskOption {
       align-items: center;
       justify-content: center;
       border-radius: var(--radius-md);
+      transition: background-color var(--transition-slow), color var(--transition-slow);
 
       svg {
         width: 22px;
@@ -608,7 +533,7 @@ interface TaskOption {
     }
 
     .stat-card--draft .stat-icon {
-      background: var(--color-border-subtle);
+      background: var(--color-fill-tertiary);
       color: var(--color-text-secondary);
     }
 
@@ -618,20 +543,21 @@ interface TaskOption {
     }
 
     .stat-value {
-      font-family: var(--font-display);
       font-size: 1.5rem;
-      font-weight: 700;
+      font-weight: 600;
       color: var(--color-text);
       line-height: 1;
+      transition: color var(--transition-slow);
     }
 
     .stat-label {
       font-size: 0.8125rem;
       color: var(--color-text-secondary);
       margin-top: var(--space-xs);
+      transition: color var(--transition-slow);
     }
 
-    /* Filter Tabs */
+    /* Filter Section */
     .filter-section {
       margin-bottom: var(--space-xl);
       animation: fadeInUp 0.4s ease backwards;
@@ -656,13 +582,13 @@ interface TaskOption {
       display: flex;
       align-items: center;
       gap: var(--space-sm);
-      padding: var(--space-md) var(--space-lg);
+      padding: var(--space-sm) var(--space-lg);
       font-size: 0.875rem;
       font-weight: 500;
       color: var(--color-text-secondary);
       background: var(--color-surface);
-      border: 1px solid var(--color-border-subtle);
-      border-radius: var(--radius-lg);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
       cursor: pointer;
       transition: all var(--transition-fast);
 
@@ -677,7 +603,7 @@ interface TaskOption {
 
       &:hover {
         color: var(--color-text);
-        border-color: var(--color-border);
+        border-color: var(--color-text-tertiary);
       }
 
       &--active {
@@ -689,35 +615,36 @@ interface TaskOption {
 
     .filter-tabs {
       display: inline-flex;
-      background: var(--color-surface);
-      border-radius: var(--radius-lg);
+      background: var(--color-fill-quaternary);
+      border-radius: var(--radius-md);
       padding: var(--space-xs);
-      box-shadow: var(--shadow-sm);
-      border: 1px solid var(--color-border-subtle);
+      transition: background-color var(--transition-slow);
     }
 
     .filter-tab {
       display: flex;
       align-items: center;
       gap: var(--space-sm);
-      padding: var(--space-md) var(--space-lg);
-      font-size: 0.875rem;
+      padding: var(--space-sm) var(--space-md);
+      font-size: 0.8125rem;
       font-weight: 500;
+      font-family: inherit;
       color: var(--color-text-secondary);
       background: transparent;
       border: none;
-      border-radius: var(--radius-md);
+      border-radius: var(--radius-sm);
       cursor: pointer;
       transition: all var(--transition-fast);
 
       &:hover:not(.filter-tab--active) {
         color: var(--color-text);
-        background: var(--color-bg);
+        background: var(--color-fill-tertiary);
       }
 
       &--active {
-        color: white;
-        background: var(--color-primary);
+        color: var(--color-primary);
+        background: var(--color-surface);
+        box-shadow: var(--shadow-xs);
       }
     }
 
@@ -725,30 +652,31 @@ interface TaskOption {
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      min-width: 22px;
-      height: 22px;
+      min-width: 20px;
+      height: 20px;
       padding: 0 var(--space-sm);
-      font-size: 0.75rem;
+      font-size: 0.6875rem;
       font-weight: 600;
       border-radius: var(--radius-full);
-      background: var(--color-bg);
+      background: var(--color-fill-tertiary);
       color: var(--color-text-secondary);
+      transition: background-color var(--transition-slow), color var(--transition-slow);
     }
 
     .filter-tab--active .filter-count {
-      background: rgba(255, 255, 255, 0.2);
-      color: white;
+      background: var(--color-primary-subtle);
+      color: var(--color-primary);
     }
 
     .filter-count--paid { background: var(--color-success-subtle); color: var(--color-success); }
     .filter-count--sent { background: var(--color-warning-subtle); color: var(--color-warning); }
-    .filter-count--draft { background: var(--color-border-subtle); color: var(--color-text-secondary); }
+    .filter-count--draft { background: var(--color-fill-tertiary); color: var(--color-text-secondary); }
 
     .filter-tab--active .filter-count--paid,
     .filter-tab--active .filter-count--sent,
     .filter-tab--active .filter-count--draft {
-      background: rgba(255, 255, 255, 0.2);
-      color: white;
+      background: var(--color-primary-subtle);
+      color: var(--color-primary);
     }
 
     /* Advanced Filters Toggle */
@@ -756,13 +684,14 @@ interface TaskOption {
       display: flex;
       align-items: center;
       gap: var(--space-sm);
-      padding: var(--space-md) var(--space-lg);
+      padding: var(--space-sm) var(--space-lg);
       font-size: 0.875rem;
       font-weight: 500;
+      font-family: inherit;
       color: var(--color-text-secondary);
       background: var(--color-surface);
-      border: 1px solid var(--color-border-subtle);
-      border-radius: var(--radius-lg);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
       cursor: pointer;
       transition: all var(--transition-fast);
 
@@ -777,7 +706,7 @@ interface TaskOption {
 
       &:hover {
         color: var(--color-text);
-        border-color: var(--color-border);
+        border-color: var(--color-text-tertiary);
       }
 
       &--active {
@@ -800,7 +729,7 @@ interface TaskOption {
       padding: 0 6px;
       font-size: 0.6875rem;
       font-weight: 600;
-      color: white;
+      color: var(--color-primary-text);
       background: var(--color-primary);
       border-radius: var(--radius-full);
     }
@@ -811,8 +740,9 @@ interface TaskOption {
       padding: var(--space-xl);
       background: var(--color-surface);
       border-radius: var(--radius-lg);
-      border: 1px solid var(--color-border-subtle);
-      box-shadow: var(--shadow-sm);
+      border: 1px solid var(--color-border);
+      box-shadow: var(--shadow-xs);
+      transition: background-color var(--transition-slow), border-color var(--transition-slow);
     }
 
     .filter-grid {
@@ -834,6 +764,7 @@ interface TaskOption {
       font-size: 0.8125rem;
       font-weight: 500;
       color: var(--color-text-secondary);
+      transition: color var(--transition-slow);
 
       svg {
         width: 14px;
@@ -853,7 +784,7 @@ interface TaskOption {
       font-family: var(--font-body);
       font-size: 0.875rem;
       color: var(--color-text);
-      background: var(--color-bg);
+      background: var(--color-fill-quaternary);
       border: 1px solid var(--color-border);
       border-radius: var(--radius-md);
       cursor: pointer;
@@ -878,8 +809,9 @@ interface TaskOption {
       transform: translateY(-50%);
       width: 16px;
       height: 16px;
-      color: var(--color-text-muted);
+      color: var(--color-text-tertiary);
       pointer-events: none;
+      transition: color var(--transition-slow);
     }
 
     .date-range {
@@ -890,7 +822,8 @@ interface TaskOption {
 
     .date-separator {
       font-size: 0.8125rem;
-      color: var(--color-text-muted);
+      color: var(--color-text-tertiary);
+      transition: color var(--transition-slow);
     }
 
     .date-input-wrapper {
@@ -904,7 +837,7 @@ interface TaskOption {
       font-family: var(--font-body);
       font-size: 0.875rem;
       color: var(--color-text);
-      background: var(--color-bg);
+      background: var(--color-fill-quaternary);
       border: 1px solid var(--color-border);
       border-radius: var(--radius-md);
       transition: all var(--transition-fast);
@@ -918,16 +851,6 @@ interface TaskOption {
         border-color: var(--color-primary);
         box-shadow: 0 0 0 3px var(--color-primary-subtle);
       }
-
-      &::-webkit-calendar-picker-indicator {
-        cursor: pointer;
-        opacity: 0.6;
-        transition: opacity var(--transition-fast);
-
-        &:hover {
-          opacity: 1;
-        }
-      }
     }
 
     .clear-date {
@@ -940,7 +863,7 @@ interface TaskOption {
       display: flex;
       align-items: center;
       justify-content: center;
-      color: var(--color-text-muted);
+      color: var(--color-text-tertiary);
       background: var(--color-surface);
       border: none;
       border-radius: var(--radius-sm);
@@ -954,7 +877,7 @@ interface TaskOption {
 
       &:hover {
         color: var(--color-danger);
-        background: rgba(239, 68, 68, 0.1);
+        background: var(--color-danger-subtle);
       }
     }
 
@@ -965,7 +888,8 @@ interface TaskOption {
       justify-content: space-between;
       margin-top: var(--space-lg);
       padding-top: var(--space-lg);
-      border-top: 1px solid var(--color-border-subtle);
+      border-top: 1px solid var(--color-border);
+      transition: border-color var(--transition-slow);
     }
 
     .active-chips {
@@ -984,6 +908,7 @@ interface TaskOption {
       color: var(--color-primary);
       background: var(--color-primary-subtle);
       border-radius: var(--radius-full);
+      transition: background-color var(--transition-slow), color var(--transition-slow);
 
       button {
         display: flex;
@@ -1006,7 +931,7 @@ interface TaskOption {
 
         &:hover {
           background: var(--color-primary);
-          color: white;
+          color: var(--color-primary-text);
         }
       }
     }
@@ -1018,6 +943,7 @@ interface TaskOption {
       padding: var(--space-sm) var(--space-md);
       font-size: 0.8125rem;
       font-weight: 500;
+      font-family: inherit;
       color: var(--color-text-secondary);
       background: transparent;
       border: none;
@@ -1032,7 +958,7 @@ interface TaskOption {
 
       &:hover {
         color: var(--color-danger);
-        background: rgba(239, 68, 68, 0.1);
+        background: var(--color-danger-subtle);
       }
     }
 
@@ -1043,12 +969,13 @@ interface TaskOption {
       align-items: center;
       justify-content: center;
       text-align: center;
-      padding: var(--space-3xl);
+      padding: 80px;
       background: var(--color-surface);
       border-radius: var(--radius-xl);
       border: 2px dashed var(--color-border);
       animation: fadeInUp 0.4s ease backwards;
       animation-delay: 0.35s;
+      transition: background-color var(--transition-slow), border-color var(--transition-slow);
     }
 
     .empty-icon {
@@ -1057,23 +984,25 @@ interface TaskOption {
       display: flex;
       align-items: center;
       justify-content: center;
-      background: var(--color-bg);
+      background: var(--color-fill-quaternary);
       border-radius: var(--radius-xl);
       margin-bottom: var(--space-xl);
+      transition: background-color var(--transition-slow);
 
       svg {
         width: 40px;
         height: 40px;
-        color: var(--color-text-muted);
+        color: var(--color-text-tertiary);
+        transition: color var(--transition-slow);
       }
     }
 
     .empty-state h3 {
-      font-family: var(--font-display);
-      font-size: 1.25rem;
+      font-size: 1.125rem;
       font-weight: 600;
       color: var(--color-text);
       margin: 0 0 var(--space-sm);
+      transition: color var(--transition-slow);
     }
 
     .empty-state p {
@@ -1082,6 +1011,7 @@ interface TaskOption {
       max-width: 400px;
       margin: 0 0 var(--space-xl);
       line-height: 1.6;
+      transition: color var(--transition-slow);
     }
 
     /* Invoices Grid */
@@ -1098,11 +1028,11 @@ interface TaskOption {
       background: var(--color-surface);
       border-radius: var(--radius-lg);
       padding: var(--space-xl);
-      box-shadow: var(--shadow-sm);
-      border: 1px solid var(--color-border-subtle);
+      box-shadow: var(--shadow-xs);
+      border: 1px solid var(--color-border);
       text-decoration: none;
       color: inherit;
-      transition: all var(--transition-normal);
+      transition: all var(--transition-base);
       animation: fadeInUp 0.4s ease backwards;
       overflow: hidden;
 
@@ -1115,13 +1045,13 @@ interface TaskOption {
         height: 3px;
         background: var(--color-primary);
         transform: scaleX(0);
-        transition: transform var(--transition-normal);
+        transition: transform var(--transition-base);
       }
 
       &:hover {
         transform: translateY(-4px);
         box-shadow: var(--shadow-lg);
-        border-color: var(--color-primary-subtle);
+        border-color: var(--color-primary);
 
         &::before {
           transform: scaleX(1);
@@ -1140,7 +1070,7 @@ interface TaskOption {
       top: 50%;
       transform: translateX(8px) translateY(-50%);
       opacity: 0;
-      transition: all var(--transition-normal);
+      transition: all var(--transition-base);
       color: var(--color-primary);
 
       svg {
@@ -1157,7 +1087,7 @@ interface TaskOption {
       .header-badges {
         display: flex;
         align-items: center;
-        gap: 8px;
+        gap: var(--space-sm);
       }
     }
 
@@ -1185,8 +1115,8 @@ interface TaskOption {
       font-size: 0.7rem;
       font-weight: 600;
       border-radius: var(--radius-full);
-      background: linear-gradient(135deg, #7c3aed 0%, #2563eb 100%);
-      color: white;
+      background: var(--color-primary);
+      color: var(--color-primary-text);
 
       svg {
         width: 12px;
@@ -1204,21 +1134,15 @@ interface TaskOption {
       font-weight: 500;
       text-transform: uppercase;
       letter-spacing: 0.5px;
-      color: var(--color-text-muted);
+      color: var(--color-text-tertiary);
+      transition: color var(--transition-slow);
     }
 
-    .invoice-number__link {
-      font-family: var(--font-display);
+    .invoice-number__value {
       font-size: 1.125rem;
-      font-weight: 700;
+      font-weight: 600;
       color: var(--color-primary);
-      text-decoration: none;
-      transition: all var(--transition-fast);
-
-      &:hover {
-        text-decoration: underline;
-        color: var(--color-primary-hover);
-      }
+      transition: color var(--transition-slow);
     }
 
     .status-badge {
@@ -1226,8 +1150,10 @@ interface TaskOption {
       align-items: center;
       gap: 6px;
       padding: var(--space-xs) var(--space-md);
-      font-size: 0.75rem;
+      font-size: 0.6875rem;
       font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
       border-radius: var(--radius-full);
     }
 
@@ -1240,7 +1166,7 @@ interface TaskOption {
 
     .status-badge--draft {
       color: var(--color-text-secondary);
-      background: var(--color-border-subtle);
+      background: var(--color-fill-tertiary);
     }
 
     .status-badge--sent {
@@ -1255,15 +1181,16 @@ interface TaskOption {
 
     .status-badge--cancelled {
       color: var(--color-danger);
-      background: rgba(239, 68, 68, 0.1);
+      background: var(--color-danger-subtle);
     }
 
     .invoice-card__body {
       display: grid;
       gap: var(--space-md);
-      padding-bottom: var(--space-lg);
-      border-bottom: 1px solid var(--color-border-subtle);
+      padding: var(--space-lg) 0;
+      border-bottom: 1px solid var(--color-border);
       margin-bottom: var(--space-lg);
+      transition: border-color var(--transition-slow);
     }
 
     .invoice-detail {
@@ -1274,7 +1201,8 @@ interface TaskOption {
 
     .detail-label {
       font-size: 0.8125rem;
-      color: var(--color-text-muted);
+      color: var(--color-text-tertiary);
+      transition: color var(--transition-slow);
     }
 
     .detail-value {
@@ -1286,6 +1214,7 @@ interface TaskOption {
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
+      transition: color var(--transition-slow);
     }
 
     .invoice-card__footer {
@@ -1303,25 +1232,28 @@ interface TaskOption {
     .amount-symbol {
       font-size: 0.875rem;
       color: var(--color-text-secondary);
+      transition: color var(--transition-slow);
     }
 
     .amount-value {
-      font-family: var(--font-display);
       font-size: 1.25rem;
-      font-weight: 700;
+      font-weight: 600;
       color: var(--color-primary);
+      transition: color var(--transition-slow);
     }
 
     .amount-currency {
       font-size: 0.6875rem;
       font-weight: 500;
-      color: var(--color-text-muted);
+      color: var(--color-text-tertiary);
       margin-left: var(--space-xs);
+      transition: color var(--transition-slow);
     }
 
     .invoice-date {
       font-size: 0.8125rem;
-      color: var(--color-text-muted);
+      color: var(--color-text-tertiary);
+      transition: color var(--transition-slow);
     }
 
     /* Buttons */
@@ -1333,7 +1265,7 @@ interface TaskOption {
       padding: var(--space-md) var(--space-xl);
       font-family: var(--font-body);
       font-size: 0.9375rem;
-      font-weight: 500;
+      font-weight: 600;
       text-decoration: none;
       border-radius: var(--radius-md);
       border: none;
@@ -1347,7 +1279,7 @@ interface TaskOption {
 
       &--primary {
         background: var(--color-primary);
-        color: white;
+        color: var(--color-primary-text);
 
         &:hover {
           background: var(--color-primary-hover);
@@ -1371,6 +1303,11 @@ interface TaskOption {
         grid-template-columns: 1fr;
       }
 
+      .filter-row {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
       .filter-tabs {
         width: 100%;
         display: grid;
@@ -1388,7 +1325,7 @@ interface TaskOption {
       }
 
       .header-title h1 {
-        font-size: 1.5rem;
+        font-size: 1.25rem;
       }
     }
   `]
@@ -1401,7 +1338,6 @@ export class InvoicesListComponent implements OnInit {
   activeFilter = signal<StatusFilter>('ALL');
   showArchived = signal(false);
 
-  // Advanced filter signals
   showAdvancedFilters = signal(false);
   selectedTaskId = signal('');
   startDate = signal('');
@@ -1412,7 +1348,6 @@ export class InvoicesListComponent implements OnInit {
     'July', 'August', 'September', 'October', 'November', 'December'
   ];
 
-  // Get unique tasks from invoices
   uniqueTasks = computed(() => {
     const tasksMap = new Map<string, TaskOption>();
     this.invoices().forEach(inv => {
@@ -1420,19 +1355,17 @@ export class InvoicesListComponent implements OnInit {
         tasksMap.set(inv.taskId, {
           id: inv.taskId,
           name: inv.task.name || 'Unknown',
-          clientName: inv.task.clientName || 'Unknown Client'
+          clientName: inv.task.client?.name || 'Unknown Client'
         });
       }
     });
     return Array.from(tasksMap.values()).sort((a, b) => a.name.localeCompare(b.name));
   });
 
-  // Check if any advanced filters are active
   hasActiveFilters = computed(() => {
     return !!(this.selectedTaskId() || this.startDate() || this.endDate());
   });
 
-  // Count active filters
   activeFilterCount = computed(() => {
     let count = 0;
     if (this.selectedTaskId()) count++;
@@ -1447,24 +1380,21 @@ export class InvoicesListComponent implements OnInit {
     const end = this.endDate();
     let result = this.invoices();
 
-    // Filter by status
     if (statusFilter !== 'ALL') {
       result = result.filter(inv => inv.status === statusFilter);
     }
 
-    // Filter by task
     if (taskId) {
       result = result.filter(inv => inv.taskId === taskId);
     }
 
-    // Filter by date range
     if (start) {
       const startTime = new Date(start).getTime();
       result = result.filter(inv => new Date(inv.createdAt).getTime() >= startTime);
     }
 
     if (end) {
-      const endTime = new Date(end).getTime() + (24 * 60 * 60 * 1000); // Include full end day
+      const endTime = new Date(end).getTime() + (24 * 60 * 60 * 1000);
       result = result.filter(inv => new Date(inv.createdAt).getTime() < endTime);
     }
 
@@ -1486,7 +1416,6 @@ export class InvoicesListComponent implements OnInit {
 
     this.invoiceService.getInvoices(filters).subscribe({
       next: (invoices) => {
-        // Sort by createdAt descending (newest first)
         const sorted = invoices.sort((a, b) =>
           new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
         );
@@ -1513,7 +1442,6 @@ export class InvoicesListComponent implements OnInit {
     this.showAdvancedFilters.update(v => !v);
   }
 
-  // Advanced filter methods
   onTaskChange(taskId: string) {
     this.selectedTaskId.set(taskId);
   }

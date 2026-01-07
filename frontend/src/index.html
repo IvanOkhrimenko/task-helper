@@ -2,10 +2,38 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>Daily Helper</title>
+  <title>Daylium</title>
   <base href="/">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="icon" type="image/x-icon" href="favicon.ico">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="alternate icon" type="image/x-icon" href="favicon.ico">
+  <meta name="theme-color" content="#F2F2F7">
+  <script>
+    // Apply theme immediately to prevent flash of wrong theme
+    (function() {
+      var stored = localStorage.getItem('theme-preference');
+      var theme = 'light';
+
+      if (stored === 'dark') {
+        theme = 'dark';
+      } else if (stored === 'light') {
+        theme = 'light';
+      } else {
+        // System preference (default)
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+          theme = 'dark';
+        }
+      }
+
+      document.documentElement.setAttribute('data-theme', theme);
+
+      // Update theme-color meta tag
+      var metaTheme = document.querySelector('meta[name="theme-color"]');
+      if (metaTheme) {
+        metaTheme.setAttribute('content', theme === 'dark' ? '#000000' : '#F2F2F7');
+      }
+    })();
+  </script>
 </head>
 <body>
   <app-root></app-root>

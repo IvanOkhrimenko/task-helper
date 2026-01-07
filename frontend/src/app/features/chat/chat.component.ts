@@ -55,7 +55,7 @@ import { ChatService, ChatMessage, PendingAction } from '../../core/services/cha
               </svg>
             </div>
             <div class="chat-header__title">
-              <span class="chat-header__name">Daily Helper AI</span>
+              <span class="chat-header__name">Daylium AI</span>
               <span class="chat-header__status">
                 @if (isStreaming()) {
                   <span class="status-dot status-dot--active"></span>
@@ -102,8 +102,8 @@ import { ChatService, ChatMessage, PendingAction } from '../../core/services/cha
                   <path d="M34 12a4 4 0 0 0 4 4a4 4 0 0 0 -4 4a4 4 0 0 0 -4 -4a4 4 0 0 0 4 -4" stroke="url(#welcomeGradient)" stroke-width="2" fill="none"/>
                   <defs>
                     <linearGradient id="welcomeGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                      <stop offset="0%" stop-color="#2563eb"/>
-                      <stop offset="100%" stop-color="#7c3aed"/>
+                      <stop offset="0%" stop-color="#10B981"/>
+                      <stop offset="100%" stop-color="#059669"/>
                     </linearGradient>
                   </defs>
                 </svg>
@@ -258,8 +258,8 @@ import { ChatService, ChatMessage, PendingAction } from '../../core/services/cha
       --chat-border: rgba(255, 255, 255, 0.08);
       --chat-text: #e7e9ea;
       --chat-text-muted: #71767b;
-      --chat-primary: #2563eb;
-      --chat-primary-light: #3b82f6;
+      --chat-primary: #10B981;
+      --chat-primary-light: #34D399;
       --chat-accent: #7c3aed;
       --chat-success: #22c55e;
       --chat-warning: #f59e0b;
@@ -286,8 +286,8 @@ import { ChatService, ChatMessage, PendingAction } from '../../core/services/cha
       transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
       background: linear-gradient(135deg, var(--chat-primary) 0%, var(--chat-accent) 100%);
       box-shadow:
-        0 4px 20px rgba(37, 99, 235, 0.4),
-        0 0 0 0 rgba(37, 99, 235, 0.4);
+        0 4px 20px rgba(16, 185, 129, 0.4),
+        0 0 0 0 rgba(16, 185, 129, 0.4);
       color: white;
 
       svg {
@@ -299,8 +299,8 @@ import { ChatService, ChatMessage, PendingAction } from '../../core/services/cha
       &:hover {
         transform: scale(1.08);
         box-shadow:
-          0 6px 28px rgba(37, 99, 235, 0.5),
-          0 0 0 0 rgba(37, 99, 235, 0.4);
+          0 6px 28px rgba(16, 185, 129, 0.5),
+          0 0 0 0 rgba(16, 185, 129, 0.4);
       }
 
       &:active {
@@ -339,8 +339,8 @@ import { ChatService, ChatMessage, PendingAction } from '../../core/services/cha
     }
 
     @keyframes fabPulse {
-      0%, 100% { box-shadow: 0 4px 20px rgba(37, 99, 235, 0.4), 0 0 0 0 rgba(245, 158, 11, 0.4); }
-      50% { box-shadow: 0 4px 20px rgba(37, 99, 235, 0.4), 0 0 0 8px rgba(245, 158, 11, 0); }
+      0%, 100% { box-shadow: 0 4px 20px rgba(16, 185, 129, 0.4), 0 0 0 0 rgba(245, 158, 11, 0.4); }
+      50% { box-shadow: 0 4px 20px rgba(16, 185, 129, 0.4), 0 0 0 8px rgba(245, 158, 11, 0); }
     }
 
     /* Chat Panel */

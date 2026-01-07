@@ -202,8 +202,8 @@ import { ReminderService, Reminder, ScheduleType } from '../../../core/services/
     :host {
       display: block;
       font-family: 'Outfit', sans-serif;
-      --color-primary: #2563EB;
-      --color-primary-hover: #1d4ed8;
+      --color-primary: #10B981;
+      --color-primary-hover: #059669;
       --color-bg: #FAFBFC;
       --color-surface: #FFFFFF;
       --color-border: #E5E7EB;

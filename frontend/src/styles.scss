@@ -1,65 +1,177 @@
-@import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;500;600;700&family=DM+Sans:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+// ============================================
+// iOS-Style Design System
+// ============================================
 
 :root {
-  // Colors
-  --color-bg: #F8F9FA;
-  --color-bg-subtle: #F1F3F5;
-  --color-surface: #FFFFFF;
-  --color-surface-elevated: #FFFFFF;
-  --color-border: #E9ECEF;
-  --color-border-subtle: #F1F3F5;
-
-  --color-text: #212529;
-  --color-text-secondary: #6C757D;
-  --color-text-muted: #ADB5BD;
-
-  --color-primary: #2563EB;
-  --color-primary-hover: #1D4ED8;
-  --color-primary-subtle: #EFF6FF;
-
-  --color-success: #10B981;
-  --color-success-subtle: #ECFDF5;
-  --color-success-border: #A7F3D0;
-
-  --color-warning: #F59E0B;
-  --color-warning-subtle: #FFFBEB;
-  --color-warning-border: #FDE68A;
-
-  --color-danger: #EF4444;
-  --color-danger-subtle: #FEF2F2;
-  --color-danger-border: #FECACA;
-
   // Typography
-  --font-display: 'Bricolage Grotesque', system-ui, sans-serif;
-  --font-body: 'DM Sans', system-ui, sans-serif;
+  --font-display: 'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
+  --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif;
+  --font-mono: 'SF Mono', 'JetBrains Mono', 'Menlo', monospace;
+
+  // ============================================
+  // Light Theme (Default)
+  // ============================================
+
+  // Backgrounds
+  --color-bg: #F2F2F7;
+  --color-bg-secondary: #FFFFFF;
+  --color-bg-tertiary: #E5E5EA;
+  --color-surface: #FFFFFF;
+  --color-surface-secondary: #F2F2F7;
+  --color-surface-elevated: #FFFFFF;
+
+  // Text
+  --color-text: #000000;
+  --color-text-secondary: rgba(60, 60, 67, 0.6);
+  --color-text-tertiary: rgba(60, 60, 67, 0.3);
+  --color-text-quaternary: rgba(60, 60, 67, 0.18);
+  --color-text-inverted: #FFFFFF;
+
+  // Borders & Separators
+  --color-border: rgba(60, 60, 67, 0.12);
+  --color-border-opaque: #C6C6C8;
+  --color-separator: rgba(60, 60, 67, 0.29);
+  --color-separator-opaque: #C6C6C8;
+
+  // iOS System Colors
+  --color-primary: #007AFF;
+  --color-primary-hover: #0056B3;
+  --color-primary-subtle: rgba(0, 122, 255, 0.1);
+  --color-primary-text: #FFFFFF;
+
+  --color-success: #34C759;
+  --color-success-subtle: rgba(52, 199, 89, 0.1);
+  --color-success-border: rgba(52, 199, 89, 0.3);
+
+  --color-warning: #FF9500;
+  --color-warning-subtle: rgba(255, 149, 0, 0.1);
+  --color-warning-border: rgba(255, 149, 0, 0.3);
+
+  --color-danger: #FF3B30;
+  --color-danger-subtle: rgba(255, 59, 48, 0.1);
+  --color-danger-border: rgba(255, 59, 48, 0.3);
+
+  --color-info: #5AC8FA;
+  --color-info-subtle: rgba(90, 200, 250, 0.1);
+
+  --color-purple: #AF52DE;
+  --color-pink: #FF2D55;
+  --color-teal: #5AC8FA;
+  --color-indigo: #5856D6;
+  --color-orange: #FF9500;
+
+  // Fills (iOS grouped background)
+  --color-fill-primary: rgba(120, 120, 128, 0.2);
+  --color-fill-secondary: rgba(120, 120, 128, 0.16);
+  --color-fill-tertiary: rgba(118, 118, 128, 0.12);
+  --color-fill-quaternary: rgba(116, 116, 128, 0.08);
 
   // Spacing
-  --space-xs: 0.25rem;
-  --space-sm: 0.5rem;
-  --space-md: 1rem;
-  --space-lg: 1.5rem;
-  --space-xl: 2rem;
-  --space-2xl: 3rem;
-  --space-3xl: 4rem;
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 12px;
+  --space-lg: 16px;
+  --space-xl: 20px;
+  --space-2xl: 24px;
+  --space-3xl: 32px;
+  --space-4xl: 40px;
 
-  // Radii
+  // Border Radius
+  --radius-xs: 4px;
   --radius-sm: 8px;
   --radius-md: 12px;
   --radius-lg: 16px;
-  --radius-xl: 24px;
+  --radius-xl: 20px;
+  --radius-2xl: 24px;
   --radius-full: 9999px;
 
-  // Shadows
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
-  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.06);
-  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.08);
-  --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.02);
+  // Shadows (subtle for light theme)
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.04);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.1), 0 2px 8px rgba(0, 0, 0, 0.04);
+  --shadow-xl: 0 16px 48px rgba(0, 0, 0, 0.12), 0 4px 16px rgba(0, 0, 0, 0.04);
+  --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.04);
 
   // Transitions
-  --transition-fast: 150ms ease;
-  --transition-base: 200ms ease;
-  --transition-slow: 300ms ease;
+  --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-base: 200ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-slow: 300ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-spring: 500ms cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
+
+// ============================================
+// Dark Theme
+// ============================================
+
+[data-theme="dark"] {
+  // Backgrounds
+  --color-bg: #000000;
+  --color-bg-secondary: #1C1C1E;
+  --color-bg-tertiary: #2C2C2E;
+  --color-surface: #1C1C1E;
+  --color-surface-secondary: #2C2C2E;
+  --color-surface-elevated: #2C2C2E;
+
+  // Text
+  --color-text: #FFFFFF;
+  --color-text-secondary: rgba(235, 235, 245, 0.6);
+  --color-text-tertiary: rgba(235, 235, 245, 0.3);
+  --color-text-quaternary: rgba(235, 235, 245, 0.18);
+  --color-text-inverted: #000000;
+
+  // Borders & Separators
+  --color-border: rgba(84, 84, 88, 0.65);
+  --color-border-opaque: #38383A;
+  --color-separator: rgba(84, 84, 88, 0.65);
+  --color-separator-opaque: #38383A;
+
+  // iOS System Colors (Dark Mode variants)
+  --color-primary: #0A84FF;
+  --color-primary-hover: #409CFF;
+  --color-primary-subtle: rgba(10, 132, 255, 0.15);
+
+  --color-success: #30D158;
+  --color-success-subtle: rgba(48, 209, 88, 0.15);
+  --color-success-border: rgba(48, 209, 88, 0.3);
+
+  --color-warning: #FF9F0A;
+  --color-warning-subtle: rgba(255, 159, 10, 0.15);
+  --color-warning-border: rgba(255, 159, 10, 0.3);
+
+  --color-danger: #FF453A;
+  --color-danger-subtle: rgba(255, 69, 58, 0.15);
+  --color-danger-border: rgba(255, 69, 58, 0.3);
+
+  --color-info: #64D2FF;
+  --color-info-subtle: rgba(100, 210, 255, 0.15);
+
+  --color-purple: #BF5AF2;
+  --color-pink: #FF375F;
+  --color-teal: #64D2FF;
+  --color-indigo: #5E5CE6;
+  --color-orange: #FF9F0A;
+
+  // Fills
+  --color-fill-primary: rgba(120, 120, 128, 0.36);
+  --color-fill-secondary: rgba(120, 120, 128, 0.32);
+  --color-fill-tertiary: rgba(118, 118, 128, 0.24);
+  --color-fill-quaternary: rgba(116, 116, 128, 0.18);
+
+  // Shadows (more pronounced in dark mode)
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.2);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.2);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4), 0 1px 3px rgba(0, 0, 0, 0.2);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.5), 0 2px 8px rgba(0, 0, 0, 0.3);
+  --shadow-xl: 0 16px 48px rgba(0, 0, 0, 0.6), 0 4px 16px rgba(0, 0, 0, 0.3);
+  --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+// ============================================
+// Base Styles
+// ============================================
 
 *, *::before, *::after {
   box-sizing: border-box;
@@ -71,17 +183,42 @@ html {
   font-size: 16px;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
 }
 
 body {
   font-family: var(--font-body);
+  font-size: 15px;
+  font-weight: 400;
+  line-height: 1.5;
   color: var(--color-text);
   background: var(--color-bg);
-  line-height: 1.6;
   min-height: 100vh;
+  transition: background-color var(--transition-slow), color var(--transition-slow);
 }
 
-// Utility classes
+// ============================================
+// Typography
+// ============================================
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  line-height: 1.25;
+  letter-spacing: -0.02em;
+}
+
+h1 { font-size: 2rem; }
+h2 { font-size: 1.5rem; }
+h3 { font-size: 1.25rem; }
+h4 { font-size: 1.125rem; }
+h5 { font-size: 1rem; }
+h6 { font-size: 0.875rem; }
+
+// ============================================
+// Utility Classes
+// ============================================
+
 .container {
   width: 100%;
   max-width: 1200px;
@@ -89,21 +226,63 @@ body {
   padding: 0 var(--space-lg);
 }
 
-// Form elements base
+.text-secondary { color: var(--color-text-secondary); }
+.text-tertiary { color: var(--color-text-tertiary); }
+.text-success { color: var(--color-success); }
+.text-warning { color: var(--color-warning); }
+.text-danger { color: var(--color-danger); }
+
+// ============================================
+// Form Elements
+// ============================================
+
 input, textarea, select {
   font-family: var(--font-body);
-  font-size: 0.9375rem;
+  font-size: 15px;
+  color: var(--color-text);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-md) var(--space-lg);
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+
+  &::placeholder {
+    color: var(--color-text-tertiary);
+  }
+
+  &:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 4px var(--color-primary-subtle);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
 }
 
-// Button base
+// ============================================
+// Buttons
+// ============================================
+
 button {
   font-family: var(--font-body);
   cursor: pointer;
   border: none;
   background: none;
+  transition: all var(--transition-fast);
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
 }
 
-// Link base
+// ============================================
+// Links
+// ============================================
+
 a {
   color: var(--color-primary);
   text-decoration: none;
@@ -114,7 +293,10 @@ a {
   }
 }
 
+// ============================================
 // Animations
+// ============================================
+
 @keyframes fadeIn {
   from { opacity: 0; }
   to { opacity: 1; }
@@ -142,9 +324,15 @@ a {
   }
 }
 
-@keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.6; }
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @keyframes scaleIn {
@@ -158,27 +346,60 @@ a {
   }
 }
 
-// Scrollbar styling
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+// ============================================
+// Scrollbar (iOS-style)
+// ============================================
+
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  background: var(--color-bg-subtle);
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--color-border);
+  background: var(--color-fill-secondary);
   border-radius: var(--radius-full);
+  border: 2px solid transparent;
+  background-clip: padding-box;
 
   &:hover {
-    background: var(--color-text-muted);
+    background: var(--color-fill-primary);
+    background-clip: padding-box;
   }
 }
 
-// Focus styles
+// Firefox
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-fill-secondary) transparent;
+}
+
+// ============================================
+// Focus Styles
+// ============================================
+
 :focus-visible {
   outline: 2px solid var(--color-primary);
   outline-offset: 2px;
+}
+
+// ============================================
+// Selection
+// ============================================
+
+::selection {
+  background: var(--color-primary-subtle);
+  color: var(--color-primary);
 }

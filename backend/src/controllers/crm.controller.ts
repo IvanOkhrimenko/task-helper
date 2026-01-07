@@ -3,6 +3,7 @@ import { AuthRequest } from '../middleware/auth.middleware.js';
 import { crmService } from '../services/crm.service.js';
 import { GenericCRMService } from '../services/generic-crm.service.js';
 import { PrismaClient } from '@prisma/client';
+import { ActivityLogService } from '../services/activity-log.service.js';
 
 /**
  * Test CRM connection (legacy hardcoded CRM)
@@ -127,6 +128,20 @@ export async function syncInvoiceToCRM(req: AuthRequest, res: Response): Promise
           crmSyncedAt: new Date(),
         },
       });
+
+      // Log activity
+      const activityService = new ActivityLogService(prisma);
+      await activityService.logInvoiceActivity(
+        invoiceId,
+        invoice.task!.id,
+        'CRM_SYNCED',
+        userId!,
+        undefined,
+        {
+          crmInvoiceId: result.crmInvoiceId,
+          integrationName: targetIntegrationId ? 'Generic CRM' : 'Legacy CRM'
+        }
+      );
     }
 
     res.json(result);
@@ -249,6 +264,17 @@ export async function fetchInvoicePdf(req: AuthRequest, res: Response): Promise<
     const result = await genericCrmService.fetchInvoicePdf(targetIntegrationId, invoice);
 
     if (result.pdfPath) {
+      // Log activity
+      const activityService = new ActivityLogService(prisma);
+      await activityService.logInvoiceActivity(
+        invoiceId,
+        invoice.task!.id,
+        'CRM_PDF_FETCHED',
+        userId!,
+        undefined,
+        { pdfUrl: result.pdfUrl, pdfPath: result.pdfPath }
+      );
+
       res.json({
         success: true,
         message: 'PDF downloaded successfully',

@@ -1,6 +1,6 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { InvoiceTemplate } from '../../../core/services/task.service';
+import { InvoiceTemplate } from '../../../core/services/client.service';
 
 interface TemplateOption {
   id: InvoiceTemplate;
@@ -301,7 +301,7 @@ interface TemplateOption {
       opacity: 0;
       transform: scale(0.5);
       transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-      box-shadow: 0 2px 8px rgba(37, 99, 235, 0.4);
+      box-shadow: 0 2px 8px rgba(16, 185, 129, 0.4);
 
       svg {
         width: 14px;

@@ -247,9 +247,9 @@ describe('MainLayoutComponent', () => {
       expect(component.currentPageTitle()).toBe('Profile');
     });
 
-    it('should return Daily Helper for unknown routes', () => {
+    it('should return Daylium for unknown routes', () => {
       component.currentRoute.set('/unknown');
-      expect(component.currentPageTitle()).toBe('Daily Helper');
+      expect(component.currentPageTitle()).toBe('Daylium');
     });
   });
 

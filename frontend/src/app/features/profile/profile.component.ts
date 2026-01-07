@@ -591,13 +591,13 @@ import { ToastComponent } from '../../shared/components/toast/toast.component';
     .header-icon {
       width: 56px;
       height: 56px;
-      background: linear-gradient(135deg, var(--color-primary) 0%, #1d4ed8 100%);
+      background: linear-gradient(135deg, var(--color-primary) 0%, #059669 100%);
       border-radius: var(--radius-lg);
       display: flex;
       align-items: center;
       justify-content: center;
       flex-shrink: 0;
-      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+      box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);
 
       svg {
         width: 28px;
@@ -803,12 +803,12 @@ import { ToastComponent } from '../../shared/components/toast/toast.component';
       &--primary {
         background: var(--color-primary);
         color: white;
-        box-shadow: 0 2px 8px rgba(37, 99, 235, 0.25);
+        box-shadow: 0 2px 8px rgba(16, 185, 129, 0.25);
 
         &:hover:not(:disabled) {
           background: var(--color-primary-hover);
           transform: translateY(-1px);
-          box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35);
+          box-shadow: 0 4px 12px rgba(16, 185, 129, 0.35);
         }
 
         &:active:not(:disabled) {

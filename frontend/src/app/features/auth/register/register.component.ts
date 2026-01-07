@@ -130,7 +130,7 @@ import { NotificationService } from '../../../core/services/notification.service
       position: relative;
       overflow: hidden;
       background:
-        radial-gradient(ellipse at 20% 0%, rgba(37, 99, 235, 0.06) 0%, transparent 50%),
+        radial-gradient(ellipse at 20% 0%, rgba(16, 185, 129, 0.06) 0%, transparent 50%),
         radial-gradient(ellipse at 80% 100%, rgba(16, 185, 129, 0.04) 0%, transparent 50%),
         var(--color-bg);
     }
@@ -273,7 +273,7 @@ import { NotificationService } from '../../../core/services/notification.service
 
       &--primary {
         background: var(--color-primary);
-        color: white;
+        color: var(--color-primary-text);
 
         &:hover:not(:disabled) {
           background: var(--color-primary-hover);
@@ -299,7 +299,7 @@ import { NotificationService } from '../../../core/services/notification.service
       width: 16px;
       height: 16px;
       border: 2px solid rgba(255, 255, 255, 0.3);
-      border-top-color: white;
+      border-top-color: var(--color-primary-text);
       border-radius: 50%;
       animation: spin 0.8s linear infinite;
     }

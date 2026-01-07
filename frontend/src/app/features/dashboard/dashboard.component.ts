@@ -41,7 +41,7 @@ interface GroupedEvents {
             <p class="header__subtitle">{{ todayFormatted() }}</p>
           </div>
           <div class="header__actions">
-            <a routerLink="/tasks/reminders/new" class="btn btn--ghost">
+            <a routerLink="/tasks/reminders/new" class="btn btn--secondary">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/>
                 <path d="M13.73 21a2 2 0 01-3.46 0"/>
@@ -61,7 +61,7 @@ interface GroupedEvents {
 
       <!-- Stats Cards -->
       <section class="stats">
-        <div class="stat-card stat-card--reminders" [style.animation-delay]="'0ms'">
+        <div class="stat-card stat-card--primary" [style.animation-delay]="'0ms'">
           <div class="stat-card__icon">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/>
@@ -74,7 +74,7 @@ interface GroupedEvents {
           </div>
         </div>
 
-        <div class="stat-card stat-card--today" [style.animation-delay]="'50ms'">
+        <div class="stat-card stat-card--warning" [style.animation-delay]="'50ms'">
           <div class="stat-card__icon">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <circle cx="12" cy="12" r="10"/>
@@ -87,7 +87,7 @@ interface GroupedEvents {
           </div>
         </div>
 
-        <div class="stat-card stat-card--invoices" [style.animation-delay]="'100ms'">
+        <div class="stat-card stat-card--danger" [style.animation-delay]="'100ms'">
           <div class="stat-card__icon">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
@@ -102,7 +102,7 @@ interface GroupedEvents {
           </div>
         </div>
 
-        <div class="stat-card stat-card--total" [style.animation-delay]="'150ms'">
+        <div class="stat-card stat-card--success" [style.animation-delay]="'150ms'">
           <div class="stat-card__icon">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <line x1="12" y1="1" x2="12" y2="23"/>
@@ -259,7 +259,7 @@ interface GroupedEvents {
                       <div class="event-card__actions">
                         @if (event.type === 'reminder' && event.taskId) {
                           <button
-                            class="action-btn action-btn--complete"
+                            class="action-btn action-btn--view"
                             title="View reminder"
                             (click)="navigateToReminder(event.taskId)"
                           >
@@ -308,50 +308,21 @@ interface GroupedEvents {
     </div>
   `,
   styles: [`
-    @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
-
     :host {
       display: block;
-      font-family: 'Outfit', sans-serif;
-      --color-primary: #2563EB;
-      --color-primary-hover: #1d4ed8;
-      --color-primary-subtle: rgba(37, 99, 235, 0.08);
-      --color-bg: #FAFBFC;
-      --color-surface: #FFFFFF;
-      --color-border: #E5E7EB;
-      --color-border-subtle: #F3F4F6;
-      --color-text: #0F172A;
-      --color-text-secondary: #64748B;
-      --color-text-muted: #94A3B8;
-
-      --color-reminder: #2563EB;
-      --color-reminder-subtle: rgba(37, 99, 235, 0.08);
-      --color-warning: #F59E0B;
-      --color-warning-subtle: rgba(245, 158, 11, 0.08);
-      --color-danger: #EF4444;
-      --color-danger-subtle: rgba(239, 68, 68, 0.08);
-      --color-success: #10B981;
-      --color-success-subtle: rgba(16, 185, 129, 0.08);
-
-      --radius-sm: 6px;
-      --radius-md: 8px;
-      --radius-lg: 12px;
-      --radius-xl: 16px;
-      --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
-      --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
-      --transition-fast: 0.15s ease;
-      --transition-base: 0.2s ease;
+      font-family: var(--font-body);
     }
 
     .dashboard {
       min-height: 100%;
-      padding: 24px 32px;
+      padding: var(--space-xl) var(--space-2xl);
       background: var(--color-bg);
+      transition: background-color var(--transition-slow);
     }
 
     /* Header */
     .header {
-      margin-bottom: 28px;
+      margin-bottom: var(--space-2xl);
     }
 
     .header__content {
@@ -361,30 +332,32 @@ interface GroupedEvents {
     }
 
     .header__title {
-      font-size: 1.625rem;
+      font-size: 1.5rem;
       font-weight: 600;
       color: var(--color-text);
       letter-spacing: -0.02em;
-      margin-bottom: 4px;
+      margin-bottom: var(--space-xs);
+      transition: color var(--transition-slow);
     }
 
     .header__subtitle {
       font-size: 0.9375rem;
       color: var(--color-text-secondary);
+      transition: color var(--transition-slow);
     }
 
     .header__actions {
       display: flex;
-      gap: 12px;
+      gap: var(--space-md);
     }
 
     .btn {
       display: inline-flex;
       align-items: center;
-      gap: 8px;
-      padding: 10px 18px;
-      font-size: 0.9375rem;
-      font-weight: 500;
+      gap: var(--space-sm);
+      padding: var(--space-sm) var(--space-lg);
+      font-size: 0.875rem;
+      font-weight: 600;
       font-family: inherit;
       border-radius: var(--radius-md);
       border: none;
@@ -399,7 +372,7 @@ interface GroupedEvents {
 
       &--primary {
         background: var(--color-primary);
-        color: white;
+        color: var(--color-primary-text);
 
         &:hover {
           background: var(--color-primary-hover);
@@ -407,15 +380,12 @@ interface GroupedEvents {
         }
       }
 
-      &--ghost {
-        background: var(--color-surface);
-        color: var(--color-text-secondary);
-        border: 1px solid var(--color-border);
+      &--secondary {
+        background: var(--color-fill-tertiary);
+        color: var(--color-text);
 
         &:hover {
-          background: var(--color-bg);
-          color: var(--color-text);
-          border-color: var(--color-text-muted);
+          background: var(--color-fill-secondary);
         }
       }
     }
@@ -424,42 +394,42 @@ interface GroupedEvents {
     .stats {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
-      gap: 16px;
-      margin-bottom: 32px;
+      gap: var(--space-lg);
+      margin-bottom: var(--space-2xl);
     }
 
     .stat-card {
       display: flex;
       align-items: center;
-      gap: 16px;
-      padding: 20px;
+      gap: var(--space-lg);
+      padding: var(--space-xl);
       background: var(--color-surface);
       border: 1px solid var(--color-border);
       border-radius: var(--radius-lg);
       animation: slideUp 0.4s ease both;
-      transition: transform var(--transition-base), box-shadow var(--transition-base);
+      transition: transform var(--transition-base), box-shadow var(--transition-base), background-color var(--transition-slow), border-color var(--transition-slow);
 
       &:hover {
         transform: translateY(-2px);
         box-shadow: var(--shadow-md);
       }
 
-      &--reminders .stat-card__icon {
-        background: var(--color-reminder-subtle);
-        color: var(--color-reminder);
+      &--primary .stat-card__icon {
+        background: var(--color-primary-subtle);
+        color: var(--color-primary);
       }
 
-      &--today .stat-card__icon {
+      &--warning .stat-card__icon {
         background: var(--color-warning-subtle);
         color: var(--color-warning);
       }
 
-      &--invoices .stat-card__icon {
+      &--danger .stat-card__icon {
         background: var(--color-danger-subtle);
         color: var(--color-danger);
       }
 
-      &--total .stat-card__icon {
+      &--success .stat-card__icon {
         background: var(--color-success-subtle);
         color: var(--color-success);
       }
@@ -473,6 +443,7 @@ interface GroupedEvents {
       justify-content: center;
       border-radius: var(--radius-md);
       flex-shrink: 0;
+      transition: background-color var(--transition-slow), color var(--transition-slow);
 
       svg {
         width: 24px;
@@ -491,12 +462,14 @@ interface GroupedEvents {
       color: var(--color-text);
       letter-spacing: -0.02em;
       line-height: 1.2;
+      transition: color var(--transition-slow);
     }
 
     .stat-card__label {
       font-size: 0.8125rem;
       color: var(--color-text-secondary);
       margin-top: 2px;
+      transition: color var(--transition-slow);
     }
 
     /* Agenda */
@@ -505,35 +478,39 @@ interface GroupedEvents {
       border: 1px solid var(--color-border);
       border-radius: var(--radius-xl);
       overflow: hidden;
+      transition: background-color var(--transition-slow), border-color var(--transition-slow);
     }
 
     .agenda__header {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 20px 24px;
+      padding: var(--space-lg) var(--space-xl);
       border-bottom: 1px solid var(--color-border);
+      transition: border-color var(--transition-slow);
     }
 
     .agenda__title {
-      font-size: 1.125rem;
+      font-size: 1.0625rem;
       font-weight: 600;
       color: var(--color-text);
+      transition: color var(--transition-slow);
     }
 
     .period-tabs {
       display: flex;
-      gap: 4px;
-      background: var(--color-bg);
-      padding: 4px;
+      gap: var(--space-xs);
+      background: var(--color-fill-quaternary);
+      padding: var(--space-xs);
       border-radius: var(--radius-md);
+      transition: background-color var(--transition-slow);
     }
 
     .period-tab {
       display: flex;
       align-items: center;
-      gap: 6px;
-      padding: 8px 14px;
+      gap: var(--space-sm);
+      padding: var(--space-sm) var(--space-md);
       font-size: 0.8125rem;
       font-weight: 500;
       font-family: inherit;
@@ -546,13 +523,13 @@ interface GroupedEvents {
 
       &:hover {
         color: var(--color-text);
-        background: rgba(0, 0, 0, 0.04);
+        background: var(--color-fill-tertiary);
       }
 
       &--active {
         color: var(--color-primary);
         background: var(--color-surface);
-        box-shadow: var(--shadow-sm);
+        box-shadow: var(--shadow-xs);
       }
     }
 
@@ -565,9 +542,9 @@ interface GroupedEvents {
       padding: 0 5px;
       font-size: 0.6875rem;
       font-weight: 600;
-      color: white;
+      color: var(--color-primary-text);
       background: var(--color-primary);
-      border-radius: 9px;
+      border-radius: var(--radius-full);
     }
 
     /* Loading & Empty State */
@@ -578,6 +555,7 @@ interface GroupedEvents {
       justify-content: center;
       padding: 64px;
       color: var(--color-text-secondary);
+      transition: color var(--transition-slow);
     }
 
     .loading__spinner {
@@ -587,19 +565,20 @@ interface GroupedEvents {
       border-top-color: var(--color-primary);
       border-radius: 50%;
       animation: spin 0.8s linear infinite;
-      margin-bottom: 12px;
+      margin-bottom: var(--space-md);
     }
 
     .empty-state {
       text-align: center;
-      padding: 64px 32px;
+      padding: 64px var(--space-2xl);
     }
 
     .empty-state__icon {
       width: 64px;
       height: 64px;
-      margin: 0 auto 20px;
+      margin: 0 auto var(--space-xl);
       color: var(--color-success);
+      transition: color var(--transition-slow);
 
       svg {
         width: 100%;
@@ -608,41 +587,44 @@ interface GroupedEvents {
     }
 
     .empty-state h3 {
-      font-size: 1.125rem;
+      font-size: 1.0625rem;
       font-weight: 600;
       color: var(--color-text);
-      margin-bottom: 6px;
+      margin-bottom: var(--space-sm);
+      transition: color var(--transition-slow);
     }
 
     .empty-state p {
       font-size: 0.9375rem;
       color: var(--color-text-secondary);
+      transition: color var(--transition-slow);
     }
 
     /* Timeline */
     .timeline {
-      padding: 24px;
+      padding: var(--space-xl);
     }
 
     .date-group {
       animation: slideUp 0.4s ease both;
 
       &:not(:last-child) {
-        margin-bottom: 24px;
+        margin-bottom: var(--space-xl);
       }
     }
 
     .date-group__header {
       display: flex;
       align-items: center;
-      gap: 12px;
-      margin-bottom: 16px;
+      gap: var(--space-md);
+      margin-bottom: var(--space-lg);
     }
 
     .date-group__line {
       flex: 1;
       height: 1px;
       background: var(--color-border);
+      transition: background-color var(--transition-slow);
     }
 
     .date-group__label {
@@ -650,10 +632,11 @@ interface GroupedEvents {
       font-weight: 600;
       text-transform: uppercase;
       letter-spacing: 0.05em;
-      color: var(--color-text-muted);
-      padding: 4px 10px;
-      background: var(--color-bg);
+      color: var(--color-text-tertiary);
+      padding: var(--space-xs) var(--space-md);
+      background: var(--color-fill-quaternary);
       border-radius: var(--radius-sm);
+      transition: color var(--transition-slow), background-color var(--transition-slow);
 
       &--today {
         color: var(--color-primary);
@@ -664,16 +647,16 @@ interface GroupedEvents {
     .events-list {
       display: flex;
       flex-direction: column;
-      gap: 12px;
+      gap: var(--space-md);
     }
 
     /* Event Card */
     .event-card {
       display: flex;
       align-items: flex-start;
-      gap: 16px;
-      padding: 16px 20px;
-      background: var(--color-bg);
+      gap: var(--space-lg);
+      padding: var(--space-lg) var(--space-xl);
+      background: var(--color-fill-quaternary);
       border-radius: var(--radius-lg);
       border: 1px solid transparent;
       position: relative;
@@ -688,8 +671,8 @@ interface GroupedEvents {
       }
 
       &--reminder {
-        .event-card__indicator { background: var(--color-reminder); }
-        .event-card__icon { color: var(--color-reminder); background: var(--color-reminder-subtle); }
+        .event-card__indicator { background: var(--color-primary); }
+        .event-card__icon { color: var(--color-primary); background: var(--color-primary-subtle); }
       }
 
       &--invoice_warning {
@@ -709,7 +692,7 @@ interface GroupedEvents {
 
       &--overdue {
         background: var(--color-danger-subtle);
-        border-color: rgba(239, 68, 68, 0.2);
+        border-color: var(--color-danger-border);
       }
     }
 
@@ -730,6 +713,7 @@ interface GroupedEvents {
       justify-content: center;
       border-radius: var(--radius-md);
       flex-shrink: 0;
+      transition: background-color var(--transition-slow), color var(--transition-slow);
 
       svg {
         width: 20px;
@@ -746,8 +730,8 @@ interface GroupedEvents {
       display: flex;
       align-items: flex-start;
       justify-content: space-between;
-      gap: 12px;
-      margin-bottom: 4px;
+      gap: var(--space-md);
+      margin-bottom: var(--space-xs);
     }
 
     .event-card__title {
@@ -755,11 +739,12 @@ interface GroupedEvents {
       font-weight: 600;
       color: var(--color-text);
       margin: 0;
+      transition: color var(--transition-slow);
     }
 
     .event-card__badges {
       display: flex;
-      gap: 6px;
+      gap: var(--space-sm);
       flex-shrink: 0;
     }
 
@@ -780,7 +765,7 @@ interface GroupedEvents {
 
       &--warning {
         background: var(--color-warning-subtle);
-        color: #B45309;
+        color: var(--color-warning);
       }
 
       &--info {
@@ -792,21 +777,23 @@ interface GroupedEvents {
     .event-card__subtitle {
       font-size: 0.875rem;
       color: var(--color-text-secondary);
-      margin: 0 0 8px 0;
+      margin: 0 0 var(--space-sm) 0;
       line-height: 1.4;
+      transition: color var(--transition-slow);
     }
 
     .event-card__meta {
       display: flex;
       align-items: center;
-      gap: 16px;
+      gap: var(--space-lg);
       font-size: 0.8125rem;
-      color: var(--color-text-muted);
+      color: var(--color-text-tertiary);
+      transition: color var(--transition-slow);
 
       svg {
         width: 14px;
         height: 14px;
-        margin-right: 4px;
+        margin-right: var(--space-xs);
       }
 
       span {
@@ -818,11 +805,12 @@ interface GroupedEvents {
     .event-card__amount {
       font-weight: 600;
       color: var(--color-text);
+      transition: color var(--transition-slow);
     }
 
     .event-card__actions {
       display: flex;
-      gap: 8px;
+      gap: var(--space-sm);
       opacity: 0;
       transform: translateX(8px);
       transition: all var(--transition-fast);
@@ -853,10 +841,10 @@ interface GroupedEvents {
 
       &:hover {
         color: var(--color-text);
-        background: var(--color-bg);
+        background: var(--color-fill-tertiary);
       }
 
-      &--complete:hover {
+      &--view:hover {
         color: var(--color-success);
         background: var(--color-success-subtle);
       }
@@ -890,12 +878,12 @@ interface GroupedEvents {
 
     @media (max-width: 768px) {
       .dashboard {
-        padding: 20px;
+        padding: var(--space-lg);
       }
 
       .header__content {
         flex-direction: column;
-        gap: 16px;
+        gap: var(--space-lg);
       }
 
       .header__actions {
@@ -914,7 +902,7 @@ interface GroupedEvents {
       .agenda__header {
         flex-direction: column;
         align-items: stretch;
-        gap: 16px;
+        gap: var(--space-lg);
       }
 
       .period-tabs {
@@ -1219,15 +1207,22 @@ export class DashboardComponent implements OnInit {
     this.generatingFor.set(data.taskId);
     this.invoiceModal.setGenerating(true);
 
-    this.taskService.generateInvoice(
-      data.taskId,
-      data.hoursWorked,
-      data.hourlyRate,
-      data.month,
-      data.year,
-      data.description,
-      data.language
-    ).subscribe({
+    this.taskService.generateInvoice(data.taskId, {
+      hoursWorked: data.hoursWorked,
+      hourlyRate: data.hourlyRate,
+      fixedAmount: data.fixedAmount,
+      month: data.month,
+      year: data.year,
+      description: data.description,
+      language: data.language,
+      currency: data.currency,
+      invoiceTemplate: data.invoiceTemplate,
+      bankAccountId: data.bankAccountId,
+      googleAccountId: data.googleAccountId,
+      useCustomEmailTemplate: data.useCustomEmailTemplate,
+      emailSubject: data.emailSubject,
+      emailBody: data.emailBody
+    }).subscribe({
       next: (invoice) => {
         this.generatingFor.set(null);
         this.invoiceModal.setGenerating(false);

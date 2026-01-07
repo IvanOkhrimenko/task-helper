@@ -144,71 +144,52 @@ import { ReminderService, Reminder, ScheduleType } from '../../../core/services/
     </div>
   `,
   styles: [`
-    @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
-
     :host {
       display: block;
-      font-family: 'Outfit', sans-serif;
-      --color-primary: #2563EB;
-      --color-primary-hover: #1d4ed8;
-      --color-bg: #FAFBFC;
-      --color-surface: #FFFFFF;
-      --color-border: #E5E7EB;
-      --color-text: #0F172A;
-      --color-text-secondary: #64748B;
-      --color-text-muted: #94A3B8;
-      --color-success: #10B981;
-      --color-success-bg: rgba(16, 185, 129, 0.1);
-      --color-warning: #F59E0B;
-      --color-warning-bg: rgba(245, 158, 11, 0.1);
-      --color-danger: #EF4444;
-      --color-danger-bg: rgba(239, 68, 68, 0.1);
-      --radius-sm: 6px;
-      --radius-md: 8px;
-      --radius-lg: 12px;
-      --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.06);
-      --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
-      --transition-fast: 0.15s ease;
-      --transition-base: 0.2s ease;
+      font-family: var(--font-body);
     }
 
     .reminders-page {
-      padding: 32px;
+      padding: var(--space-2xl);
       max-width: 1200px;
       margin: 0 auto;
+      transition: background-color var(--transition-slow);
     }
 
     .page-header {
       display: flex;
       align-items: flex-start;
       justify-content: space-between;
-      margin-bottom: 32px;
+      margin-bottom: var(--space-2xl);
     }
 
     .page-title {
       font-size: 1.75rem;
       font-weight: 600;
       color: var(--color-text);
-      margin-bottom: 4px;
+      margin-bottom: var(--space-xs);
       letter-spacing: -0.02em;
+      transition: color var(--transition-slow);
     }
 
     .page-subtitle {
       font-size: 0.9375rem;
       color: var(--color-text-secondary);
+      transition: color var(--transition-slow);
     }
 
     .btn {
       display: inline-flex;
       align-items: center;
-      gap: 8px;
-      padding: 10px 18px;
+      gap: var(--space-sm);
+      padding: var(--space-md) var(--space-lg);
       font-size: 0.9375rem;
       font-weight: 500;
       border-radius: var(--radius-md);
       transition: all var(--transition-fast);
       text-decoration: none;
       cursor: pointer;
+      border: none;
 
       svg {
         width: 18px;
@@ -217,7 +198,7 @@ import { ReminderService, Reminder, ScheduleType } from '../../../core/services/
 
       &--primary {
         background: var(--color-primary);
-        color: white;
+        color: var(--color-primary-text);
 
         &:hover {
           background: var(--color-primary-hover);
@@ -230,13 +211,13 @@ import { ReminderService, Reminder, ScheduleType } from '../../../core/services/
         color: var(--color-text-secondary);
 
         &:hover {
-          background: var(--color-bg);
+          background: var(--color-fill-quaternary);
           color: var(--color-text);
         }
       }
 
       &--sm {
-        padding: 6px 12px;
+        padding: var(--space-sm) var(--space-md);
         font-size: 0.8125rem;
 
         svg {
@@ -246,7 +227,7 @@ import { ReminderService, Reminder, ScheduleType } from '../../../core/services/
       }
 
       &--danger:hover {
-        background: var(--color-danger-bg);
+        background: var(--color-danger-subtle);
         color: var(--color-danger);
       }
     }
@@ -255,19 +236,20 @@ import { ReminderService, Reminder, ScheduleType } from '../../../core/services/
     .stats-row {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
-      gap: 16px;
-      margin-bottom: 32px;
+      gap: var(--space-lg);
+      margin-bottom: var(--space-2xl);
     }
 
     .stat-card {
       background: var(--color-surface);
       border: 1px solid var(--color-border);
       border-radius: var(--radius-lg);
-      padding: 20px;
+      padding: var(--space-xl);
       text-align: center;
+      transition: background-color var(--transition-slow), border-color var(--transition-slow);
 
       &--active .stat-value { color: var(--color-success); }
-      &--inactive .stat-value { color: var(--color-text-muted); }
+      &--inactive .stat-value { color: var(--color-text-tertiary); }
       &--due .stat-value { color: var(--color-warning); }
     }
 
@@ -277,7 +259,8 @@ import { ReminderService, Reminder, ScheduleType } from '../../../core/services/
       font-weight: 600;
       color: var(--color-text);
       line-height: 1;
-      margin-bottom: 6px;
+      margin-bottom: var(--space-sm);
+      transition: color var(--transition-slow);
     }
 
     .stat-label {
@@ -285,6 +268,7 @@ import { ReminderService, Reminder, ScheduleType } from '../../../core/services/
       color: var(--color-text-secondary);
       text-transform: uppercase;
       letter-spacing: 0.05em;
+      transition: color var(--transition-slow);
     }
 
     /* Loading State */
@@ -304,7 +288,7 @@ import { ReminderService, Reminder, ScheduleType } from '../../../core/services/
       border-top-color: var(--color-primary);
       border-radius: 50%;
       animation: spin 0.8s linear infinite;
-      margin-bottom: 16px;
+      margin-bottom: var(--space-lg);
     }
 
     @keyframes spin {
@@ -318,13 +302,14 @@ import { ReminderService, Reminder, ScheduleType } from '../../../core/services/
       background: var(--color-surface);
       border-radius: var(--radius-lg);
       border: 2px dashed var(--color-border);
+      transition: background-color var(--transition-slow), border-color var(--transition-slow);
     }
 
     .empty-state__icon {
       width: 64px;
       height: 64px;
       margin: 0 auto 20px;
-      color: var(--color-text-muted);
+      color: var(--color-text-tertiary);
 
       svg {
         width: 100%;
@@ -336,19 +321,21 @@ import { ReminderService, Reminder, ScheduleType } from '../../../core/services/
       font-size: 1.25rem;
       font-weight: 600;
       color: var(--color-text);
-      margin-bottom: 8px;
+      margin-bottom: var(--space-sm);
+      transition: color var(--transition-slow);
     }
 
     .empty-state p {
       color: var(--color-text-secondary);
-      margin-bottom: 24px;
+      margin-bottom: var(--space-xl);
+      transition: color var(--transition-slow);
     }
 
     /* Reminders Grid */
     .reminders-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
-      gap: 20px;
+      gap: var(--space-xl);
     }
 
     .reminder-card {
@@ -361,7 +348,7 @@ import { ReminderService, Reminder, ScheduleType } from '../../../core/services/
       transition: all var(--transition-base);
 
       &:hover {
-        box-shadow: var(--shadow-md);
+        box-shadow: var(--shadow-lg);
         transform: translateY(-2px);
       }
 
@@ -389,15 +376,16 @@ import { ReminderService, Reminder, ScheduleType } from '../../../core/services/
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 16px 20px;
+      padding: var(--space-lg) var(--space-xl);
       border-bottom: 1px solid var(--color-border);
-      background: var(--color-bg);
+      background: var(--color-fill-quaternary);
+      transition: background-color var(--transition-slow), border-color var(--transition-slow);
     }
 
     .reminder-card__status {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: var(--space-md);
     }
 
     .status-indicator {
@@ -407,47 +395,49 @@ import { ReminderService, Reminder, ScheduleType } from '../../../core/services/
 
       &--active {
         background: var(--color-success);
-        box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
+        box-shadow: 0 0 0 3px var(--color-success-subtle);
       }
 
       &--inactive {
-        background: var(--color-text-muted);
+        background: var(--color-text-tertiary);
       }
     }
 
     .schedule-badge {
-      padding: 4px 10px;
+      padding: var(--space-xs) var(--space-md);
       font-size: 0.6875rem;
       font-weight: 600;
       text-transform: uppercase;
       letter-spacing: 0.05em;
-      border-radius: 4px;
-      background: var(--color-bg);
+      border-radius: var(--radius-xs);
+      background: var(--color-fill-quaternary);
       color: var(--color-text-secondary);
 
       &--one_time {
-        background: #EEF2FF;
-        color: #4F46E5;
+        background: var(--color-info-subtle);
+        color: var(--color-info);
       }
       &--daily {
-        background: #ECFDF5;
-        color: #059669;
+        background: var(--color-success-subtle);
+        color: var(--color-success);
       }
       &--weekly {
-        background: #FEF3C7;
-        color: #D97706;
+        background: var(--color-warning-subtle);
+        color: var(--color-warning);
       }
       &--monthly {
-        background: #FCE7F3;
-        color: #DB2777;
+        background: var(--color-pink);
+        background: rgba(255, 45, 85, 0.1);
+        color: var(--color-pink);
       }
       &--yearly {
-        background: #E0E7FF;
-        color: #4338CA;
+        background: var(--color-indigo);
+        background: rgba(88, 86, 214, 0.1);
+        color: var(--color-indigo);
       }
       &--custom {
-        background: #F1F5F9;
-        color: #475569;
+        background: var(--color-fill-tertiary);
+        color: var(--color-text-secondary);
       }
     }
 
@@ -469,7 +459,7 @@ import { ReminderService, Reminder, ScheduleType } from '../../../core/services/
     .toggle-slider {
       position: absolute;
       inset: 0;
-      background: var(--color-border);
+      background: var(--color-fill-primary);
       border-radius: 12px;
       transition: all var(--transition-fast);
 
@@ -480,10 +470,10 @@ import { ReminderService, Reminder, ScheduleType } from '../../../core/services/
         width: 18px;
         left: 3px;
         bottom: 3px;
-        background: white;
+        background: var(--color-surface);
         border-radius: 50%;
         transition: all var(--transition-fast);
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
       }
     }
 
@@ -496,7 +486,7 @@ import { ReminderService, Reminder, ScheduleType } from '../../../core/services/
     }
 
     .reminder-card__body {
-      padding: 20px;
+      padding: var(--space-xl);
     }
 
     .reminder-card__name-link {
@@ -529,28 +519,30 @@ import { ReminderService, Reminder, ScheduleType } from '../../../core/services/
     .reminder-card__schedule {
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: var(--space-sm);
       font-size: 0.8125rem;
       color: var(--color-text-secondary);
+      transition: color var(--transition-slow);
 
       svg {
         width: 16px;
         height: 16px;
-        color: var(--color-text-muted);
+        color: var(--color-text-tertiary);
       }
 
       .text-muted {
-        color: var(--color-text-muted);
+        color: var(--color-text-tertiary);
         font-style: italic;
       }
     }
 
     .reminder-card__footer {
       display: flex;
-      gap: 8px;
-      padding: 12px 20px;
-      background: var(--color-bg);
+      gap: var(--space-sm);
+      padding: var(--space-md) var(--space-xl);
+      background: var(--color-fill-quaternary);
       border-top: 1px solid var(--color-border);
+      transition: background-color var(--transition-slow), border-color var(--transition-slow);
     }
 
     @media (max-width: 768px) {

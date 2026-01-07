@@ -27,6 +27,23 @@ export const routes: Routes = [
         path: 'dashboard',
         loadComponent: () => import('./features/dashboard/dashboard.component').then(m => m.DashboardComponent)
       },
+      // Clients
+      {
+        path: 'clients',
+        loadComponent: () => import('./features/clients/clients-list/clients-list.component').then(m => m.ClientsListComponent)
+      },
+      {
+        path: 'clients/new',
+        loadComponent: () => import('./features/clients/client-form/client-form.component').then(m => m.ClientFormComponent)
+      },
+      {
+        path: 'clients/:id',
+        loadComponent: () => import('./features/clients/client-detail/client-detail.component').then(m => m.ClientDetailComponent)
+      },
+      {
+        path: 'clients/:id/edit',
+        loadComponent: () => import('./features/clients/client-form/client-form.component').then(m => m.ClientFormComponent)
+      },
       // Invoice Tasks (existing tasks)
       {
         path: 'tasks/invoices',

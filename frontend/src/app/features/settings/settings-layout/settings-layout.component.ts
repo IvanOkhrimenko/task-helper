@@ -83,32 +83,9 @@ interface SettingsNavItem {
     </div>
   `,
   styles: [`
-    @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&display=swap');
-
     :host {
-      --color-bg: #0a0a0f;
-      --color-surface: #12121a;
-      --color-surface-elevated: #1a1a24;
-      --color-border: #2a2a35;
-      --color-border-subtle: #1e1e28;
-      --color-primary: #e07a3a;
-      --color-primary-hover: #f08a4a;
-      --color-primary-subtle: rgba(224, 122, 58, 0.1);
-      --color-primary-glow: rgba(224, 122, 58, 0.15);
-      --color-text: #f5f5f5;
-      --color-text-secondary: #a0a0a8;
-      --color-text-muted: #6b7280;
-      --sidebar-width: 260px;
-      --header-height: 72px;
-      --radius-sm: 6px;
-      --radius-md: 10px;
-      --radius-lg: 14px;
-      --transition-fast: 0.15s ease;
-      --transition-base: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-      --font-display: 'DM Sans', sans-serif;
-
       display: block;
-      font-family: var(--font-display);
+      font-family: var(--font-body);
     }
 
     .settings-layout {
@@ -117,6 +94,7 @@ interface SettingsNavItem {
       background: var(--color-bg);
       position: relative;
       overflow: hidden;
+      transition: background-color var(--transition-slow);
     }
 
     /* Ambient glow effects */
@@ -125,14 +103,14 @@ interface SettingsNavItem {
       pointer-events: none;
       border-radius: 50%;
       filter: blur(120px);
-      opacity: 0.4;
+      opacity: 0.3;
       z-index: 0;
     }
 
     .ambient-glow--top {
       width: 600px;
       height: 600px;
-      background: radial-gradient(circle, var(--color-primary-glow) 0%, transparent 70%);
+      background: radial-gradient(circle, var(--color-primary-subtle) 0%, transparent 70%);
       top: -200px;
       left: 10%;
       animation: ambientFloat 20s ease-in-out infinite;
@@ -141,7 +119,7 @@ interface SettingsNavItem {
     .ambient-glow--bottom {
       width: 400px;
       height: 400px;
-      background: radial-gradient(circle, rgba(99, 102, 241, 0.08) 0%, transparent 70%);
+      background: radial-gradient(circle, var(--color-info-subtle) 0%, transparent 70%);
       bottom: -100px;
       right: 5%;
       animation: ambientFloat 25s ease-in-out infinite reverse;
@@ -154,14 +132,15 @@ interface SettingsNavItem {
 
     /* Sidebar */
     .settings-sidebar {
-      width: var(--sidebar-width);
+      width: 260px;
       background: var(--color-surface);
-      border-right: 1px solid var(--color-border-subtle);
+      border-right: 1px solid var(--color-border);
       display: flex;
       flex-direction: column;
       position: relative;
       z-index: 10;
       animation: slideInLeft 0.4s ease-out;
+      transition: background-color var(--transition-slow), border-color var(--transition-slow);
     }
 
     @keyframes slideInLeft {
@@ -176,22 +155,22 @@ interface SettingsNavItem {
     }
 
     .sidebar-header {
-      padding: 28px 24px;
-      border-bottom: 1px solid var(--color-border-subtle);
+      padding: var(--space-2xl) var(--space-xl);
+      border-bottom: 1px solid var(--color-border);
       display: flex;
       align-items: center;
-      gap: 14px;
+      gap: var(--space-md);
+      transition: border-color var(--transition-slow);
     }
 
     .sidebar-header__icon {
       width: 44px;
       height: 44px;
-      background: linear-gradient(135deg, var(--color-primary) 0%, #d06830 100%);
+      background: var(--color-primary);
       border-radius: var(--radius-md);
       display: flex;
       align-items: center;
       justify-content: center;
-      box-shadow: 0 4px 20px var(--color-primary-glow);
 
       svg {
         width: 22px;
@@ -210,36 +189,38 @@ interface SettingsNavItem {
       color: var(--color-text);
       margin: 0;
       letter-spacing: -0.02em;
+      transition: color var(--transition-slow);
     }
 
     .sidebar-header__subtitle {
       font-size: 0.8125rem;
-      color: var(--color-text-muted);
+      color: var(--color-text-secondary);
       margin: 2px 0 0;
+      transition: color var(--transition-slow);
     }
 
     /* Navigation */
     .settings-nav {
       flex: 1;
-      padding: 16px 12px;
+      padding: var(--space-lg) var(--space-md);
       display: flex;
       flex-direction: column;
-      gap: 4px;
+      gap: var(--space-xs);
     }
 
     .nav-item {
       display: flex;
       align-items: center;
-      gap: 12px;
-      padding: 14px 16px;
+      gap: var(--space-md);
+      padding: var(--space-md) var(--space-lg);
       border-radius: var(--radius-md);
       text-decoration: none;
       position: relative;
-      transition: all var(--transition-base);
+      transition: all var(--transition-fast);
       animation: fadeSlideIn 0.4s ease-out both;
 
       &:hover {
-        background: var(--color-surface-elevated);
+        background: var(--color-fill-quaternary);
 
         .nav-item__icon {
           color: var(--color-primary);
@@ -284,7 +265,7 @@ interface SettingsNavItem {
     .nav-item__icon {
       width: 20px;
       height: 20px;
-      color: var(--color-text-muted);
+      color: var(--color-text-tertiary);
       flex-shrink: 0;
       transition: all var(--transition-fast);
 
@@ -310,8 +291,9 @@ interface SettingsNavItem {
     .nav-item__description {
       display: block;
       font-size: 0.75rem;
-      color: var(--color-text-muted);
+      color: var(--color-text-tertiary);
       margin-top: 2px;
+      transition: color var(--transition-slow);
     }
 
     .nav-item__indicator {
@@ -329,17 +311,18 @@ interface SettingsNavItem {
 
     /* Sidebar Footer */
     .sidebar-footer {
-      padding: 16px 12px;
-      border-top: 1px solid var(--color-border-subtle);
+      padding: var(--space-lg) var(--space-md);
+      border-top: 1px solid var(--color-border);
+      transition: border-color var(--transition-slow);
     }
 
     .back-link {
       display: flex;
       align-items: center;
-      gap: 10px;
-      padding: 12px 16px;
+      gap: var(--space-sm);
+      padding: var(--space-md) var(--space-lg);
       border-radius: var(--radius-md);
-      color: var(--color-text-muted);
+      color: var(--color-text-secondary);
       font-size: 0.875rem;
       font-weight: 500;
       text-decoration: none;
@@ -352,8 +335,8 @@ interface SettingsNavItem {
       }
 
       &:hover {
-        background: var(--color-surface-elevated);
-        color: var(--color-text-secondary);
+        background: var(--color-fill-quaternary);
+        color: var(--color-text);
 
         svg {
           transform: translateX(-3px);
@@ -377,58 +360,46 @@ interface SettingsNavItem {
     }
 
     .content-header {
-      height: var(--header-height);
-      padding: 0 32px;
-      border-bottom: 1px solid var(--color-border-subtle);
+      height: 72px;
+      padding: 0 var(--space-3xl);
+      border-bottom: 1px solid var(--color-border);
       display: flex;
       align-items: center;
       background: var(--color-surface);
+      transition: background-color var(--transition-slow), border-color var(--transition-slow);
     }
 
     .breadcrumb {
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: var(--space-sm);
     }
 
     .breadcrumb__root {
       font-size: 0.875rem;
-      color: var(--color-text-muted);
+      color: var(--color-text-tertiary);
       font-weight: 500;
+      transition: color var(--transition-slow);
     }
 
     .breadcrumb__separator {
       width: 14px;
       height: 14px;
-      color: var(--color-text-muted);
+      color: var(--color-text-tertiary);
+      transition: color var(--transition-slow);
     }
 
     .breadcrumb__current {
       font-size: 1rem;
       font-weight: 600;
       color: var(--color-text);
+      transition: color var(--transition-slow);
     }
 
     .content-body {
       flex: 1;
       overflow-y: auto;
-      padding: 32px;
-
-      /* Custom scrollbar */
-      &::-webkit-scrollbar {
-        width: 8px;
-      }
-      &::-webkit-scrollbar-track {
-        background: var(--color-bg);
-      }
-      &::-webkit-scrollbar-thumb {
-        background: var(--color-border);
-        border-radius: 4px;
-
-        &:hover {
-          background: var(--color-text-muted);
-        }
-      }
+      padding: var(--space-3xl);
     }
 
     /* Responsive */
@@ -440,14 +411,14 @@ interface SettingsNavItem {
       .settings-sidebar {
         width: 100%;
         border-right: none;
-        border-bottom: 1px solid var(--color-border-subtle);
+        border-bottom: 1px solid var(--color-border);
       }
 
       .settings-nav {
         flex-direction: row;
         overflow-x: auto;
-        gap: 8px;
-        padding: 12px;
+        gap: var(--space-sm);
+        padding: var(--space-md);
 
         &::-webkit-scrollbar {
           display: none;
@@ -457,7 +428,7 @@ interface SettingsNavItem {
       .nav-item {
         flex-direction: column;
         align-items: center;
-        padding: 12px 16px;
+        padding: var(--space-md) var(--space-lg);
         min-width: max-content;
         text-align: center;
       }
@@ -489,7 +460,7 @@ interface SettingsNavItem {
       }
 
       .content-body {
-        padding: 20px 16px;
+        padding: var(--space-xl) var(--space-lg);
       }
     }
   `]
@@ -511,19 +482,12 @@ export class SettingsLayoutComponent {
       route: '/settings/crm',
       icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>',
       description: 'External CRM systems'
-    },
-    {
-      label: 'Bank Accounts',
-      route: '/settings/bank-accounts',
-      icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>',
-      description: 'Payment details'
     }
   ];
 
   sectionNames: Record<string, string> = {
     '/settings/profile': 'Profile',
-    '/settings/crm': 'CRM Integrations',
-    '/settings/bank-accounts': 'Bank Accounts'
+    '/settings/crm': 'CRM Integrations'
   };
 
   currentSectionName = computed(() => {

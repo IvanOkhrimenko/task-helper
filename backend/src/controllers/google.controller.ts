@@ -8,6 +8,7 @@ import {
   createGmailDraft
 } from '../services/gmail.service.js';
 import { StorageService } from '../services/storage.service.js';
+import { ActivityLogService } from '../services/activity-log.service.js';
 
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:4200';
 
@@ -222,6 +223,31 @@ export async function createDraft(req: AuthRequest, res: Response): Promise<void
       attachmentBase64,
       attachmentFilename
     });
+
+    // Log activity if invoice was involved
+    if (invoiceId && req.userId) {
+      const invoice = await prisma.invoice.findFirst({
+        where: { id: invoiceId, userId: req.userId },
+        include: { task: true }
+      });
+
+      if (invoice) {
+        const activityService = new ActivityLogService(prisma);
+        await activityService.logInvoiceActivity(
+          invoiceId,
+          invoice.taskId,
+          'EMAIL_DRAFT_CREATED',
+          req.userId,
+          undefined,
+          {
+            to,
+            subject,
+            hasAttachment: !!attachmentBase64,
+            attachmentSource: attachmentSource
+          }
+        );
+      }
+    }
 
     res.json({
       success: true,

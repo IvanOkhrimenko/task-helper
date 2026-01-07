@@ -11,11 +11,13 @@ import { IntegrationsService } from '../../../core/services/integrations.service
 import { CRMService, CRMStatus } from '../../../core/services/crm.service';
 import { CRMIntegrationService, CRMIntegration } from '../../../core/services/crm-integration.service';
 import { ToastComponent } from '../../../shared/components/toast/toast.component';
+import { ActivityLogService, ActivityLog } from '../../../core/services/activity-log.service';
+import { ActivityTimelineComponent } from '../../../shared/components/activity-timeline/activity-timeline.component';
 
 @Component({
   selector: 'app-invoice-preview',
   standalone: true,
-  imports: [CommonModule, RouterLink, ToastComponent, FormsModule],
+  imports: [CommonModule, RouterLink, ToastComponent, FormsModule, ActivityTimelineComponent],
   template: `
     <app-toast />
     <div class="invoice-page">
@@ -116,24 +118,24 @@ import { ToastComponent } from '../../../shared/components/toast/toast.component
                     </div>
                     <div class="info-item">
                       <span class="info-label">Client Name</span>
-                      <span class="info-value">{{ invoice()!.task!.clientName || '—' }}</span>
+                      <span class="info-value">{{ invoice()!.task!.client?.name || '—' }}</span>
                     </div>
                     <div class="info-item">
                       <span class="info-label">Email</span>
                       <span class="info-value">
-                        @if (invoice()!.task!.clientEmail) {
-                          <a href="mailto:{{ invoice()!.task!.clientEmail }}" class="email-link">
-                            {{ invoice()!.task!.clientEmail }}
+                        @if (invoice()!.task!.client?.email) {
+                          <a href="mailto:{{ invoice()!.task!.client!.email }}" class="email-link">
+                            {{ invoice()!.task!.client!.email }}
                           </a>
                         } @else {
                           —
                         }
                       </span>
                     </div>
-                    @if (invoice()!.task!.clientAddress) {
+                    @if (getClientAddress()) {
                       <div class="info-item info-item--full">
                         <span class="info-label">Address</span>
-                        <span class="info-value info-value--address">{{ invoice()!.task!.clientAddress }}</span>
+                        <span class="info-value info-value--address">{{ getClientAddress() }}</span>
                       </div>
                     }
                   }
@@ -150,21 +152,39 @@ import { ToastComponent } from '../../../shared/components/toast/toast.component
                   Financial Summary
                 </h3>
                 <div class="financial-grid">
-                  <div class="financial-item">
-                    <span class="financial-label">Hours Worked</span>
-                    <span class="financial-value">{{ invoice()!.hoursWorked || 0 }} hrs</span>
-                  </div>
-                  <div class="financial-item">
-                    <span class="financial-label">Hourly Rate</span>
-                    <span class="financial-value">{{ getCurrencySymbol() }}{{ invoice()!.hourlyRate || 0 }}</span>
-                  </div>
-                  <div class="financial-item financial-item--total">
-                    <span class="financial-label">Total Amount</span>
-                    <span class="financial-value financial-value--total">
-                      {{ getCurrencySymbol() }}{{ invoice()!.amount }}
-                      <span class="currency-code">{{ invoice()!.currency }}</span>
-                    </span>
-                  </div>
+                  @if (isFixedAmountInvoice()) {
+                    <!-- Fixed Amount Invoice -->
+                    <div class="financial-item financial-item--fixed">
+                      <span class="financial-label">Billing Type</span>
+                      <span class="financial-value">
+                        <span class="billing-type-badge">Fixed Amount</span>
+                      </span>
+                    </div>
+                    <div class="financial-item financial-item--total">
+                      <span class="financial-label">Monthly Amount</span>
+                      <span class="financial-value financial-value--total">
+                        {{ getCurrencySymbol() }}{{ invoice()!.amount }}
+                        <span class="currency-code">{{ invoice()!.currency }}</span>
+                      </span>
+                    </div>
+                  } @else {
+                    <!-- Hourly Invoice -->
+                    <div class="financial-item">
+                      <span class="financial-label">Hours Worked</span>
+                      <span class="financial-value">{{ invoice()!.hoursWorked || 0 }} hrs</span>
+                    </div>
+                    <div class="financial-item">
+                      <span class="financial-label">Hourly Rate</span>
+                      <span class="financial-value">{{ getCurrencySymbol() }}{{ invoice()!.hourlyRate || 0 }}</span>
+                    </div>
+                    <div class="financial-item financial-item--total">
+                      <span class="financial-label">Total Amount</span>
+                      <span class="financial-value financial-value--total">
+                        {{ getCurrencySymbol() }}{{ invoice()!.amount }}
+                        <span class="currency-code">{{ invoice()!.currency }}</span>
+                      </span>
+                    </div>
+                  }
                 </div>
               </div>
 
@@ -232,7 +252,7 @@ import { ToastComponent } from '../../../shared/components/toast/toast.component
                     </div>
                     @if (googleEnabled() && googleService.accounts().length > 0) {
                       <div class="gmail-draft-section">
-                        @if (googleService.accounts().length > 1 && !invoice()?.task?.googleAccountId) {
+                        @if (googleService.accounts().length > 1 && !invoice()?.task?.client?.googleAccountId) {
                           <div class="account-select">
                             <label class="account-select__label">Send from:</label>
                             <select
@@ -294,7 +314,7 @@ import { ToastComponent } from '../../../shared/components/toast/toast.component
                         <button
                           class="btn btn--gmail"
                           (click)="createGmailDraft()"
-                          [disabled]="isCreatingDraft() || (googleService.accounts().length > 1 && !selectedGoogleAccountId() && !invoice()?.task?.googleAccountId)"
+                          [disabled]="isCreatingDraft() || (googleService.accounts().length > 1 && !selectedGoogleAccountId() && !invoice()?.task?.client?.googleAccountId)"
                         >
                           @if (isCreatingDraft()) {
                             <span class="btn__spinner btn__spinner--dark"></span>
@@ -542,6 +562,18 @@ import { ToastComponent } from '../../../shared/components/toast/toast.component
                   </div>
                 }
               </div>
+
+              <!-- Activity History -->
+              <div class="card card--activity">
+                <h3 class="card__title">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"/>
+                    <polyline points="12 6 12 12 16 14"/>
+                  </svg>
+                  Activity History
+                </h3>
+                <app-activity-timeline [activityLogs]="activityLogs()" />
+              </div>
             </div>
 
             <!-- Right Column: PDF Preview -->
@@ -648,50 +680,7 @@ import { ToastComponent } from '../../../shared/components/toast/toast.component
     </div>
   `,
   styles: [`
-    @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
-
     :host {
-      --color-bg: #FAFBFC;
-      --color-surface: #FFFFFF;
-      --color-primary: #2563EB;
-      --color-primary-hover: #1D4ED8;
-      --color-primary-subtle: rgba(37, 99, 235, 0.08);
-      --color-text: #1F2937;
-      --color-text-secondary: #6B7280;
-      --color-text-muted: #9CA3AF;
-      --color-border: #E5E7EB;
-      --color-border-subtle: #F3F4F6;
-      --color-success: #10B981;
-      --color-success-subtle: rgba(16, 185, 129, 0.1);
-      --color-warning: #F59E0B;
-      --color-warning-subtle: rgba(245, 158, 11, 0.1);
-      --color-danger: #EF4444;
-      --color-danger-subtle: rgba(239, 68, 68, 0.1);
-
-      --font-display: 'Outfit', system-ui, sans-serif;
-      --font-body: 'Outfit', system-ui, sans-serif;
-
-      --space-xs: 4px;
-      --space-sm: 8px;
-      --space-md: 12px;
-      --space-lg: 16px;
-      --space-xl: 24px;
-      --space-2xl: 32px;
-      --space-3xl: 48px;
-
-      --radius-sm: 6px;
-      --radius-md: 10px;
-      --radius-lg: 14px;
-      --radius-xl: 20px;
-      --radius-full: 9999px;
-
-      --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
-      --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.06);
-      --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.08);
-
-      --transition-fast: 0.15s ease;
-      --transition-normal: 0.25s ease;
-
       display: block;
       font-family: var(--font-body);
     }
@@ -700,6 +689,7 @@ import { ToastComponent } from '../../../shared/components/toast/toast.component
       min-height: 100vh;
       background: var(--color-bg);
       padding: var(--space-2xl) 0;
+      transition: background-color var(--transition-slow);
     }
 
     .container {
@@ -771,13 +761,34 @@ import { ToastComponent } from '../../../shared/components/toast/toast.component
     /* Main Grid Layout */
     .invoice-grid {
       display: grid;
-      grid-template-columns: 420px 1fr;
+      grid-template-columns: 1fr 380px;
       gap: var(--space-xl);
       align-items: start;
 
-      @media (max-width: 1100px) {
+      @media (max-width: 1200px) {
+        grid-template-columns: 1fr 320px;
+      }
+
+      @media (max-width: 1000px) {
         grid-template-columns: 1fr;
       }
+    }
+
+    .details-column {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: var(--space-lg);
+
+      @media (max-width: 1000px) {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .details-column > .card--header,
+    .details-column > .card--email,
+    .details-column > .card--actions,
+    .details-column > .card--activity {
+      grid-column: 1 / -1;
     }
 
     /* Cards */
@@ -785,18 +796,20 @@ import { ToastComponent } from '../../../shared/components/toast/toast.component
       background: var(--color-surface);
       border-radius: var(--radius-lg);
       padding: var(--space-xl);
-      box-shadow: var(--shadow-sm);
-      border: 1px solid var(--color-border-subtle);
-      margin-bottom: var(--space-lg);
+      box-shadow: var(--shadow-card);
+      border: 1px solid var(--color-border);
       animation: fadeInUp 0.4s ease backwards;
+      transition: background-color var(--transition-slow), border-color var(--transition-slow);
 
       &:nth-child(1) { animation-delay: 0.05s; }
-      &:nth-child(2) { animation-delay: 0.1s; }
-      &:nth-child(3) { animation-delay: 0.15s; }
-      &:nth-child(4) { animation-delay: 0.2s; }
-      &:nth-child(5) { animation-delay: 0.25s; }
-      &:nth-child(6) { animation-delay: 0.3s; }
-      &:nth-child(7) { animation-delay: 0.35s; }
+      &:nth-child(2) { animation-delay: 0.08s; }
+      &:nth-child(3) { animation-delay: 0.11s; }
+      &:nth-child(4) { animation-delay: 0.14s; }
+      &:nth-child(5) { animation-delay: 0.17s; }
+      &:nth-child(6) { animation-delay: 0.2s; }
+      &:nth-child(7) { animation-delay: 0.23s; }
+      &:nth-child(8) { animation-delay: 0.26s; }
+      &:nth-child(9) { animation-delay: 0.29s; }
     }
 
     @keyframes fadeInUp {
@@ -821,6 +834,7 @@ import { ToastComponent } from '../../../shared/components/toast/toast.component
       letter-spacing: 0.5px;
       color: var(--color-text-secondary);
       margin-bottom: var(--space-lg);
+      transition: color var(--transition-slow);
 
       svg {
         width: 16px;
@@ -878,7 +892,7 @@ import { ToastComponent } from '../../../shared/components/toast/toast.component
       font-size: 0.75rem;
       font-weight: 600;
       border-radius: var(--radius-full);
-      background: linear-gradient(135deg, #7c3aed 0%, #2563eb 100%);
+      background: linear-gradient(135deg, #10B981 0%, #059669 100%);
       color: white;
 
       svg {
@@ -949,11 +963,13 @@ import { ToastComponent } from '../../../shared/components/toast/toast.component
       font-size: 1.5rem;
       font-weight: 600;
       color: var(--color-text);
+      transition: color var(--transition-slow);
     }
 
     .period-year {
       font-size: 1.125rem;
       color: var(--color-text-secondary);
+      transition: color var(--transition-slow);
     }
 
     /* Info Grid */
@@ -975,13 +991,15 @@ import { ToastComponent } from '../../../shared/components/toast/toast.component
       font-weight: 500;
       text-transform: uppercase;
       letter-spacing: 0.5px;
-      color: var(--color-text-muted);
+      color: var(--color-text-tertiary);
       margin-bottom: var(--space-xs);
+      transition: color var(--transition-slow);
     }
 
     .info-value {
       font-size: 0.9375rem;
       color: var(--color-text);
+      transition: color var(--transition-slow);
 
       &--link {
         display: inline-flex;
@@ -1022,9 +1040,23 @@ import { ToastComponent } from '../../../shared/components/toast/toast.component
       padding: var(--space-xs) var(--space-sm);
       font-size: 0.8125rem;
       font-weight: 500;
-      background: var(--color-bg);
+      background: var(--color-fill-quaternary);
       border-radius: var(--radius-sm);
       color: var(--color-text-secondary);
+      transition: background-color var(--transition-slow), color var(--transition-slow);
+    }
+
+    .billing-type-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-xs);
+      padding: var(--space-xs) var(--space-md);
+      font-size: 0.8125rem;
+      font-weight: 600;
+      background: linear-gradient(135deg, var(--color-primary-subtle), rgba(99, 102, 241, 0.15));
+      color: var(--color-primary);
+      border-radius: var(--radius-full);
+      border: 1px solid var(--color-primary-subtle);
     }
 
     /* Financial Grid */
@@ -1038,7 +1070,8 @@ import { ToastComponent } from '../../../shared/components/toast/toast.component
       justify-content: space-between;
       align-items: center;
       padding: var(--space-md) 0;
-      border-bottom: 1px solid var(--color-border-subtle);
+      border-bottom: 1px solid var(--color-border);
+      transition: border-color var(--transition-slow);
 
       &:last-child {
         border-bottom: none;
@@ -1055,6 +1088,7 @@ import { ToastComponent } from '../../../shared/components/toast/toast.component
     .financial-label {
       font-size: 0.875rem;
       color: var(--color-text-secondary);
+      transition: color var(--transition-slow);
     }
 
     .financial-value {
@@ -1062,6 +1096,7 @@ import { ToastComponent } from '../../../shared/components/toast/toast.component
       font-size: 1rem;
       font-weight: 600;
       color: var(--color-text);
+      transition: color var(--transition-slow);
 
       &--total {
         font-size: 1.25rem;
@@ -1072,14 +1107,16 @@ import { ToastComponent } from '../../../shared/components/toast/toast.component
     .currency-code {
       font-size: 0.75rem;
       font-weight: 500;
-      color: var(--color-text-muted);
+      color: var(--color-text-tertiary);
       margin-left: var(--space-xs);
+      transition: color var(--transition-slow);
     }
 
     /* Email Draft */
     .card--email {
-      background: var(--color-bg);
+      background: var(--color-surface-secondary);
       border: 1px dashed var(--color-border);
+      transition: background-color var(--transition-slow), border-color var(--transition-slow);
     }
 
     .email-draft {
@@ -1096,10 +1133,12 @@ import { ToastComponent } from '../../../shared/components/toast/toast.component
       font-weight: 600;
       color: var(--color-text-secondary);
       min-width: 60px;
+      transition: color var(--transition-slow);
     }
 
     .email-field__value {
       color: var(--color-text);
+      transition: color var(--transition-slow);
     }
 
     .email-body {
@@ -1107,7 +1146,8 @@ import { ToastComponent } from '../../../shared/components/toast/toast.component
       padding: var(--space-md);
       background: var(--color-surface);
       border-radius: var(--radius-md);
-      border: 1px solid var(--color-border-subtle);
+      border: 1px solid var(--color-border);
+      transition: background-color var(--transition-slow), border-color var(--transition-slow);
 
       pre {
         font-family: var(--font-body);
@@ -1119,6 +1159,7 @@ import { ToastComponent } from '../../../shared/components/toast/toast.component
         max-height: 150px;
         overflow-y: auto;
         line-height: 1.6;
+        transition: color var(--transition-slow);
       }
     }
 
@@ -1165,9 +1206,10 @@ import { ToastComponent } from '../../../shared/components/toast/toast.component
     .attachment-options {
       display: flex;
       gap: var(--space-xs);
-      background: var(--color-border-subtle);
+      background: var(--color-fill-tertiary);
       padding: 3px;
       border-radius: var(--radius-md);
+      transition: background-color var(--transition-slow);
     }
 
     .attachment-btn {
@@ -1216,11 +1258,17 @@ import { ToastComponent } from '../../../shared/components/toast/toast.component
       font-size: 0.875rem;
       color: var(--color-text);
       cursor: pointer;
+      transition: background-color var(--transition-slow), border-color var(--transition-slow), color var(--transition-slow);
 
       &:focus {
         outline: none;
         border-color: var(--color-primary);
         box-shadow: 0 0 0 3px var(--color-primary-subtle);
+      }
+
+      option {
+        background: var(--color-surface);
+        color: var(--color-text);
       }
     }
 
@@ -1266,19 +1314,20 @@ import { ToastComponent } from '../../../shared/components/toast/toast.component
       font-size: 0.875rem;
       font-weight: 500;
       border-radius: var(--radius-md);
-      background: var(--color-bg);
+      background: var(--color-surface);
       color: var(--color-text-secondary);
       border: 1px solid var(--color-border);
       cursor: pointer;
-      transition: all var(--transition-fast);
+      transition: all var(--transition-fast), background-color var(--transition-slow), border-color var(--transition-slow);
 
       &:hover {
-        border-color: var(--color-text-muted);
+        border-color: var(--color-text-tertiary);
+        background: var(--color-fill-quaternary);
       }
 
       &--active {
         background: var(--color-primary);
-        color: white;
+        color: var(--color-primary-text);
         border-color: var(--color-primary);
       }
     }
@@ -1288,13 +1337,13 @@ import { ToastComponent } from '../../../shared/components/toast/toast.component
       height: 8px;
       border-radius: 50%;
 
-      &--draft { background: var(--color-text-muted); }
+      &--draft { background: var(--color-text-tertiary); }
       &--sent { background: var(--color-warning); }
       &--paid { background: var(--color-success); }
     }
 
     .status-btn--active .status-btn__dot {
-      background: white;
+      background: var(--color-primary-text);
     }
 
     /* PDF Preview Column */
@@ -1308,9 +1357,10 @@ import { ToastComponent } from '../../../shared/components/toast/toast.component
       border-radius: var(--radius-lg);
       overflow: hidden;
       box-shadow: var(--shadow-md);
-      border: 1px solid var(--color-border-subtle);
+      border: 1px solid var(--color-border);
       animation: fadeInUp 0.4s ease backwards;
       animation-delay: 0.1s;
+      transition: background-color var(--transition-slow), border-color var(--transition-slow);
     }
 
     .pdf-header {
@@ -1318,8 +1368,9 @@ import { ToastComponent } from '../../../shared/components/toast/toast.component
       align-items: center;
       justify-content: space-between;
       padding: var(--space-lg) var(--space-xl);
-      background: var(--color-bg);
-      border-bottom: 1px solid var(--color-border-subtle);
+      background: var(--color-surface-secondary);
+      border-bottom: 1px solid var(--color-border);
+      transition: background-color var(--transition-slow), border-color var(--transition-slow);
     }
 
     .pdf-header__left {
@@ -1334,14 +1385,16 @@ import { ToastComponent } from '../../../shared/components/toast/toast.component
       font-weight: 600;
       color: var(--color-text);
       margin: 0;
+      transition: color var(--transition-slow);
     }
 
     .pdf-tabs {
       display: flex;
       gap: var(--space-xs);
-      background: var(--color-border-subtle);
+      background: var(--color-fill-tertiary);
       padding: 3px;
       border-radius: var(--radius-md);
+      transition: background-color var(--transition-slow);
     }
 
     .pdf-tab {
@@ -1367,9 +1420,13 @@ import { ToastComponent } from '../../../shared/components/toast/toast.component
     }
 
     .pdf-container {
-      height: 800px;
+      height: 600px;
       background: #525659;
       position: relative;
+
+      @media (max-width: 1200px) {
+        height: 500px;
+      }
     }
 
     .pdf-viewer {
@@ -1424,7 +1481,7 @@ import { ToastComponent } from '../../../shared/components/toast/toast.component
 
       &--primary {
         background: var(--color-primary);
-        color: white;
+        color: var(--color-primary-text);
 
         &:hover:not(:disabled) {
           background: var(--color-primary-hover);
@@ -1435,9 +1492,10 @@ import { ToastComponent } from '../../../shared/components/toast/toast.component
         background: transparent;
         color: var(--color-text-secondary);
         border: 1px solid var(--color-border);
+        transition: all var(--transition-fast), background-color var(--transition-slow), border-color var(--transition-slow);
 
         &:hover {
-          background: var(--color-bg);
+          background: var(--color-fill-quaternary);
           color: var(--color-text);
         }
       }
@@ -1462,7 +1520,7 @@ import { ToastComponent } from '../../../shared/components/toast/toast.component
         color: white;
 
         &:hover:not(:disabled) {
-          background: #d97706;
+          filter: brightness(0.9);
         }
       }
 
@@ -1471,7 +1529,7 @@ import { ToastComponent } from '../../../shared/components/toast/toast.component
         color: white;
 
         &:hover:not(:disabled) {
-          background: #dc2626;
+          filter: brightness(0.9);
         }
       }
 
@@ -1483,8 +1541,25 @@ import { ToastComponent } from '../../../shared/components/toast/toast.component
 
     /* Action Buttons */
     .card--actions {
-      background: var(--color-bg);
+      background: var(--color-surface-secondary);
       border: 1px dashed var(--color-border);
+      transition: background-color var(--transition-slow), border-color var(--transition-slow);
+    }
+
+    /* Activity Card */
+    .card--activity {
+      background: var(--color-surface);
+      max-height: 400px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+
+      app-activity-timeline {
+        flex: 1;
+        overflow-y: auto;
+        margin: 0 calc(-1 * var(--space-xl));
+        padding: 0 var(--space-xl);
+      }
     }
 
     .action-buttons {
@@ -1516,6 +1591,7 @@ import { ToastComponent } from '../../../shared/components/toast/toast.component
       margin-top: var(--space-lg);
       padding-top: var(--space-lg);
       border-top: 1px solid var(--color-border);
+      transition: border-color var(--transition-slow);
     }
 
     .crm-sync-title {
@@ -1526,6 +1602,7 @@ import { ToastComponent } from '../../../shared/components/toast/toast.component
       font-weight: 600;
       color: var(--color-text-secondary);
       margin-bottom: var(--space-md);
+      transition: color var(--transition-slow);
 
       svg {
         width: 16px;
@@ -1611,16 +1688,16 @@ import { ToastComponent } from '../../../shared/components/toast/toast.component
       color: var(--color-text);
       font-size: 0.875rem;
       cursor: pointer;
-      transition: all var(--transition-fast);
+      transition: all var(--transition-fast), background-color var(--transition-slow), border-color var(--transition-slow);
 
       &:hover {
-        border-color: var(--color-text-muted);
+        border-color: var(--color-text-tertiary);
       }
 
       &:focus {
         outline: none;
-        border-color: #6366f1;
-        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+        border-color: var(--color-primary);
+        box-shadow: 0 0 0 3px var(--color-primary-subtle);
       }
 
       option {
@@ -1678,14 +1755,13 @@ import { ToastComponent } from '../../../shared/components/toast/toast.component
     }
 
     /* Responsive */
-    @media (max-width: 1100px) {
+    @media (max-width: 1000px) {
       .preview-column {
         position: static;
-        order: -1;
       }
 
       .pdf-container {
-        height: 500px;
+        height: 400px;
       }
     }
 
@@ -1732,9 +1808,11 @@ export class InvoicePreviewComponent implements OnInit, OnDestroy {
   private crmService = inject(CRMService);
   private crmIntegrationService = inject(CRMIntegrationService);
   private sanitizer = inject(DomSanitizer);
+  private activityLogService = inject(ActivityLogService);
 
   invoice = signal<Invoice | null>(null);
   emailDraft = signal<EmailDraft | null>(null);
+  activityLogs = signal<ActivityLog[]>([]);
   isLoading = signal(true);
   isDownloading = signal(false);
   isPdfLoading = signal(false);
@@ -1763,6 +1841,29 @@ export class InvoicePreviewComponent implements OnInit, OnDestroy {
     return url ? this.sanitizer.bypassSecurityTrustResourceUrl(url) : null;
   });
   hasCrmPdf = computed(() => !!this.invoice()?.crmPdfPath);
+
+  // Detect if invoice is fixed amount (no hours/rate, but has amount)
+  isFixedAmountInvoice = computed(() => {
+    const inv = this.invoice();
+    if (!inv) return false;
+    const hours = Number(inv.hoursWorked) || 0;
+    const rate = Number(inv.hourlyRate) || 0;
+    const amount = Number(inv.amount) || 0;
+    // It's a fixed amount invoice if hours and rate are 0 but amount exists
+    return hours === 0 && rate === 0 && amount > 0;
+  });
+
+  // Helper to build client address from structured fields
+  getClientAddress(): string {
+    const client = this.invoice()?.task?.client;
+    if (!client) return '';
+    const parts = [
+      client.streetAddress,
+      [client.postcode, client.city].filter(Boolean).join(' '),
+      client.country
+    ].filter(Boolean);
+    return parts.join(', ');
+  }
 
   private rawPdfUrl = signal<string | null>(null);
   private objectUrl: string | null = null;
@@ -1837,12 +1938,20 @@ export class InvoicePreviewComponent implements OnInit, OnDestroy {
         this.invoice.set(invoice);
         this.loadEmailDraft(id);
         this.loadPdfPreview(id);
+        this.loadActivityLogs(id);
         this.isLoading.set(false);
       },
       error: () => {
         this.isLoading.set(false);
         this.notificationService.error('Failed to load invoice');
       }
+    });
+  }
+
+  loadActivityLogs(invoiceId: string) {
+    this.activityLogService.getInvoiceActivity(invoiceId).subscribe({
+      next: (logs) => this.activityLogs.set(logs),
+      error: () => console.error('Failed to load activity logs')
     });
   }
 
@@ -1917,6 +2026,7 @@ export class InvoicePreviewComponent implements OnInit, OnDestroy {
     this.invoiceService.updateStatus(inv.id, status).subscribe({
       next: (updated) => {
         this.invoice.set(updated);
+        this.loadActivityLogs(inv.id);
         this.notificationService.success(`Status updated to ${this.getStatusLabel(status)}`);
       },
       error: () => {
@@ -1930,8 +2040,8 @@ export class InvoicePreviewComponent implements OnInit, OnDestroy {
     const draft = this.emailDraft();
     const accounts = this.googleService.accounts();
 
-    // Use task's googleAccountId, or selected one, or first available account
-    const googleAccountId = inv?.task?.googleAccountId
+    // Use client's googleAccountId, or selected one, or first available account
+    const googleAccountId = inv?.task?.client?.googleAccountId
       || this.selectedGoogleAccountId()
       || (accounts.length === 1 ? accounts[0].id : null);
 
@@ -1944,7 +2054,7 @@ export class InvoicePreviewComponent implements OnInit, OnDestroy {
 
     this.googleService.createDraft({
       googleAccountId,
-      to: inv?.task?.clientEmail || '',
+      to: inv?.task?.client?.billingEmail || inv?.task?.client?.email || '',
       subject: draft.subject,
       body: draft.body,
       invoiceId: inv?.id,
@@ -1952,6 +2062,7 @@ export class InvoicePreviewComponent implements OnInit, OnDestroy {
     }).subscribe({
       next: (response) => {
         this.isCreatingDraft.set(false);
+        this.loadActivityLogs(inv!.id);
         this.notificationService.success('Gmail draft created!');
         // Open Gmail draft in new tab
         window.open(response.webLink, '_blank');
@@ -1978,6 +2089,7 @@ export class InvoicePreviewComponent implements OnInit, OnDestroy {
       next: (updated) => {
         this.invoice.set(updated);
         this.isArchiving.set(false);
+        this.loadActivityLogs(inv.id);
         this.notificationService.success('Invoice archived');
       },
       error: () => {
@@ -1996,6 +2108,7 @@ export class InvoicePreviewComponent implements OnInit, OnDestroy {
       next: (updated) => {
         this.invoice.set(updated);
         this.isArchiving.set(false);
+        this.loadActivityLogs(inv.id);
         this.notificationService.success('Invoice restored from archive');
       },
       error: () => {
@@ -2044,6 +2157,7 @@ export class InvoicePreviewComponent implements OnInit, OnDestroy {
             crmInvoiceId: result.crmInvoiceId,
             crmSyncedAt: new Date().toISOString()
           } : null);
+          this.loadActivityLogs(inv.id);
         } else {
           this.notificationService.error(result.message || 'Failed to sync to CRM');
           console.error('CRM sync error:', result.error);
@@ -2090,6 +2204,7 @@ export class InvoicePreviewComponent implements OnInit, OnDestroy {
           this.invoice.update(i => i ? { ...i, crmPdfUrl: result.pdfUrl, crmPdfPath: result.pdfPath } : null);
           // Load CRM PDF preview
           this.loadCrmPdfPreview(inv.id);
+          this.loadActivityLogs(inv.id);
         } else {
           this.notificationService.error(result.message || 'Failed to fetch PDF from CRM');
         }

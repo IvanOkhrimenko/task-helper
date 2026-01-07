@@ -4,6 +4,8 @@ import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute, RouterLink } from '@angular/router';
 import { TaskService, Task, Invoice } from '../../../core/services/task.service';
 import { InvoiceService } from '../../../core/services/invoice.service';
+import { ActivityLogService, ActivityLog } from '../../../core/services/activity-log.service';
+import { ActivityTimelineComponent } from '../../../shared/components/activity-timeline/activity-timeline.component';
 
 const MONTH_NAMES = [
   'January', 'February', 'March', 'April', 'May', 'June',
@@ -13,7 +15,7 @@ const MONTH_NAMES = [
 @Component({
   selector: 'app-task-detail',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink, ActivityTimelineComponent],
   template: `
     <div class="page">
       <div class="page__container">
@@ -48,22 +50,22 @@ const MONTH_NAMES = [
               </div>
               <h1 class="task-header__title">{{ task()!.name }}</h1>
               <div class="task-header__meta">
-                @if (task()!.clientName) {
+                @if (task()!.client?.name) {
                   <span class="meta-item">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                       <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
                       <circle cx="12" cy="7" r="4"/>
                     </svg>
-                    {{ task()!.clientName }}
+                    <a [routerLink]="['/clients', task()!.client!.id]" class="meta-link">{{ task()!.client!.name }}</a>
                   </span>
                 }
-                @if (task()!.clientEmail) {
+                @if (task()!.client?.email) {
                   <span class="meta-item">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                       <rect x="2" y="4" width="20" height="16" rx="2"/>
                       <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
                     </svg>
-                    {{ task()!.clientEmail }}
+                    {{ task()!.client!.email }}
                   </span>
                 }
               </div>
@@ -71,10 +73,6 @@ const MONTH_NAMES = [
 
             <div class="task-header__details">
               <div class="detail-grid">
-                <div class="detail-item">
-                  <span class="detail-label">Hourly Rate</span>
-                  <span class="detail-value detail-value--highlight">\${{ task()!.hourlyRate || 0 }}</span>
-                </div>
                 <div class="detail-item">
                   <span class="detail-label">Warning Day</span>
                   <span class="detail-value">
@@ -91,18 +89,24 @@ const MONTH_NAMES = [
                   <span class="detail-label">Total Invoices</span>
                   <span class="detail-value">{{ invoices().length }}</span>
                 </div>
+                @if (task()!.client?.hourlyRate) {
+                  <div class="detail-item">
+                    <span class="detail-label">Hourly Rate</span>
+                    <span class="detail-value detail-value--highlight">{{ task()!.client!.currency || 'USD' }} {{ task()!.client!.hourlyRate }}</span>
+                  </div>
+                }
               </div>
 
-              @if (task()!.clientAddress) {
+              @if (clientAddress()) {
                 <div class="address-block">
                   <span class="detail-label">Client Address</span>
-                  <p class="address-text">{{ task()!.clientAddress }}</p>
+                  <p class="address-text">{{ clientAddress() }}</p>
                 </div>
               }
             </div>
 
             <div class="task-header__actions">
-              <a [routerLink]="['/tasks', task()!.id, 'edit']" class="btn btn--secondary">
+              <a [routerLink]="['/tasks/invoices', task()!.id, 'edit']" class="btn btn--secondary">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/>
                 </svg>
@@ -278,62 +282,37 @@ const MONTH_NAMES = [
               </div>
             }
           </section>
+
+          <!-- Activity History Section -->
+          <section class="activity-section" style="animation-delay: 0.3s">
+            <div class="section-header">
+              <h2 class="section-title">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="10"/>
+                  <polyline points="12,6 12,12 16,14"/>
+                </svg>
+                Activity History
+              </h2>
+              <span class="invoice-count">{{ activityLogs().length }} entries</span>
+            </div>
+
+            <app-activity-timeline [activityLogs]="activityLogs()"></app-activity-timeline>
+          </section>
         }
       </div>
     </div>
   `,
   styles: [`
-    @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
-
     :host {
-      --color-bg: #FAFBFC;
-      --color-surface: #FFFFFF;
-      --color-primary: #2563EB;
-      --color-primary-hover: #1D4ED8;
-      --color-primary-subtle: rgba(37, 99, 235, 0.08);
-      --color-warning: #F59E0B;
-      --color-warning-subtle: rgba(245, 158, 11, 0.1);
-      --color-danger: #EF4444;
-      --color-danger-subtle: rgba(239, 68, 68, 0.1);
-      --color-success: #10B981;
-      --color-success-subtle: rgba(16, 185, 129, 0.1);
-      --color-text: #1F2937;
-      --color-text-secondary: #6B7280;
-      --color-text-muted: #9CA3AF;
-      --color-border: #E5E7EB;
-      --color-border-subtle: #F3F4F6;
-
-      --font-display: 'Outfit', system-ui, sans-serif;
-      --font-mono: 'JetBrains Mono', monospace;
-
-      --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
-      --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.06);
-      --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.08);
-      --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.04), 0 4px 16px rgba(0, 0, 0, 0.04);
-
-      --radius-sm: 6px;
-      --radius-md: 10px;
-      --radius-lg: 14px;
-      --radius-xl: 20px;
-
-      --space-xs: 4px;
-      --space-sm: 8px;
-      --space-md: 12px;
-      --space-lg: 16px;
-      --space-xl: 24px;
-      --space-2xl: 32px;
-      --space-3xl: 48px;
-
-      --transition-fast: 0.15s ease;
-      --transition-normal: 0.25s ease;
-
       display: block;
+      font-family: var(--font-body);
     }
 
     .page {
       min-height: 100vh;
       background: var(--color-bg);
       padding: var(--space-xl);
+      transition: background-color var(--transition-slow);
     }
 
     .page__container {
@@ -370,7 +349,7 @@ const MONTH_NAMES = [
     }
 
     .breadcrumb__separator {
-      color: var(--color-text-muted);
+      color: var(--color-text-tertiary);
     }
 
     .breadcrumb__current {
@@ -409,6 +388,7 @@ const MONTH_NAMES = [
       animation: slideUp 0.5s ease backwards;
       position: relative;
       overflow: hidden;
+      transition: background-color var(--transition-slow), box-shadow var(--transition-slow);
 
       &::before {
         content: '';
@@ -450,7 +430,7 @@ const MONTH_NAMES = [
       }
 
       &--inactive {
-        background: var(--color-text-muted);
+        background: var(--color-text-tertiary);
       }
     }
 
@@ -485,9 +465,20 @@ const MONTH_NAMES = [
       }
     }
 
+    .meta-link {
+      color: var(--color-primary);
+      text-decoration: none;
+      transition: opacity var(--transition-fast);
+
+      &:hover {
+        opacity: 0.8;
+        text-decoration: underline;
+      }
+    }
+
     .task-header__details {
       padding-top: var(--space-xl);
-      border-top: 1px solid var(--color-border-subtle);
+      border-top: 1px solid var(--color-fill-quaternary);
     }
 
     .detail-grid {
@@ -507,7 +498,7 @@ const MONTH_NAMES = [
       font-family: var(--font-display);
       font-size: 0.75rem;
       font-weight: 500;
-      color: var(--color-text-muted);
+      color: var(--color-text-tertiary);
       text-transform: uppercase;
       letter-spacing: 0.05em;
     }
@@ -548,7 +539,7 @@ const MONTH_NAMES = [
 
     .address-block {
       padding-top: var(--space-lg);
-      border-top: 1px solid var(--color-border-subtle);
+      border-top: 1px solid var(--color-fill-quaternary);
     }
 
     .address-text {
@@ -565,12 +556,18 @@ const MONTH_NAMES = [
       justify-content: flex-end;
       padding-top: var(--space-xl);
       margin-top: var(--space-lg);
-      border-top: 1px solid var(--color-border-subtle);
+      border-top: 1px solid var(--color-fill-quaternary);
     }
 
     /* Invoice Section */
-    .invoice-section {
+    .invoice-section,
+    .activity-section {
       animation: slideUp 0.5s ease backwards;
+      margin-bottom: var(--space-2xl);
+    }
+
+    .activity-section {
+      margin-bottom: 0;
     }
 
     .section-header {
@@ -600,8 +597,8 @@ const MONTH_NAMES = [
     .invoice-count {
       font-family: var(--font-mono);
       font-size: 0.875rem;
-      color: var(--color-text-muted);
-      background: var(--color-border-subtle);
+      color: var(--color-text-tertiary);
+      background: var(--color-fill-quaternary);
       padding: var(--space-xs) var(--space-md);
       border-radius: var(--radius-sm);
     }
@@ -617,6 +614,7 @@ const MONTH_NAMES = [
       box-shadow: var(--shadow-card);
       padding: var(--space-3xl);
       text-align: center;
+      transition: background-color var(--transition-slow), box-shadow var(--transition-slow);
     }
 
     .empty-state__icon {
@@ -625,14 +623,14 @@ const MONTH_NAMES = [
       display: flex;
       align-items: center;
       justify-content: center;
-      background: var(--color-border-subtle);
+      background: var(--color-fill-quaternary);
       border-radius: var(--radius-lg);
       margin-bottom: var(--space-xl);
 
       svg {
         width: 32px;
         height: 32px;
-        color: var(--color-text-muted);
+        color: var(--color-text-tertiary);
       }
     }
 
@@ -680,7 +678,7 @@ const MONTH_NAMES = [
       z-index: 1;
 
       &--draft {
-        background: var(--color-text-muted);
+        background: var(--color-text-tertiary);
       }
 
       &--sent {
@@ -712,7 +710,7 @@ const MONTH_NAMES = [
       border-radius: var(--radius-lg);
       box-shadow: var(--shadow-card);
       overflow: hidden;
-      transition: box-shadow var(--transition-normal), transform var(--transition-normal);
+      transition: background-color var(--transition-slow), box-shadow var(--transition-base), transform var(--transition-base);
 
       &:hover {
         box-shadow: var(--shadow-lg);
@@ -725,7 +723,7 @@ const MONTH_NAMES = [
       align-items: center;
       justify-content: space-between;
       padding: var(--space-lg) var(--space-xl);
-      background: var(--color-border-subtle);
+      background: var(--color-fill-quaternary);
       border-bottom: 1px solid var(--color-border);
     }
 
@@ -790,7 +788,7 @@ const MONTH_NAMES = [
       gap: var(--space-lg);
       margin-bottom: var(--space-xl);
       padding-bottom: var(--space-xl);
-      border-bottom: 1px solid var(--color-border-subtle);
+      border-bottom: 1px solid var(--color-fill-quaternary);
     }
 
     .stat {
@@ -803,7 +801,7 @@ const MONTH_NAMES = [
       font-family: var(--font-display);
       font-size: 0.6875rem;
       font-weight: 500;
-      color: var(--color-text-muted);
+      color: var(--color-text-tertiary);
       text-transform: uppercase;
       letter-spacing: 0.05em;
     }
@@ -845,7 +843,7 @@ const MONTH_NAMES = [
       font-family: var(--font-display);
       font-size: 0.75rem;
       font-weight: 500;
-      color: var(--color-text-muted);
+      color: var(--color-text-tertiary);
       text-transform: uppercase;
       letter-spacing: 0.05em;
     }
@@ -867,7 +865,7 @@ const MONTH_NAMES = [
       transition: border-color var(--transition-fast);
 
       &:hover {
-        border-color: var(--color-text-muted);
+        border-color: var(--color-text-tertiary);
       }
 
       &:focus {
@@ -904,7 +902,7 @@ const MONTH_NAMES = [
       }
 
       &:hover:not(:disabled) {
-        border-color: var(--color-text-muted);
+        border-color: var(--color-text-tertiary);
         color: var(--color-text);
       }
 
@@ -930,7 +928,7 @@ const MONTH_NAMES = [
     .comments-section {
       margin-top: var(--space-lg);
       padding-top: var(--space-lg);
-      border-top: 1px solid var(--color-border-subtle);
+      border-top: 1px solid var(--color-fill-quaternary);
     }
 
     .comments-toggle {
@@ -985,7 +983,7 @@ const MONTH_NAMES = [
       transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
 
       &::placeholder {
-        color: var(--color-text-muted);
+        color: var(--color-text-tertiary);
       }
 
       &:focus {
@@ -1003,10 +1001,10 @@ const MONTH_NAMES = [
       padding: var(--space-sm) var(--space-lg);
       border-radius: var(--radius-sm);
       background: var(--color-primary);
-      color: white;
+      color: var(--color-primary-text);
       border: none;
       cursor: pointer;
-      transition: background var(--transition-fast);
+      transition: background-color var(--transition-fast), color var(--transition-fast);
       display: inline-flex;
       align-items: center;
       gap: var(--space-sm);
@@ -1025,7 +1023,7 @@ const MONTH_NAMES = [
       width: 12px;
       height: 12px;
       border: 2px solid rgba(255, 255, 255, 0.3);
-      border-top-color: white;
+      border-top-color: var(--color-primary-text);
       border-radius: 50%;
       animation: spin 0.8s linear infinite;
     }
@@ -1052,7 +1050,7 @@ const MONTH_NAMES = [
 
       &--primary {
         background: var(--color-primary);
-        color: white;
+        color: var(--color-primary-text);
         border: none;
 
         &:hover {
@@ -1066,8 +1064,8 @@ const MONTH_NAMES = [
         border: 1px solid var(--color-border);
 
         &:hover {
-          background: var(--color-border-subtle);
-          border-color: var(--color-text-muted);
+          background: var(--color-fill-quaternary);
+          border-color: var(--color-text-tertiary);
         }
       }
     }
@@ -1149,14 +1147,27 @@ export class TaskDetailComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private taskService = inject(TaskService);
   private invoiceService = inject(InvoiceService);
+  private activityLogService = inject(ActivityLogService);
 
   loading = signal(true);
   task = signal<Task | null>(null);
   invoices = signal<Invoice[]>([]);
+  activityLogs = signal<ActivityLog[]>([]);
   expandedComments = signal<Set<string>>(new Set());
   updatingStatus = signal<string | null>(null);
   savingComments = signal<string | null>(null);
   commentDrafts = new Map<string, string>();
+
+  clientAddress = computed(() => {
+    const client = this.task()?.client;
+    if (!client) return '';
+    const parts = [
+      client.streetAddress,
+      [client.postcode, client.city].filter(Boolean).join(' '),
+      client.country
+    ].filter(Boolean);
+    return parts.join('\n');
+  });
 
   ngOnInit() {
     const taskId = this.route.snapshot.paramMap.get('id');
@@ -1172,10 +1183,18 @@ export class TaskDetailComponent implements OnInit {
         this.task.set(task);
         this.invoices.set(task.invoices || []);
         this.loading.set(false);
+        this.loadActivityLogs(id);
       },
       error: () => {
         this.router.navigate(['/dashboard']);
       }
+    });
+  }
+
+  private loadActivityLogs(taskId: string) {
+    this.activityLogService.getTaskActivity(taskId).subscribe({
+      next: (logs) => this.activityLogs.set(logs),
+      error: (err) => console.error('Failed to load activity logs:', err)
     });
   }
 
@@ -1204,6 +1223,8 @@ export class TaskDetailComponent implements OnInit {
           list.map(inv => inv.id === invoiceId ? { ...inv, status: updated.status } : inv)
         );
         this.updatingStatus.set(null);
+        const taskId = this.task()?.id;
+        if (taskId) this.loadActivityLogs(taskId);
       },
       error: () => {
         this.updatingStatus.set(null);
@@ -1239,6 +1260,8 @@ export class TaskDetailComponent implements OnInit {
           list.map(inv => inv.id === invoiceId ? { ...inv, comments: updated.comments } : inv)
         );
         this.savingComments.set(null);
+        const taskId = this.task()?.id;
+        if (taskId) this.loadActivityLogs(taskId);
       },
       error: () => {
         this.savingComments.set(null);

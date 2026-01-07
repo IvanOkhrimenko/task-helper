@@ -35,6 +35,7 @@ model User {
   pushNotifications   Boolean @default(true)
   pushSubscription    Json?   // Web Push subscription data
 
+  clients           Client[]
   tasks             Task[]
   invoices          Invoice[]
   notifications     Notification[]
@@ -42,6 +43,7 @@ model User {
   bankAccounts      BankAccount[]
   crmIntegrations   CRMIntegration[]
   chatConversations ChatConversation[]
+  activityLogs      ActivityLog[]
   createdAt         DateTime  @default(now())
 }
 
@@ -61,6 +63,7 @@ model BankAccount {
   userId          String
   user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  clients         Client[]
   tasks           Task[]
 
   createdAt       DateTime @default(now())
@@ -105,6 +108,7 @@ model CRMIntegration {
   // Relations
   userId              String
   user                User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  clients             Client[]
   tasks               Task[]
 
   createdAt           DateTime  @default(now())
@@ -114,6 +118,67 @@ model CRMIntegration {
   @@index([userId, isActive])
 }
 
+// Client/Company entity - stores all client/buyer information for invoices
+model Client {
+  id                  String    @id @default(uuid())
+  name                String    // Client/company name
+  isActive            Boolean   @default(true)
+  isArchived          Boolean   @default(false)
+
+  // Client/Buyer contact info
+  nip                 String?   // Tax ID (NIP in Poland)
+  streetAddress       String?   // Street and building number
+  postcode            String?   // Postal code
+  city                String?   // City
+  country             String?   // Country
+  email               String?   // Primary email
+  billingEmail        String?   // Email for sending invoices (if different)
+  bankAccount         String?   // Client's bank account number
+
+  // CRM integration
+  crmClientId         String?   // Client ID in CRM system
+  crmIntegrationId    String?   // Which CRM integration to use
+  crmIntegration      CRMIntegration? @relation(fields: [crmIntegrationId], references: [id], onDelete: SetNull)
+
+  // Invoice defaults
+  hourlyRate          Decimal?  @db.Decimal(10, 2)
+  hoursWorked         Decimal?  @db.Decimal(10, 2)  // Default hours per invoice
+  fixedMonthlyAmount  Decimal?  @db.Decimal(10, 2)  // Fixed amount instead of rate*hours
+  description         String?   // General description for invoices
+  defaultServiceName  String?   // Default service name for CRM invoices
+  currency            String    @default("USD")
+  defaultLanguage     String    @default("PL")  // PL, EN
+  invoiceTemplate     InvoiceTemplate @default(STANDARD)
+
+  // Email template fields
+  emailSubjectTemplate   String?  @db.Text
+  emailBodyTemplate      String?  @db.Text
+  useCustomEmailTemplate Boolean  @default(false)
+
+  // Integrations
+  googleAccountId     String?
+  googleAccount       GoogleAccount? @relation(fields: [googleAccountId], references: [id], onDelete: SetNull)
+  bankAccountId       String?   // Bank account for invoices
+  bankAccountRef      BankAccount? @relation(fields: [bankAccountId], references: [id], onDelete: SetNull)
+
+  // Relations
+  userId              String
+  user                User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tasks               Task[]
+  invoices            Invoice[]
+  activityLogs        ActivityLog[]
+
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  @@index([userId])
+  @@index([userId, isActive])
+  @@index([userId, isArchived])
+  @@index([crmIntegrationId])
+  @@index([googleAccountId])
+  @@index([bankAccountId])
+}
+
 model Task {
   id            String    @id @default(uuid())
   type          TaskType  @default(INVOICE)
@@ -121,36 +186,37 @@ model Task {
   isActive      Boolean   @default(true)
   isArchived    Boolean   @default(false)
 
-  // Shared date fields (for INVOICE type - day of month)
+  // Date fields (for INVOICE type - day of month)
   warningDate   Int?      // day of month for warning (1-31)
   deadlineDate  Int?      // day of month for deadline (1-31)
 
-  // Invoice-specific data - Client/Buyer info
+  // Client relation (nullable for migration, will be required after data migration)
+  clientId      String?
+  client        Client?   @relation(fields: [clientId], references: [id], onDelete: SetNull)
+
+  // @deprecated - Legacy client fields (moved to Client entity)
+  // These will be removed after data migration
   clientName          String?
-  clientNip           String?   // Client's tax ID (optional)
-  clientStreetAddress String?   // Client street and building
-  clientPostcode      String?   // Client postal code
-  clientCity          String?   // Client city
-  clientCountry       String?   // Client country
+  clientNip           String?
+  clientStreetAddress String?
+  clientPostcode      String?
+  clientCity          String?
+  clientCountry       String?
   clientEmail         String?
-  clientBankAccount   String?   // Client's bank account number (optional)
-
-  // CRM integration
-  crmClientId         String?   // Client ID in CRM system
-  crmIntegrationId    String?   // Which CRM integration to use for this task
+  billingEmail        String?
+  clientBankAccount   String?
+  crmClientId         String?
+  crmIntegrationId    String?
   crmIntegration      CRMIntegration? @relation(fields: [crmIntegrationId], references: [id], onDelete: SetNull)
-
-  // Legacy field - keep for backwards compatibility
-  clientAddress       String?   // @deprecated - use clientStreetAddress, clientPostcode, etc.
-
-  // Invoice defaults
+  clientAddress       String?
   hourlyRate          Decimal?  @db.Decimal(10, 2)
   hoursWorked         Decimal?  @db.Decimal(10, 2)
-  description         String?   // General task description
-  defaultServiceName  String?   // Default service/item name for CRM invoices (e.g., "Tworzenie oprogramowania")
+  fixedMonthlyAmount  Decimal?  @db.Decimal(10, 2)  // Fixed amount instead of rate*hours
+  description         String?
+  defaultServiceName  String?
   currency            String    @default("USD")
-  defaultLanguage     String    @default("PL")  // PL, EN
-  invoiceTemplate     InvoiceTemplate @default(STANDARD)  // Invoice PDF template style
+  defaultLanguage     String    @default("PL")
+  invoiceTemplate     InvoiceTemplate @default(STANDARD)
 
   // Reminder-specific data
   scheduleType      ScheduleType?
@@ -181,10 +247,12 @@ model Task {
   user          User              @relation(fields: [userId], references: [id], onDelete: Cascade)
   invoices      Invoice[]
   notifications Notification[]
+  activityLogs  ActivityLog[]
   createdAt     DateTime          @default(now())
   updatedAt     DateTime          @updatedAt
 
   @@index([userId, type])
+  @@index([clientId])
   @@index([googleAccountId])
   @@index([bankAccountId])
   @@index([crmIntegrationId])
@@ -217,15 +285,19 @@ model Invoice {
   crmPdfUrl    String?       // URL to PDF in external CRM system
   crmPdfPath   String?       // Local path to downloaded CRM PDF
 
-  taskId    String
-  task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @default(now()) @updatedAt
+  taskId       String
+  task         Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  clientId     String?  // Direct link to client (nullable for migration)
+  client       Client?  @relation(fields: [clientId], references: [id], onDelete: SetNull)
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  activityLogs ActivityLog[]
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @default(now()) @updatedAt
 
   @@index([userId])
   @@index([taskId])
+  @@index([clientId])
   @@index([status])
   @@index([userId, isArchived])
 }
@@ -264,6 +336,7 @@ model GoogleAccount {
   userId        String
   user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  clients       Client[]
   tasks         Task[]
 
   createdAt     DateTime @default(now())
@@ -433,4 +506,58 @@ model ChatPendingAction {
   createdAt      DateTime     @default(now())
 
   @@index([conversationId, status])
+}
+
+// Activity Log for tracking all entity changes
+model ActivityLog {
+  id           String       @id @default(uuid())
+  entityType   EntityType
+  entityId     String
+  action       ActionType
+
+  changes      Json?        // { field: { oldValue, newValue } }
+  metadata     Json?        // { triggerSource, crmInvoiceId, etc }
+
+  userId       String
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  clientId     String?
+  client       Client?      @relation(fields: [clientId], references: [id], onDelete: SetNull)
+  taskId       String?
+  task         Task?        @relation(fields: [taskId], references: [id], onDelete: SetNull)
+  invoiceId    String?
+  invoice      Invoice?     @relation(fields: [invoiceId], references: [id], onDelete: SetNull)
+
+  createdAt    DateTime     @default(now())
+
+  @@index([entityType, entityId])
+  @@index([clientId])
+  @@index([taskId])
+  @@index([invoiceId])
+  @@index([createdAt])
+  @@index([userId])
+}
+
+enum EntityType {
+  CLIENT
+  TASK
+  INVOICE
+}
+
+enum ActionType {
+  CREATED
+  UPDATED
+  DELETED
+  STATUS_CHANGED
+  ARCHIVED
+  UNARCHIVED
+  ACTIVATED
+  DEACTIVATED
+  INVOICE_GENERATED
+  PDF_GENERATED
+  EMAIL_SENT
+  EMAIL_DRAFT_CREATED
+  CRM_SYNCED
+  CRM_PDF_FETCHED
+  COMMENTS_UPDATED
 }

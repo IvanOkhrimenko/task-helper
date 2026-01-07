@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import { PrismaClient } from '@prisma/client';
 import authRoutes from './routes/auth.routes.js';
+import clientRoutes from './routes/client.routes.js';
 import taskRoutes from './routes/task.routes.js';
 import invoiceRoutes from './routes/invoice.routes.js';
 import reminderRoutes from './routes/reminder.routes.js';
@@ -13,6 +14,7 @@ import integrationsRoutes from './routes/integrations.routes.js';
 import crmRoutes from './routes/crm.routes.js';
 import crmIntegrationsRoutes from './routes/crm-integrations.routes.js';
 import bankAccountsRoutes from './routes/bank-accounts.routes.js';
+import activityLogRoutes from './routes/activity-log.routes.js';
 import { initScheduler } from './services/scheduler.service.js';
 
 const app = express();
@@ -30,6 +32,7 @@ app.set('prisma', prisma);
 
 // Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/clients', clientRoutes);
 app.use('/api/tasks', taskRoutes);
 app.use('/api/invoices', invoiceRoutes);
 app.use('/api/reminders', reminderRoutes);
@@ -41,6 +44,7 @@ app.use('/api/integrations', integrationsRoutes);
 app.use('/api/crm', crmRoutes);
 app.use('/api/crm-integrations', crmIntegrationsRoutes);
 app.use('/api/bank-accounts', bankAccountsRoutes);
+app.use('/api/activity', activityLogRoutes);
 
 // Health check
 app.get('/api/health', (_, res) => {

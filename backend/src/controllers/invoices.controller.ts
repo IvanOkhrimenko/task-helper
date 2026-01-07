@@ -6,11 +6,27 @@ import fs from 'fs';
 import { AuthRequest } from '../middleware/auth.middleware.js';
 import { generateInvoicePDF, generateEmailDraft } from '../services/pdf.service.js';
 import { StorageService } from '../services/storage.service.js';
+import { ActivityLogService } from '../services/activity-log.service.js';
 
 export async function generateInvoice(req: AuthRequest, res: Response): Promise<void> {
   const prisma: PrismaClient = req.app.get('prisma');
   const { id: taskId } = req.params;
-  const { hoursWorked, hourlyRate, month, year, description, language } = req.body;
+  const {
+    hoursWorked,
+    hourlyRate,
+    fixedAmount,
+    month,
+    year,
+    description,
+    language,
+    currency: requestCurrency,
+    invoiceTemplate,
+    bankAccountId,
+    googleAccountId,
+    useCustomEmailTemplate,
+    emailSubject,
+    emailBody
+  } = req.body;
 
   try {
     const task = await prisma.task.findFirst({
@@ -31,10 +47,22 @@ export async function generateInvoice(req: AuthRequest, res: Response): Promise<
       return;
     }
 
-    // Use provided hours and rate or task defaults
-    const hours = hoursWorked !== undefined ? parseFloat(hoursWorked) : (Number(task.hoursWorked) || 0);
-    const rate = hourlyRate !== undefined ? parseFloat(hourlyRate) : (Number(task.hourlyRate) || 0);
-    const amount = hours * rate;
+    // Determine amount based on billing type
+    let amount: number;
+    let hours: number;
+    let rate: number;
+
+    if (fixedAmount !== undefined) {
+      // Fixed monthly amount - use provided or task default
+      amount = parseFloat(fixedAmount) || Number(task.fixedMonthlyAmount) || 0;
+      hours = 0;  // Not applicable for fixed amount
+      rate = 0;   // Not applicable for fixed amount
+    } else {
+      // Hourly billing - calculate from hours * rate
+      hours = hoursWorked !== undefined ? parseFloat(hoursWorked) : (Number(task.hoursWorked) || 0);
+      rate = hourlyRate !== undefined ? parseFloat(hourlyRate) : (Number(task.hourlyRate) || 0);
+      amount = hours * rate;
+    }
 
     // Use provided month/year or current date
     const invoiceMonth = month !== undefined ? parseInt(month) : new Date().getMonth();
@@ -79,14 +107,22 @@ export async function generateInvoice(req: AuthRequest, res: Response): Promise<
       language: invoiceLanguage
     });
 
-    // Generate email draft
-    const emailDraft = generateEmailDraft(
-      { ...task, description: invoiceDescription, hoursWorked: hours as any },
-      invoice,
-      user,
-      periodInfo,
-      invoiceLanguage
-    );
+    // Generate email draft - use passed email template if provided, otherwise generate default
+    let emailDraft: { subject: string; body: string };
+
+    if (useCustomEmailTemplate && emailSubject && emailBody) {
+      // Use custom email template provided from the frontend
+      emailDraft = { subject: emailSubject, body: emailBody };
+    } else {
+      // Generate default email draft
+      emailDraft = generateEmailDraft(
+        { ...task, description: invoiceDescription, hoursWorked: hours as any },
+        invoice,
+        user,
+        periodInfo,
+        invoiceLanguage
+      );
+    }
 
     // Update invoice with PDF path and email content
     const updatedInvoice = await prisma.invoice.update({
@@ -97,6 +133,31 @@ export async function generateInvoice(req: AuthRequest, res: Response): Promise<
         emailBody: emailDraft.body
       }
     });
+
+    // Log activity
+    const activityService = new ActivityLogService(prisma);
+    await activityService.logInvoiceActivity(
+      updatedInvoice.id,
+      taskId,
+      'INVOICE_GENERATED',
+      req.userId!,
+      undefined,
+      {
+        invoiceNumber: updatedInvoice.number,
+        amount: updatedInvoice.amount,
+        currency: updatedInvoice.currency,
+        hoursWorked: hours,
+        hourlyRate: rate
+      }
+    );
+    await activityService.logInvoiceActivity(
+      updatedInvoice.id,
+      taskId,
+      'PDF_GENERATED',
+      req.userId!,
+      undefined,
+      { pdfPath }
+    );
 
     res.status(201).json(updatedInvoice);
   } catch (error) {
@@ -282,6 +343,16 @@ export async function updateInvoiceStatus(req: AuthRequest, res: Response): Prom
       data: { status }
     });
 
+    // Log activity
+    const activityService = new ActivityLogService(prisma);
+    await activityService.logInvoiceActivity(
+      invoice.id,
+      invoice.taskId,
+      'STATUS_CHANGED',
+      req.userId!,
+      { status: { oldValue: existing.status, newValue: status } }
+    );
+
     res.json(invoice);
   } catch (error) {
     console.error('UpdateInvoiceStatus error:', error);
@@ -309,6 +380,18 @@ export async function updateInvoiceComments(req: AuthRequest, res: Response): Pr
       data: { comments }
     });
 
+    // Log activity if comments changed
+    if (existing.comments !== comments) {
+      const activityService = new ActivityLogService(prisma);
+      await activityService.logInvoiceActivity(
+        invoice.id,
+        invoice.taskId,
+        'COMMENTS_UPDATED',
+        req.userId!,
+        { comments: { oldValue: existing.comments, newValue: comments } }
+      );
+    }
+
     res.json(invoice);
   } catch (error) {
     console.error('UpdateInvoiceComments error:', error);
@@ -334,6 +417,16 @@ export async function archiveInvoice(req: AuthRequest, res: Response): Promise<v
       where: { id },
       data: { isArchived: true }
     });
+
+    // Log activity
+    const activityService = new ActivityLogService(prisma);
+    await activityService.logInvoiceActivity(
+      invoice.id,
+      invoice.taskId,
+      'ARCHIVED',
+      req.userId!,
+      { isArchived: { oldValue: false, newValue: true } }
+    );
 
     res.json(invoice);
   } catch (error) {
@@ -361,6 +454,16 @@ export async function unarchiveInvoice(req: AuthRequest, res: Response): Promise
       data: { isArchived: false }
     });
 
+    // Log activity
+    const activityService = new ActivityLogService(prisma);
+    await activityService.logInvoiceActivity(
+      invoice.id,
+      invoice.taskId,
+      'UNARCHIVED',
+      req.userId!,
+      { isArchived: { oldValue: true, newValue: false } }
+    );
+
     res.json(invoice);
   } catch (error) {
     console.error('UnarchiveInvoice error:', error);
@@ -381,6 +484,17 @@ export async function deleteInvoice(req: AuthRequest, res: Response): Promise<vo
       res.status(404).json({ error: 'Invoice not found' });
       return;
     }
+
+    // Log activity before deletion
+    const activityService = new ActivityLogService(prisma);
+    await activityService.logInvoiceActivity(
+      id,
+      existing.taskId,
+      'DELETED',
+      req.userId!,
+      undefined,
+      { invoiceNumber: existing.number }
+    );
 
     // Delete PDF from storage if exists
     if (existing.pdfPath) {
