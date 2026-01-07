@@ -127,6 +127,28 @@ export const routes: Routes = [
         path: 'settings/google',
         loadComponent: () => import('./features/settings/google-settings/google-settings.component').then(m => m.GoogleSettingsComponent),
         canActivate: [adminGuard]
+      },
+      // Taxes
+      {
+        path: 'taxes',
+        loadComponent: () => import('./features/taxes/taxes.component').then(m => m.TaxesComponent)
+      },
+      {
+        path: 'settings/taxes',
+        loadComponent: () => import('./features/taxes/tax-settings/tax-settings.component').then(m => m.TaxSettingsComponent)
+      },
+      // Expenses
+      {
+        path: 'expenses',
+        loadComponent: () => import('./features/taxes/expenses/expenses-list/expenses-list.component').then(m => m.ExpensesListComponent)
+      },
+      {
+        path: 'expenses/new',
+        loadComponent: () => import('./features/taxes/expenses/expense-form/expense-form.component').then(m => m.ExpenseFormComponent)
+      },
+      {
+        path: 'expenses/:id/edit',
+        loadComponent: () => import('./features/taxes/expenses/expense-form/expense-form.component').then(m => m.ExpenseFormComponent)
       }
     ]
   },

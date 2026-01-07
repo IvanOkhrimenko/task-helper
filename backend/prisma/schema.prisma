@@ -44,6 +44,8 @@ model User {
   crmIntegrations   CRMIntegration[]
   chatConversations ChatConversation[]
   activityLogs      ActivityLog[]
+  taxSettings       TaxSettings?
+  expenses          Expense[]
   createdAt         DateTime  @default(now())
 }
 
@@ -560,4 +562,132 @@ enum ActionType {
   CRM_SYNCED
   CRM_PDF_FETCHED
   COMMENTS_UPDATED
+}
+
+// ============================================
+// Polish B2B Tax Calculator Models
+// ============================================
+
+enum TaxForm {
+  LINIOWY       // 19% flat tax
+  SKALA         // Progressive 12%/32%
+  RYCZALT       // Lump sum (12% for IT)
+}
+
+enum ZUSType {
+  STANDARD      // Full ZUS (~1600 PLN/month)
+  MALY_ZUS_PLUS // First 2 years (~400 PLN/month)
+  PREFERENCYJNY // First 6 months (~300 PLN/month)
+  CUSTOM        // Custom amount
+}
+
+enum ExpenseCategory {
+  OFFICE_SUPPLIES
+  SOFTWARE_SUBSCRIPTIONS
+  HARDWARE_EQUIPMENT
+  TRAVEL_TRANSPORT
+  MEALS_ENTERTAINMENT
+  PROFESSIONAL_SERVICES
+  EDUCATION_TRAINING
+  MARKETING_ADVERTISING
+  INSURANCE
+  RENT_UTILITIES
+  TELECOMMUNICATIONS
+  BANKING_FEES
+  TAXES_FEES
+  OTHER
+}
+
+enum ExpenseType {
+  BUSINESS    // Business expenses (tax deductible)
+  PERSONAL    // Personal expenses (not tax deductible)
+}
+
+// User's B2B tax configuration
+model TaxSettings {
+  id                String   @id @default(uuid())
+
+  // Tax form selection
+  taxForm           TaxForm  @default(LINIOWY)
+
+  // ZUS configuration
+  zusType           ZUSType  @default(STANDARD)
+  zusStartDate      DateTime?  // When ZUS preference started (for tracking eligibility)
+  customZusAmount   Decimal?   @db.Decimal(10, 2)  // For custom ZUS amount
+
+  // Health insurance configuration
+  healthInsuranceBase Decimal? @db.Decimal(10, 2)  // Custom base for health insurance
+
+  // Ryczalt-specific settings
+  ryczaltRate       Decimal    @default(12) @db.Decimal(5, 2)  // Default 12% for IT
+
+  // Fiscal year settings
+  fiscalYearStart   Int        @default(1)  // Month (1-12)
+
+  userId            String     @unique
+  user              User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt         DateTime   @default(now())
+  updatedAt         DateTime   @updatedAt
+}
+
+// Expense tracking for tax deductions
+model Expense {
+  id                String          @id @default(uuid())
+
+  // Core expense data
+  name              String
+  description       String?         @db.Text
+  category          ExpenseCategory
+  expenseType       ExpenseType     @default(BUSINESS)  // Business or Personal
+  amount            Decimal         @db.Decimal(10, 2)
+  currency          String          @default("PLN")
+  amountPLN         Decimal         @db.Decimal(10, 2)  // Converted amount in PLN
+
+  // Date tracking
+  expenseDate       DateTime
+  expenseMonth      Int             // 1-12
+  expenseYear       Int
+
+  // VAT handling
+  vatRate           Decimal?        @db.Decimal(5, 2)   // 0, 5, 8, 23
+  vatAmount         Decimal?        @db.Decimal(10, 2)
+  netAmount         Decimal         @db.Decimal(10, 2)  // Amount without VAT
+
+  // Document reference
+  documentNumber    String?
+  documentPath      String?         // Receipt/invoice PDF
+
+  // Tax deductibility
+  isDeductible      Boolean         @default(true)
+  deductiblePercent Decimal         @default(100) @db.Decimal(5, 2)  // Some expenses partially deductible
+
+  // Foreign currency conversion
+  originalCurrency  String?
+  originalAmount    Decimal?        @db.Decimal(10, 2)
+  exchangeRate      Decimal?        @db.Decimal(10, 6)
+  exchangeRateDate  DateTime?
+
+  userId            String
+  user              User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+
+  @@index([userId, expenseMonth, expenseYear])
+  @@index([userId, category])
+  @@index([userId, expenseType])
+  @@index([expenseDate])
+}
+
+// Cached exchange rates from NBP
+model ExchangeRateCache {
+  id          String   @id @default(uuid())
+  currency    String   // USD, EUR, GBP, etc.
+  rate        Decimal  @db.Decimal(10, 6)
+  rateDate    DateTime // The date for which the rate applies
+  fetchedAt   DateTime @default(now())
+
+  @@unique([currency, rateDate])
+  @@index([currency, rateDate])
 }
