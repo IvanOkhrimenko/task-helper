@@ -11,11 +11,19 @@ export interface User {
   email: string;
   name: string;
   role: UserRole;
+  // Split address fields for CRM integration
+  streetAddress?: string;
+  postcode?: string;
+  city?: string;
+  country?: string;
+  // Legacy address field (deprecated)
   address?: string;
   nip?: string;
   bankName?: string;
   bankIban?: string;
   bankSwift?: string;
+  // CRM integration
+  crmRequisitesId?: string;
   createdAt: string;
 }
 

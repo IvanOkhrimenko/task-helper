@@ -16,6 +16,7 @@ export interface CreateDraftRequest {
   subject: string;
   body: string;
   invoiceId?: string;
+  attachmentSource?: 'local' | 'crm' | 'none';  // Which PDF to attach
 }
 
 export interface CreateDraftResponse {

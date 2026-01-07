@@ -3,6 +3,7 @@ import {
   getInvoices,
   getInvoice,
   downloadInvoicePDF,
+  downloadCrmPdf,
   getEmailDraft,
   updateInvoiceStatus,
   updateInvoiceComments,
@@ -19,6 +20,7 @@ router.use(authMiddleware);
 router.get('/', getInvoices);
 router.get('/:id', getInvoice);
 router.get('/:id/pdf', downloadInvoicePDF);
+router.get('/:id/crm-pdf', downloadCrmPdf);
 router.get('/:id/email-draft', getEmailDraft);
 router.patch('/:id/status', updateInvoiceStatus);
 router.patch('/:id/comments', updateInvoiceComments);

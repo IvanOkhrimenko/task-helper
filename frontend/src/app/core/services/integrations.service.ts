@@ -12,6 +12,10 @@ export interface IntegrationSettings {
   hasGoogleCredentials: boolean;
 }
 
+export interface PublicIntegrationStatus {
+  googleEnabled: boolean;
+}
+
 export interface UpdateIntegrationSettings {
   googleClientId?: string;
   googleClientSecret?: string;
@@ -32,8 +36,12 @@ export class IntegrationsService {
 
   // State
   settings = signal<IntegrationSettings | null>(null);
+  publicStatus = signal<PublicIntegrationStatus | null>(null);
   isLoading = signal(false);
   error = signal<string | null>(null);
+
+  // Computed flag for Google enabled (works for both admin and regular users)
+  googleEnabled = signal(false);
 
   // Get integration settings (admin only)
   fetchSettings(): void {
@@ -77,5 +85,22 @@ export class IntegrationsService {
   // Test Google connection
   testGoogleConnection(): Observable<TestConnectionResult> {
     return this.http.post<TestConnectionResult>(`${this.apiUrl}/google/test`, {});
+  }
+
+  // Get public integration status (available to all authenticated users)
+  fetchPublicStatus(): void {
+    this.http.get<PublicIntegrationStatus>(`${this.apiUrl}/status`)
+      .pipe(
+        tap(status => {
+          this.publicStatus.set(status);
+          this.googleEnabled.set(status.googleEnabled);
+        }),
+        catchError(err => {
+          console.error('Failed to fetch integration status:', err);
+          this.googleEnabled.set(false);
+          return of(null);
+        })
+      )
+      .subscribe();
   }
 }

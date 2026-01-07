@@ -23,6 +23,10 @@ export async function getTasks(req: AuthRequest, res: Response): Promise<void> {
         invoices: {
           orderBy: { createdAt: 'desc' },
           take: 1
+        },
+        bankAccount: true,
+        crmIntegration: {
+          select: { id: true, name: true, isActive: true }
         }
       },
       orderBy: { createdAt: 'desc' }
@@ -46,7 +50,13 @@ export async function getTask(req: AuthRequest, res: Response): Promise<void> {
         userId: req.userId,
         type: 'INVOICE'  // Only return INVOICE tasks
       },
-      include: { invoices: { orderBy: { createdAt: 'desc' } } }
+      include: {
+        invoices: { orderBy: { createdAt: 'desc' } },
+        bankAccount: true,
+        crmIntegration: {
+          select: { id: true, name: true, isActive: true }
+        }
+      }
     });
 
     if (!task) {
@@ -68,17 +78,29 @@ export async function createTask(req: AuthRequest, res: Response): Promise<void>
     type,
     warningDate,
     deadlineDate,
+    // Client info
     clientName,
-    clientAddress,
+    clientNip,
+    clientStreetAddress,
+    clientPostcode,
+    clientCity,
+    clientCountry,
+    clientAddress,  // deprecated
     clientEmail,
     clientBankAccount,
+    // CRM integration
+    crmClientId,
+    crmIntegrationId,
+    // Invoice defaults
     hourlyRate,
     hoursWorked,
     description,
+    defaultServiceName,
     currency,
     defaultLanguage,
     invoiceTemplate,
     googleAccountId,
+    bankAccountId,
     emailSubjectTemplate,
     emailBodyTemplate,
     useCustomEmailTemplate
@@ -96,22 +118,35 @@ export async function createTask(req: AuthRequest, res: Response): Promise<void>
         type: type || 'INVOICE',
         warningDate: parseInt(warningDate),
         deadlineDate: parseInt(deadlineDate),
+        // Client info
         clientName,
-        clientAddress,
+        clientNip,
+        clientStreetAddress,
+        clientPostcode,
+        clientCity,
+        clientCountry,
+        clientAddress,  // deprecated
         clientEmail,
         clientBankAccount,
+        // CRM integration
+        crmClientId,
+        crmIntegrationId: crmIntegrationId || null,
+        // Invoice defaults
         hourlyRate: hourlyRate ? parseFloat(hourlyRate) : null,
         hoursWorked: hoursWorked ? parseFloat(hoursWorked) : null,
         description,
+        defaultServiceName,
         currency: currency || 'USD',
         defaultLanguage: defaultLanguage || 'PL',
         invoiceTemplate: invoiceTemplate || 'STANDARD',
         googleAccountId: googleAccountId || null,
+        bankAccountId: bankAccountId || null,
         emailSubjectTemplate: emailSubjectTemplate || null,
         emailBodyTemplate: emailBodyTemplate || null,
         useCustomEmailTemplate: useCustomEmailTemplate || false,
         userId: req.userId!
-      }
+      },
+      include: { bankAccount: true }
     });
 
     res.status(201).json(task);
@@ -128,17 +163,29 @@ export async function updateTask(req: AuthRequest, res: Response): Promise<void>
     name,
     warningDate,
     deadlineDate,
+    // Client info
     clientName,
-    clientAddress,
+    clientNip,
+    clientStreetAddress,
+    clientPostcode,
+    clientCity,
+    clientCountry,
+    clientAddress,  // deprecated
     clientEmail,
     clientBankAccount,
+    // CRM integration
+    crmClientId,
+    crmIntegrationId,
+    // Invoice defaults
     hourlyRate,
     hoursWorked,
     description,
+    defaultServiceName,
     currency,
     defaultLanguage,
     invoiceTemplate,
     googleAccountId,
+    bankAccountId,
     emailSubjectTemplate,
     emailBodyTemplate,
     useCustomEmailTemplate
@@ -160,21 +207,34 @@ export async function updateTask(req: AuthRequest, res: Response): Promise<void>
         name,
         warningDate: warningDate !== undefined ? parseInt(warningDate) : undefined,
         deadlineDate: deadlineDate !== undefined ? parseInt(deadlineDate) : undefined,
+        // Client info
         clientName,
-        clientAddress,
+        clientNip,
+        clientStreetAddress,
+        clientPostcode,
+        clientCity,
+        clientCountry,
+        clientAddress,  // deprecated
         clientEmail,
         clientBankAccount,
+        // CRM integration
+        crmClientId,
+        crmIntegrationId: crmIntegrationId !== undefined ? (crmIntegrationId || null) : undefined,
+        // Invoice defaults
         hourlyRate: hourlyRate !== undefined ? parseFloat(hourlyRate) : undefined,
         hoursWorked: hoursWorked !== undefined ? parseFloat(hoursWorked) : undefined,
         description,
+        defaultServiceName,
         currency,
         defaultLanguage,
         invoiceTemplate,
         googleAccountId: googleAccountId || null,
+        bankAccountId: bankAccountId || null,
         emailSubjectTemplate,
         emailBodyTemplate,
         useCustomEmailTemplate
-      }
+      },
+      include: { bankAccount: true }
     });
 
     res.json(task);

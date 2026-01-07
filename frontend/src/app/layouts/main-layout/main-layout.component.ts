@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { Router, RouterOutlet, RouterLink, RouterLinkActive, NavigationEnd } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
 import { AppNotificationService, AppNotification } from '../../core/services/app-notification.service';
+import { AISettingsService } from '../../core/services/ai-settings.service';
 import { ChatComponent } from '../../features/chat/chat.component';
 import { filter, Subscription } from 'rxjs';
 
@@ -194,8 +195,10 @@ interface NavSection {
       </div>
     </div>
 
-    <!-- AI Chat Assistant -->
-    <app-chat />
+    <!-- AI Chat Assistant - Only show when AI is enabled -->
+    @if (aiEnabled()) {
+      <app-chat />
+    }
   `,
   styles: [`
     @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
@@ -902,6 +905,7 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
   private router = inject(Router);
   private authService = inject(AuthService);
   notificationService = inject(AppNotificationService);
+  private aiSettingsService = inject(AISettingsService);
   private routerSubscription?: Subscription;
 
   sidebarCollapsed = signal(false);
@@ -909,8 +913,8 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
   currentRoute = signal('');
 
   user = this.authService.user;
-
   isAdmin = this.authService.isAdmin;
+  aiEnabled = this.aiSettingsService.aiEnabled;
 
   navSections = computed<NavSection[]>(() => {
     const baseNav: NavSection[] = [
@@ -960,7 +964,17 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
           {
             label: 'Profile',
             route: '/profile',
-            icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>'
+            icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>'
+          },
+          {
+            label: 'CRM Integrations',
+            route: '/settings/crm',
+            icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>'
+          },
+          {
+            label: 'Bank Accounts',
+            route: '/settings/bank-accounts',
+            icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18"/><path d="M3 10h18"/><path d="M5 6l7-3 7 3"/><path d="M4 10v11"/><path d="M20 10v11"/><path d="M8 10v11"/><path d="M12 10v11"/><path d="M16 10v11"/></svg>'
           },
           // AI Settings - only shown to admins
           ...(this.isAdmin() ? [{
@@ -987,6 +1001,8 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
     '/tasks/new': 'New Task',
     '/invoices': 'Invoices',
     '/profile': 'Profile',
+    '/settings/crm': 'CRM Integrations',
+    '/settings/bank-accounts': 'Bank Accounts',
     '/settings/ai': 'AI Settings',
     '/settings/google': 'Google Integration'
   };
@@ -1024,6 +1040,9 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
       .subscribe((event) => {
         this.currentRoute.set((event as NavigationEnd).urlAfterRedirects);
       });
+
+    // Fetch AI settings status to determine if chat should be shown
+    this.aiSettingsService.fetchPublicStatus();
   }
 
   ngOnDestroy(): void {

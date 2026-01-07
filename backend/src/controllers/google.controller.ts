@@ -157,15 +157,16 @@ interface CreateDraftBody {
   subject: string;
   body: string;
   invoiceId?: string;
+  attachmentSource?: 'local' | 'crm' | 'none';  // Which PDF to attach
 }
 
 export async function createDraft(req: AuthRequest, res: Response): Promise<void> {
   const prisma: PrismaClient = req.app.get('prisma');
-  const { googleAccountId, to, subject, body, invoiceId } = req.body as CreateDraftBody;
+  const { googleAccountId, to, subject, body, invoiceId, attachmentSource = 'local' } = req.body as CreateDraftBody;
 
   try {
-    if (!googleAccountId || !to || !subject || !body) {
-      res.status(400).json({ error: 'Missing required fields' });
+    if (!googleAccountId || !subject || !body) {
+      res.status(400).json({ error: 'Missing required fields: googleAccountId, subject, and body are required' });
       return;
     }
 
@@ -179,26 +180,37 @@ export async function createDraft(req: AuthRequest, res: Response): Promise<void
       return;
     }
 
-    // Get invoice PDF if provided
+    // Get invoice PDF based on attachmentSource
     let attachmentBase64: string | undefined;
     let attachmentFilename: string | undefined;
 
-    if (invoiceId) {
+    if (invoiceId && attachmentSource !== 'none') {
       const invoice = await prisma.invoice.findFirst({
         where: { id: invoiceId, userId: req.userId }
       });
 
-      if (invoice?.pdfPath) {
-        // Read PDF file from storage (local or R2) and convert to base64
-        try {
-          const pdfBuffer = await StorageService.getFile(invoice.pdfPath);
-          if (pdfBuffer) {
-            attachmentBase64 = pdfBuffer.toString('base64');
-            attachmentFilename = StorageService.getFileName(invoice.pdfPath);
+      if (invoice) {
+        // Determine which PDF to attach
+        const pdfPath = attachmentSource === 'crm' && invoice.crmPdfPath
+          ? invoice.crmPdfPath
+          : invoice.pdfPath;
+
+        if (pdfPath) {
+          try {
+            const pdfBuffer = await StorageService.getFile(pdfPath);
+            if (pdfBuffer) {
+              attachmentBase64 = pdfBuffer.toString('base64');
+              // Use CRM filename if attaching CRM PDF
+              if (attachmentSource === 'crm' && invoice.crmPdfPath) {
+                attachmentFilename = `crm-invoice-${invoice.number}.pdf`;
+              } else {
+                attachmentFilename = StorageService.getFileName(pdfPath);
+              }
+            }
+          } catch (err) {
+            console.error('Failed to read PDF:', err);
+            // Continue without attachment
           }
-        } catch (err) {
-          console.error('Failed to read PDF:', err);
-          // Continue without attachment
         }
       }
     }

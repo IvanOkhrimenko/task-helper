@@ -87,6 +87,20 @@ export async function updateIntegrationSettings(req: Request, res: Response) {
   }
 }
 
+// Get public integration status (for non-admin users)
+export async function getPublicIntegrationStatus(req: Request, res: Response) {
+  try {
+    const settings = await prisma.integrationSettings.findFirst();
+
+    res.json({
+      googleEnabled: settings?.googleEnabled ?? false,
+    });
+  } catch (error) {
+    console.error('Error fetching public integration status:', error);
+    res.status(500).json({ error: 'Failed to fetch integration status' });
+  }
+}
+
 // Test Google connection (admin only)
 export async function testGoogleConnection(req: Request, res: Response) {
   try {

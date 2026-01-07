@@ -13,12 +13,22 @@ model User {
   password      String
   name          String
   role          UserRole  @default(USER)
-  // Seller info for invoices
-  address       String?
-  nip           String?   // Tax ID (NIP in Poland)
-  bankName      String?
-  bankIban      String?
-  bankSwift     String?
+
+  // Seller info for invoices (split address for CRM integration)
+  nip             String?   // Tax ID (NIP in Poland)
+  streetAddress   String?   // Street and building number
+  postcode        String?   // Postal code
+  city            String?   // City
+  country         String?   @default("Polska")  // Country
+
+  // Legacy single bank fields - @deprecated, use bankAccounts relation
+  bankName        String?
+  bankIban        String?
+  bankSwift       String?
+  crmRequisitesId String?
+
+  // Legacy field - keep for backwards compatibility
+  address         String?   // @deprecated - use streetAddress, postcode, city, country
 
   // Notification preferences
   emailNotifications  Boolean @default(true)
@@ -29,8 +39,79 @@ model User {
   invoices          Invoice[]
   notifications     Notification[]
   googleAccounts    GoogleAccount[]
+  bankAccounts      BankAccount[]
+  crmIntegrations   CRMIntegration[]
   chatConversations ChatConversation[]
   createdAt         DateTime  @default(now())
+}
+
+model BankAccount {
+  id              String   @id @default(uuid())
+  name            String   // Display name, e.g., "PKO PLN", "Wise EUR"
+  currency        String   // EUR, USD, PLN, etc.
+  bankName        String   // Bank name
+  iban            String   // IBAN
+  swift           String?  // SWIFT/BIC code
+
+  // CRM integration
+  crmRequisitesId String?  // ID in CRM system (crm.mcgroup.pl)
+
+  isDefault       Boolean  @default(false)  // Default bank account for user
+
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  tasks           Task[]
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([userId])
+  @@index([userId, currency])
+}
+
+model CRMIntegration {
+  id                  String    @id @default(uuid())
+  name                String    // Display name, e.g., "MCGroup CRM", "Custom CRM"
+  isActive            Boolean   @default(true)
+
+  // Login Configuration
+  loginUrl            String    // e.g., "https://crm.example.com/login"
+  loginMethod         String    @default("POST")
+  email               String    // CRM login email
+  password            String    // CRM login password (TODO: encrypt in production)
+  csrfSelector        String?   // Regex to extract CSRF token from login page
+  csrfHeader          String?   // Header name for CSRF (e.g., "X-XSRF-TOKEN")
+
+  // Invoice Creation Configuration
+  createInvoiceUrl    String    // e.g., "https://crm.example.com/saveFakturyClients"
+  createInvoiceMethod String    @default("POST")
+  headers             Json      @default("{}") // {"Content-Type": "application/x-www-form-urlencoded"}
+
+  // Invoice List/Download Configuration
+  listInvoicesUrl     String?   // e.g., "https://crm.example.com/show-faktury-client"
+  invoiceNumberPrefix String?   // e.g., "FS/" - prefix CRM adds to invoice numbers
+  invoiceNumberSuffix String?   // e.g., "/MCG" - suffix CRM adds to invoice numbers
+
+  // Field Mapping (CRM field name -> placeholder template)
+  fieldMapping        Json      @default("{}") // {"company": "{{user.name}}", "nip": "{{user.nip}}"}
+  staticFields        Json?     // Static fields that don't use placeholders {"selectLang": "PL"}
+
+  // Session State (cached)
+  sessionCookies      String?   @db.Text  // Serialized cookies
+  csrfToken           String?   // Current CSRF token
+  sessionExpiresAt    DateTime? // When session expires
+
+  // Relations
+  userId              String
+  user                User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tasks               Task[]
+
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  @@index([userId])
+  @@index([userId, isActive])
 }
 
 model Task {
@@ -44,17 +125,32 @@ model Task {
   warningDate   Int?      // day of month for warning (1-31)
   deadlineDate  Int?      // day of month for deadline (1-31)
 
-  // Invoice-specific data
-  clientName        String?
-  clientAddress     String?
-  clientEmail       String?
-  clientBankAccount String?   // Client's bank account number
-  hourlyRate        Decimal?  @db.Decimal(10, 2)
-  hoursWorked       Decimal?  @db.Decimal(10, 2)
-  description       String?
-  currency          String    @default("USD")
-  defaultLanguage   String    @default("PL")  // PL, EN
-  invoiceTemplate   InvoiceTemplate @default(STANDARD)  // Invoice PDF template style
+  // Invoice-specific data - Client/Buyer info
+  clientName          String?
+  clientNip           String?   // Client's tax ID (optional)
+  clientStreetAddress String?   // Client street and building
+  clientPostcode      String?   // Client postal code
+  clientCity          String?   // Client city
+  clientCountry       String?   // Client country
+  clientEmail         String?
+  clientBankAccount   String?   // Client's bank account number (optional)
+
+  // CRM integration
+  crmClientId         String?   // Client ID in CRM system
+  crmIntegrationId    String?   // Which CRM integration to use for this task
+  crmIntegration      CRMIntegration? @relation(fields: [crmIntegrationId], references: [id], onDelete: SetNull)
+
+  // Legacy field - keep for backwards compatibility
+  clientAddress       String?   // @deprecated - use clientStreetAddress, clientPostcode, etc.
+
+  // Invoice defaults
+  hourlyRate          Decimal?  @db.Decimal(10, 2)
+  hoursWorked         Decimal?  @db.Decimal(10, 2)
+  description         String?   // General task description
+  defaultServiceName  String?   // Default service/item name for CRM invoices (e.g., "Tworzenie oprogramowania")
+  currency            String    @default("USD")
+  defaultLanguage     String    @default("PL")  // PL, EN
+  invoiceTemplate     InvoiceTemplate @default(STANDARD)  // Invoice PDF template style
 
   // Reminder-specific data
   scheduleType      ScheduleType?
@@ -72,6 +168,10 @@ model Task {
   googleAccountId   String?
   googleAccount     GoogleAccount? @relation(fields: [googleAccountId], references: [id], onDelete: SetNull)
 
+  // Bank account for invoices (determines currency and CRM requisites)
+  bankAccountId     String?
+  bankAccount       BankAccount? @relation(fields: [bankAccountId], references: [id], onDelete: SetNull)
+
   // Email template fields for custom invoice emails
   emailSubjectTemplate   String?  @db.Text  // Custom subject template with placeholders
   emailBodyTemplate      String?  @db.Text  // Custom body template with placeholders
@@ -86,6 +186,8 @@ model Task {
 
   @@index([userId, type])
   @@index([googleAccountId])
+  @@index([bankAccountId])
+  @@index([crmIntegrationId])
   @@index([nextOccurrence])
   @@index([isActive, nextOccurrence])
   @@index([userId, isArchived])
@@ -108,6 +210,12 @@ model Invoice {
   hourlyRate   Decimal?      @db.Decimal(10, 2)
   language     String        @default("PL")  // PL, EN
   createdByAI  Boolean       @default(false) // True if created via AI assistant
+
+  // CRM integration
+  crmInvoiceId String?       // ID of invoice in external CRM system
+  crmSyncedAt  DateTime?     // When invoice was last synced to CRM
+  crmPdfUrl    String?       // URL to PDF in external CRM system
+  crmPdfPath   String?       // Local path to downloaded CRM PDF
 
   taskId    String
   task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)

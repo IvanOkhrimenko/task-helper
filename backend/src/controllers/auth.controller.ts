@@ -88,11 +88,17 @@ export async function getMe(req: AuthRequest, res: Response): Promise<void> {
         email: true,
         name: true,
         role: true,
-        address: true,
+        // Split address fields
+        streetAddress: true,
+        postcode: true,
+        city: true,
+        country: true,
+        address: true,  // deprecated
         nip: true,
         bankName: true,
         bankIban: true,
         bankSwift: true,
+        crmRequisitesId: true,
         createdAt: true
       }
     });
@@ -111,29 +117,51 @@ export async function getMe(req: AuthRequest, res: Response): Promise<void> {
 
 export async function updateProfile(req: AuthRequest, res: Response): Promise<void> {
   const prisma: PrismaClient = req.app.get('prisma');
-  const { name, address, nip, bankName, bankIban, bankSwift } = req.body;
+  const {
+    name,
+    streetAddress,
+    postcode,
+    city,
+    country,
+    address,  // deprecated
+    nip,
+    bankName,
+    bankIban,
+    bankSwift,
+    crmRequisitesId
+  } = req.body;
 
   try {
     const user = await prisma.user.update({
       where: { id: req.userId },
       data: {
         name,
-        address,
+        streetAddress,
+        postcode,
+        city,
+        country,
+        address,  // deprecated
         nip,
         bankName,
         bankIban,
-        bankSwift
+        bankSwift,
+        crmRequisitesId
       },
       select: {
         id: true,
         email: true,
         name: true,
         role: true,
-        address: true,
+        streetAddress: true,
+        postcode: true,
+        city: true,
+        country: true,
+        address: true,  // deprecated
         nip: true,
         bankName: true,
         bankIban: true,
         bankSwift: true,
+        crmRequisitesId: true,
         createdAt: true
       }
     });

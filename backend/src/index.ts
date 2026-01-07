@@ -10,6 +10,9 @@ import dashboardRoutes from './routes/dashboard.routes.js';
 import googleRoutes from './routes/google.routes.js';
 import chatRoutes from './routes/chat.routes.js';
 import integrationsRoutes from './routes/integrations.routes.js';
+import crmRoutes from './routes/crm.routes.js';
+import crmIntegrationsRoutes from './routes/crm-integrations.routes.js';
+import bankAccountsRoutes from './routes/bank-accounts.routes.js';
 import { initScheduler } from './services/scheduler.service.js';
 
 const app = express();
@@ -35,6 +38,9 @@ app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/google', googleRoutes);
 app.use('/api/chat', chatRoutes);
 app.use('/api/integrations', integrationsRoutes);
+app.use('/api/crm', crmRoutes);
+app.use('/api/crm-integrations', crmIntegrationsRoutes);
+app.use('/api/bank-accounts', bankAccountsRoutes);
 
 // Health check
 app.get('/api/health', (_, res) => {

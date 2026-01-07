@@ -153,18 +153,35 @@ export async function createGmailDraft(
   const boundary = 'boundary_' + Date.now();
   let emailContent: string;
 
+  // Body can be HTML (from rich text editor) or plain text
+  // If it contains HTML tags, use as-is; otherwise convert line breaks
+  const isHtml = /<[a-z][\s\S]*>/i.test(params.body);
+  const htmlBody = isHtml
+    ? params.body
+    : params.body
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/\n/g, '<br>\n');
+
+  // Build headers - only include To if provided
+  const headers: string[] = [];
+  if (params.to) {
+    headers.push(`To: ${params.to}`);
+  }
+  headers.push(`Subject: ${params.subject}`);
+  headers.push('MIME-Version: 1.0');
+
   if (params.attachmentBase64 && params.attachmentFilename) {
     // Email with attachment
     emailContent = [
-      `To: ${params.to}`,
-      `Subject: ${params.subject}`,
-      'MIME-Version: 1.0',
+      ...headers,
       `Content-Type: multipart/mixed; boundary="${boundary}"`,
       '',
       `--${boundary}`,
       'Content-Type: text/html; charset="UTF-8"',
       '',
-      params.body,
+      htmlBody,
       '',
       `--${boundary}`,
       `Content-Type: application/pdf; name="${params.attachmentFilename}"`,
@@ -178,12 +195,10 @@ export async function createGmailDraft(
   } else {
     // Simple HTML email
     emailContent = [
-      `To: ${params.to}`,
-      `Subject: ${params.subject}`,
-      'MIME-Version: 1.0',
+      ...headers,
       'Content-Type: text/html; charset="UTF-8"',
       '',
-      params.body
+      htmlBody
     ].join('\r\n');
   }
 

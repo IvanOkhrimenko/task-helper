@@ -7,6 +7,9 @@ import { InvoiceService, EmailDraft } from '../../../core/services/invoice.servi
 import { Invoice } from '../../../core/services/task.service';
 import { NotificationService } from '../../../core/services/notification.service';
 import { GoogleService } from '../../../core/services/google.service';
+import { IntegrationsService } from '../../../core/services/integrations.service';
+import { CRMService, CRMStatus } from '../../../core/services/crm.service';
+import { CRMIntegrationService, CRMIntegration } from '../../../core/services/crm-integration.service';
 import { ToastComponent } from '../../../shared/components/toast/toast.component';
 
 @Component({
@@ -227,7 +230,7 @@ import { ToastComponent } from '../../../shared/components/toast/toast.component
                         Copy Body
                       </button>
                     </div>
-                    @if (googleService.accounts().length > 0) {
+                    @if (googleEnabled() && googleService.accounts().length > 0) {
                       <div class="gmail-draft-section">
                         @if (googleService.accounts().length > 1 && !invoice()?.task?.googleAccountId) {
                           <div class="account-select">
@@ -252,6 +255,42 @@ import { ToastComponent } from '../../../shared/components/toast/toast.component
                             <span>{{ googleService.accounts()[0].email }}</span>
                           </div>
                         }
+
+                        <!-- Attachment Selector -->
+                        <div class="attachment-selector">
+                          <label class="attachment-selector__label">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                              <path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48"/>
+                            </svg>
+                            Attach PDF:
+                          </label>
+                          <div class="attachment-options">
+                            <button
+                              class="attachment-btn"
+                              [class.attachment-btn--active]="selectedAttachment() === 'local'"
+                              (click)="selectAttachmentSource('local')"
+                            >
+                              Local
+                            </button>
+                            @if (hasCrmPdf()) {
+                              <button
+                                class="attachment-btn"
+                                [class.attachment-btn--active]="selectedAttachment() === 'crm'"
+                                (click)="selectAttachmentSource('crm')"
+                              >
+                                CRM
+                              </button>
+                            }
+                            <button
+                              class="attachment-btn"
+                              [class.attachment-btn--active]="selectedAttachment() === 'none'"
+                              (click)="selectAttachmentSource('none')"
+                            >
+                              None
+                            </button>
+                          </div>
+                        </div>
+
                         <button
                           class="btn btn--gmail"
                           (click)="createGmailDraft()"
@@ -271,7 +310,7 @@ import { ToastComponent } from '../../../shared/components/toast/toast.component
                           }
                         </button>
                       </div>
-                    } @else {
+                    } @else if (googleEnabled()) {
                       <div class="no-google-account">
                         <a routerLink="/profile" class="btn btn--ghost">
                           <svg viewBox="0 0 24 24" fill="currentColor" class="google-icon">
@@ -390,6 +429,108 @@ import { ToastComponent } from '../../../shared/components/toast/toast.component
                     }
                   </button>
                 </div>
+
+                <!-- CRM Sync Section -->
+                @if (hasCrmIntegrations()) {
+                  <div class="crm-sync-section">
+                    <h4 class="crm-sync-title">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        <path d="M9 12l2 2 4-4"/>
+                      </svg>
+                      {{ getActiveCrmName() }}
+                    </h4>
+
+                    <!-- CRM Integration Selector (when multiple integrations exist) -->
+                    @if (crmIntegrations().length > 1) {
+                      <div class="crm-integration-selector">
+                        <select
+                          class="crm-select"
+                          [value]="selectedCrmIntegrationId() || ''"
+                          (change)="selectCrmIntegration($any($event.target).value || null)"
+                        >
+                          @for (integration of crmIntegrations(); track integration.id) {
+                            <option [value]="integration.id" [selected]="selectedCrmIntegrationId() === integration.id || (!selectedCrmIntegrationId() && $first)">{{ integration.name }}</option>
+                          }
+                        </select>
+                      </div>
+                    }
+
+                    <!-- CRM Action Buttons -->
+                    <div class="crm-actions">
+                      @if (invoice()?.crmSyncedAt || invoice()?.crmInvoiceId) {
+                        <!-- Already synced - show status -->
+                        <div class="crm-synced-status">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M22 11.08V12a10 10 0 11-5.93-9.14"/>
+                            <polyline points="22 4 12 14.01 9 11.01"/>
+                          </svg>
+                          <div class="crm-synced-info">
+                            <span class="crm-synced-label">Synced to CRM</span>
+                            @if (invoice()?.crmSyncedAt) {
+                              <span class="crm-synced-date">{{ invoice()!.crmSyncedAt | date:'medium' }}</span>
+                            }
+                          </div>
+                        </div>
+                      } @else {
+                        <!-- Not synced yet - show sync button -->
+                        <button
+                          class="btn btn--crm"
+                          (click)="syncToCRM()"
+                          [disabled]="isSyncingCRM()"
+                        >
+                          @if (isSyncingCRM()) {
+                            <span class="btn__spinner btn__spinner--dark"></span>
+                            Syncing...
+                          } @else {
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                              <polyline points="23 4 23 10 17 10"/>
+                              <polyline points="1 20 1 14 7 14"/>
+                              <path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/>
+                            </svg>
+                            Sync to CRM
+                          }
+                        </button>
+                      }
+
+                      <!-- Fetch PDF from CRM -->
+                      @if (invoice()?.crmPdfPath) {
+                        <button
+                          class="btn btn--ghost"
+                          (click)="downloadCrmPdf()"
+                        >
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+                            <polyline points="7 10 12 15 17 10"/>
+                            <line x1="12" y1="15" x2="12" y2="3"/>
+                          </svg>
+                          Download CRM PDF
+                        </button>
+                      } @else if (invoice()?.crmSyncedAt || invoice()?.crmInvoiceId) {
+                        <!-- Only show fetch button if invoice was synced -->
+                        <button
+                          class="btn btn--ghost"
+                          (click)="fetchCrmPdf()"
+                          [disabled]="isFetchingCrmPdf()"
+                        >
+                          @if (isFetchingCrmPdf()) {
+                            <span class="btn__spinner btn__spinner--dark"></span>
+                            Fetching...
+                          } @else {
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                              <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+                              <polyline points="14 2 14 8 20 8"/>
+                              <line x1="12" y1="18" x2="12" y2="12"/>
+                              <line x1="9" y1="15" x2="15" y2="15"/>
+                            </svg>
+                            Fetch PDF from CRM
+                          }
+                        </button>
+                      }
+                    </div>
+                  </div>
+                }
+
                 @if (invoice()!.isArchived) {
                   <div class="archived-notice">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -407,10 +548,30 @@ import { ToastComponent } from '../../../shared/components/toast/toast.component
             <div class="preview-column">
               <div class="pdf-card">
                 <div class="pdf-header">
-                  <h3 class="pdf-title">Document Preview</h3>
+                  <div class="pdf-header__left">
+                    <h3 class="pdf-title">Document Preview</h3>
+                    @if (hasCrmPdf()) {
+                      <div class="pdf-tabs">
+                        <button
+                          class="pdf-tab"
+                          [class.pdf-tab--active]="activePdfTab() === 'local'"
+                          (click)="switchPdfTab('local')"
+                        >
+                          Local
+                        </button>
+                        <button
+                          class="pdf-tab"
+                          [class.pdf-tab--active]="activePdfTab() === 'crm'"
+                          (click)="switchPdfTab('crm')"
+                        >
+                          CRM
+                        </button>
+                      </div>
+                    }
+                  </div>
                   <button
                     class="btn btn--primary"
-                    (click)="downloadPdf()"
+                    (click)="activePdfTab() === 'crm' ? downloadCrmPdf() : downloadPdf()"
                     [disabled]="isDownloading()"
                   >
                     @if (isDownloading()) {
@@ -422,34 +583,61 @@ import { ToastComponent } from '../../../shared/components/toast/toast.component
                         <polyline points="7 10 12 15 17 10"/>
                         <line x1="12" y1="15" x2="12" y2="3"/>
                       </svg>
-                      Download PDF
+                      Download {{ activePdfTab() === 'crm' ? 'CRM' : '' }} PDF
                     }
                   </button>
                 </div>
                 <div class="pdf-container">
-                  @if (isPdfLoading()) {
-                    <div class="pdf-loading">
-                      <div class="loading__spinner"></div>
-                      <p>Loading preview...</p>
-                    </div>
-                  } @else if (pdfUrl()) {
-                    <iframe
-                      [src]="pdfUrl()"
-                      class="pdf-viewer"
-                      title="Invoice PDF Preview"
-                    ></iframe>
+                  @if (activePdfTab() === 'local') {
+                    @if (isPdfLoading()) {
+                      <div class="pdf-loading">
+                        <div class="loading__spinner"></div>
+                        <p>Loading preview...</p>
+                      </div>
+                    } @else if (pdfUrl()) {
+                      <iframe
+                        [src]="pdfUrl()"
+                        class="pdf-viewer"
+                        title="Invoice PDF Preview"
+                      ></iframe>
+                    } @else {
+                      <div class="pdf-error">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                          <circle cx="12" cy="12" r="10"/>
+                          <line x1="12" y1="8" x2="12" y2="12"/>
+                          <line x1="12" y1="16" x2="12.01" y2="16"/>
+                        </svg>
+                        <p>Could not load PDF preview</p>
+                        <button class="btn btn--ghost" (click)="loadPdfPreview(invoice()!.id)">
+                          Try Again
+                        </button>
+                      </div>
+                    }
                   } @else {
-                    <div class="pdf-error">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <circle cx="12" cy="12" r="10"/>
-                        <line x1="12" y1="8" x2="12" y2="12"/>
-                        <line x1="12" y1="16" x2="12.01" y2="16"/>
-                      </svg>
-                      <p>Could not load PDF preview</p>
-                      <button class="btn btn--ghost" (click)="loadPdfPreview(invoice()!.id)">
-                        Try Again
-                      </button>
-                    </div>
+                    @if (isCrmPdfLoading()) {
+                      <div class="pdf-loading">
+                        <div class="loading__spinner"></div>
+                        <p>Loading CRM PDF...</p>
+                      </div>
+                    } @else if (crmPdfUrl()) {
+                      <iframe
+                        [src]="crmPdfUrl()"
+                        class="pdf-viewer"
+                        title="CRM Invoice PDF Preview"
+                      ></iframe>
+                    } @else {
+                      <div class="pdf-error">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                          <circle cx="12" cy="12" r="10"/>
+                          <line x1="12" y1="8" x2="12" y2="12"/>
+                          <line x1="12" y1="16" x2="12.01" y2="16"/>
+                        </svg>
+                        <p>Could not load CRM PDF preview</p>
+                        <button class="btn btn--ghost" (click)="loadCrmPdfPreview(invoice()!.id)">
+                          Try Again
+                        </button>
+                      </div>
+                    }
                   }
                 </div>
               </div>
@@ -942,11 +1130,66 @@ import { ToastComponent } from '../../../shared/components/toast/toast.component
 
     .gmail-draft-section {
       display: flex;
+      flex-wrap: wrap;
       align-items: center;
       gap: var(--space-md);
       margin-top: var(--space-lg);
       padding-top: var(--space-lg);
       border-top: 1px solid var(--color-border-subtle);
+    }
+
+    .attachment-selector {
+      display: flex;
+      align-items: center;
+      gap: var(--space-sm);
+      width: 100%;
+      margin-bottom: var(--space-sm);
+    }
+
+    .attachment-selector__label {
+      display: flex;
+      align-items: center;
+      gap: var(--space-xs);
+      font-size: 0.8125rem;
+      font-weight: 500;
+      color: var(--color-text-secondary);
+      white-space: nowrap;
+
+      svg {
+        width: 14px;
+        height: 14px;
+        opacity: 0.7;
+      }
+    }
+
+    .attachment-options {
+      display: flex;
+      gap: var(--space-xs);
+      background: var(--color-border-subtle);
+      padding: 3px;
+      border-radius: var(--radius-md);
+    }
+
+    .attachment-btn {
+      padding: var(--space-xs) var(--space-md);
+      font-size: 0.75rem;
+      font-weight: 500;
+      color: var(--color-text-secondary);
+      background: transparent;
+      border: none;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: all var(--transition-fast);
+
+      &:hover {
+        color: var(--color-text);
+      }
+
+      &--active {
+        background: var(--color-surface);
+        color: var(--color-primary);
+        box-shadow: var(--shadow-sm);
+      }
     }
 
     .account-select {
@@ -1079,12 +1322,48 @@ import { ToastComponent } from '../../../shared/components/toast/toast.component
       border-bottom: 1px solid var(--color-border-subtle);
     }
 
+    .pdf-header__left {
+      display: flex;
+      align-items: center;
+      gap: var(--space-lg);
+    }
+
     .pdf-title {
       font-family: var(--font-display);
       font-size: 1rem;
       font-weight: 600;
       color: var(--color-text);
       margin: 0;
+    }
+
+    .pdf-tabs {
+      display: flex;
+      gap: var(--space-xs);
+      background: var(--color-border-subtle);
+      padding: 3px;
+      border-radius: var(--radius-md);
+    }
+
+    .pdf-tab {
+      padding: var(--space-sm) var(--space-md);
+      font-size: 0.8125rem;
+      font-weight: 500;
+      color: var(--color-text-secondary);
+      background: transparent;
+      border: none;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: all var(--transition-fast);
+
+      &:hover {
+        color: var(--color-text);
+      }
+
+      &--active {
+        background: var(--color-surface);
+        color: var(--color-primary);
+        box-shadow: var(--shadow-sm);
+      }
     }
 
     .pdf-container {
@@ -1232,6 +1511,154 @@ import { ToastComponent } from '../../../shared/components/toast/toast.component
       }
     }
 
+    /* CRM Sync Section */
+    .crm-sync-section {
+      margin-top: var(--space-lg);
+      padding-top: var(--space-lg);
+      border-top: 1px solid var(--color-border);
+    }
+
+    .crm-sync-title {
+      display: flex;
+      align-items: center;
+      gap: var(--space-sm);
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: var(--color-text-secondary);
+      margin-bottom: var(--space-md);
+
+      svg {
+        width: 16px;
+        height: 16px;
+      }
+    }
+
+    .crm-synced {
+      display: flex;
+      align-items: center;
+      gap: var(--space-sm);
+      padding: var(--space-md);
+      background: var(--color-success-subtle);
+      color: var(--color-success);
+      font-size: 0.875rem;
+      font-weight: 500;
+      border-radius: var(--radius-md);
+
+      svg {
+        width: 16px;
+        height: 16px;
+      }
+    }
+
+    .crm-synced-status {
+      display: flex;
+      align-items: center;
+      gap: var(--space-md);
+      padding: var(--space-md) var(--space-lg);
+      background: var(--color-success-subtle);
+      color: var(--color-success);
+      border-radius: var(--radius-md);
+      width: 100%;
+
+      svg {
+        width: 20px;
+        height: 20px;
+        flex-shrink: 0;
+      }
+    }
+
+    .crm-synced-info {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .crm-synced-label {
+      font-size: 0.875rem;
+      font-weight: 600;
+    }
+
+    .crm-synced-date {
+      font-size: 0.75rem;
+      opacity: 0.8;
+    }
+
+    .crm-pdf-actions {
+      margin-top: var(--space-md);
+    }
+
+    .crm-actions {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-sm);
+    }
+
+    .btn--sm {
+      padding: var(--space-sm) var(--space-md);
+      font-size: 0.8125rem;
+    }
+
+    .crm-integration-selector {
+      margin-bottom: var(--space-md);
+    }
+
+    .crm-select {
+      width: 100%;
+      padding: var(--space-sm) var(--space-md);
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      color: var(--color-text);
+      font-size: 0.875rem;
+      cursor: pointer;
+      transition: all var(--transition-fast);
+
+      &:hover {
+        border-color: var(--color-text-muted);
+      }
+
+      &:focus {
+        outline: none;
+        border-color: #6366f1;
+        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+      }
+
+      option {
+        background: var(--color-surface);
+        color: var(--color-text);
+      }
+    }
+
+    .btn--crm {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: var(--space-sm);
+      width: 100%;
+      padding: var(--space-md) var(--space-lg);
+      background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+      color: white;
+      font-weight: 500;
+      border-radius: var(--radius-md);
+      transition: all var(--transition-fast);
+
+      svg {
+        width: 16px;
+        height: 16px;
+      }
+
+      &:hover:not(:disabled) {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(99, 102, 241, 0.35);
+      }
+
+      &:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none;
+      }
+    }
+
     .btn__spinner--dark {
       width: 16px;
       height: 16px;
@@ -1301,6 +1728,9 @@ export class InvoicePreviewComponent implements OnInit, OnDestroy {
   private invoiceService = inject(InvoiceService);
   private notificationService = inject(NotificationService);
   googleService = inject(GoogleService);
+  private integrationsService = inject(IntegrationsService);
+  private crmService = inject(CRMService);
+  private crmIntegrationService = inject(CRMIntegrationService);
   private sanitizer = inject(DomSanitizer);
 
   invoice = signal<Invoice | null>(null);
@@ -1311,7 +1741,28 @@ export class InvoicePreviewComponent implements OnInit, OnDestroy {
   isCreatingDraft = signal(false);
   isArchiving = signal(false);
   isDeleting = signal(false);
+  isSyncingCRM = signal(false);
   selectedGoogleAccountId = signal<string | null>(null);
+  googleEnabled = this.integrationsService.googleEnabled;
+  crmStatus = signal<CRMStatus | null>(null);
+
+  // CRM integrations
+  crmIntegrations = signal<CRMIntegration[]>([]);
+  selectedCrmIntegrationId = signal<string | null>(null);
+  hasCrmIntegrations = computed(() => this.crmIntegrations().length > 0);
+  isFetchingCrmPdf = signal(false);
+
+  // PDF preview tabs and attachment selection
+  activePdfTab = signal<'local' | 'crm'>('local');
+  selectedAttachment = signal<'local' | 'crm' | 'none'>('local');
+  private crmPdfObjectUrl: string | null = null;
+  private rawCrmPdfUrl = signal<string | null>(null);
+  isCrmPdfLoading = signal(false);
+  crmPdfUrl = computed(() => {
+    const url = this.rawCrmPdfUrl();
+    return url ? this.sanitizer.bypassSecurityTrustResourceUrl(url) : null;
+  });
+  hasCrmPdf = computed(() => !!this.invoice()?.crmPdfPath);
 
   private rawPdfUrl = signal<string | null>(null);
   private objectUrl: string | null = null;
@@ -1331,13 +1782,26 @@ export class InvoicePreviewComponent implements OnInit, OnDestroy {
     if (id) {
       this.loadInvoice(id);
     }
+    // Fetch integration status to check if Google is enabled
+    this.integrationsService.fetchPublicStatus();
     // Load user's connected Google accounts
     this.googleService.fetchAccounts();
+    // Check CRM status
+    this.crmService.getStatus().subscribe(status => {
+      this.crmStatus.set(status);
+    });
+    // Load available CRM integrations
+    this.crmIntegrationService.getIntegrations().subscribe(integrations => {
+      this.crmIntegrations.set(integrations.filter(i => i.isActive));
+    });
   }
 
   ngOnDestroy() {
     if (this.objectUrl) {
       window.URL.revokeObjectURL(this.objectUrl);
+    }
+    if (this.crmPdfObjectUrl) {
+      window.URL.revokeObjectURL(this.crmPdfObjectUrl);
     }
   }
 
@@ -1483,7 +1947,8 @@ export class InvoicePreviewComponent implements OnInit, OnDestroy {
       to: inv?.task?.clientEmail || '',
       subject: draft.subject,
       body: draft.body,
-      invoiceId: inv?.id
+      invoiceId: inv?.id,
+      attachmentSource: this.selectedAttachment()
     }).subscribe({
       next: (response) => {
         this.isCreatingDraft.set(false);
@@ -1558,5 +2023,132 @@ export class InvoicePreviewComponent implements OnInit, OnDestroy {
         this.notificationService.error('Failed to delete invoice');
       }
     });
+  }
+
+  syncToCRM(integrationId?: string) {
+    const inv = this.invoice();
+    if (!inv) return;
+
+    // Use selected integration, or provided integrationId, or task's default
+    const selectedId = integrationId || this.selectedCrmIntegrationId() || undefined;
+
+    this.isSyncingCRM.set(true);
+    this.crmService.syncInvoice(inv.id, selectedId).subscribe({
+      next: (result) => {
+        this.isSyncingCRM.set(false);
+        if (result.success) {
+          this.notificationService.success(result.message);
+          // Update the local invoice with CRM ID and sync date
+          this.invoice.update(i => i ? {
+            ...i,
+            crmInvoiceId: result.crmInvoiceId,
+            crmSyncedAt: new Date().toISOString()
+          } : null);
+        } else {
+          this.notificationService.error(result.message || 'Failed to sync to CRM');
+          console.error('CRM sync error:', result.error);
+        }
+      },
+      error: (err) => {
+        this.isSyncingCRM.set(false);
+        this.notificationService.error('Failed to sync to CRM');
+        console.error('CRM sync error:', err);
+      }
+    });
+  }
+
+  selectCrmIntegration(integrationId: string | null) {
+    this.selectedCrmIntegrationId.set(integrationId);
+  }
+
+  getActiveCrmName(): string {
+    const integrations = this.crmIntegrations();
+    if (integrations.length === 0) return 'CRM';
+    if (integrations.length === 1) return integrations[0].name;
+
+    const selectedId = this.selectedCrmIntegrationId();
+    if (selectedId) {
+      const selected = integrations.find(i => i.id === selectedId);
+      if (selected) return selected.name;
+    }
+    return integrations[0].name;
+  }
+
+  fetchCrmPdf() {
+    const inv = this.invoice();
+    if (!inv) return;
+
+    const selectedId = this.selectedCrmIntegrationId() || undefined;
+
+    this.isFetchingCrmPdf.set(true);
+    this.invoiceService.fetchPdfFromCRM(inv.id, selectedId).subscribe({
+      next: (result) => {
+        this.isFetchingCrmPdf.set(false);
+        if (result.success) {
+          this.notificationService.success('PDF downloaded from CRM');
+          // Update local invoice state to reflect the new PDF
+          this.invoice.update(i => i ? { ...i, crmPdfUrl: result.pdfUrl, crmPdfPath: result.pdfPath } : null);
+          // Load CRM PDF preview
+          this.loadCrmPdfPreview(inv.id);
+        } else {
+          this.notificationService.error(result.message || 'Failed to fetch PDF from CRM');
+        }
+      },
+      error: (err) => {
+        this.isFetchingCrmPdf.set(false);
+        this.notificationService.error('Failed to fetch PDF from CRM');
+        console.error('CRM fetch PDF error:', err);
+      }
+    });
+  }
+
+  downloadCrmPdf() {
+    const inv = this.invoice();
+    if (!inv) return;
+
+    this.invoiceService.downloadCrmPdf(inv.id).subscribe({
+      next: (blob) => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `crm-${inv.number}.pdf`;
+        a.click();
+        window.URL.revokeObjectURL(url);
+        this.notificationService.success('CRM PDF downloaded!');
+      },
+      error: () => {
+        this.notificationService.error('Failed to download CRM PDF');
+      }
+    });
+  }
+
+  loadCrmPdfPreview(invoiceId: string) {
+    this.isCrmPdfLoading.set(true);
+    this.invoiceService.downloadCrmPdf(invoiceId).subscribe({
+      next: (blob) => {
+        if (this.crmPdfObjectUrl) {
+          window.URL.revokeObjectURL(this.crmPdfObjectUrl);
+        }
+        this.crmPdfObjectUrl = window.URL.createObjectURL(blob);
+        this.rawCrmPdfUrl.set(this.crmPdfObjectUrl);
+        this.isCrmPdfLoading.set(false);
+      },
+      error: () => {
+        this.isCrmPdfLoading.set(false);
+      }
+    });
+  }
+
+  switchPdfTab(tab: 'local' | 'crm') {
+    this.activePdfTab.set(tab);
+    // Load CRM PDF preview if switching to CRM tab and not loaded yet
+    const inv = this.invoice();
+    if (tab === 'crm' && inv?.crmPdfPath && !this.rawCrmPdfUrl()) {
+      this.loadCrmPdfPreview(inv.id);
+    }
+  }
+
+  selectAttachmentSource(source: 'local' | 'crm' | 'none') {
+    this.selectedAttachment.set(source);
   }
 }

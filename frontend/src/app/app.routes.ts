@@ -89,6 +89,16 @@ export const routes: Routes = [
         path: 'profile',
         loadComponent: () => import('./features/profile/profile.component').then(m => m.ProfileComponent)
       },
+      // CRM Integrations
+      {
+        path: 'settings/crm',
+        loadComponent: () => import('./features/settings/crm-settings/crm-settings.component').then(m => m.CRMSettingsComponent)
+      },
+      // Bank Accounts
+      {
+        path: 'settings/bank-accounts',
+        loadComponent: () => import('./features/settings/bank-accounts-settings/bank-accounts-settings.component').then(m => m.BankAccountsSettingsComponent)
+      },
       // Admin: AI Settings
       {
         path: 'settings/ai',

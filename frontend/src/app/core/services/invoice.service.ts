@@ -77,4 +77,26 @@ export class InvoiceService {
   deleteInvoice(id: string): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/${id}`);
   }
+
+  fetchPdfFromCRM(invoiceId: string, integrationId?: string): Observable<{
+    success: boolean;
+    message: string;
+    pdfUrl?: string;
+    pdfPath?: string;
+  }> {
+    let params = new HttpParams();
+    if (integrationId) {
+      params = params.set('integrationId', integrationId);
+    }
+    return this.http.post<{
+      success: boolean;
+      message: string;
+      pdfUrl?: string;
+      pdfPath?: string;
+    }>(`${environment.apiUrl}/crm/fetch-pdf/${invoiceId}`, {}, { params });
+  }
+
+  downloadCrmPdf(invoiceId: string): Observable<Blob> {
+    return this.http.get(`${this.apiUrl}/${invoiceId}/crm-pdf`, { responseType: 'blob' });
+  }
 }

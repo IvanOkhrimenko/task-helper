@@ -41,6 +41,9 @@ export class AISettingsService {
   isLoading = signal(false);
   error = signal<string | null>(null);
 
+  // Public state - available to all users
+  aiEnabled = signal(false);
+
   // Get settings (admin endpoint with full details)
   fetchSettings(): void {
     this.isLoading.set(true);
@@ -78,6 +81,22 @@ export class AISettingsService {
           throw err;
         })
       );
+  }
+
+  // Fetch public AI status (available to all authenticated users)
+  fetchPublicStatus(): void {
+    this.http.get<AISettings>(`${this.apiUrl}/settings`)
+      .pipe(
+        tap(settings => {
+          this.aiEnabled.set(settings.isActive);
+        }),
+        catchError(err => {
+          console.error('Failed to fetch AI status:', err);
+          this.aiEnabled.set(false);
+          return of(null);
+        })
+      )
+      .subscribe();
   }
 
   // Available models for each provider

@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
+import { BankAccount } from './bank-account.service';
 
 export type InvoiceTemplate = 'STANDARD' | 'MINIMAL' | 'MODERN' | 'CORPORATE' | 'CREATIVE' | 'ELEGANT';
 
@@ -13,17 +14,36 @@ export interface Task {
   isArchived: boolean;
   warningDate: number;
   deadlineDate: number;
+  // Client info
   clientName?: string;
-  clientAddress?: string;
+  clientNip?: string;
+  clientStreetAddress?: string;
+  clientPostcode?: string;
+  clientCity?: string;
+  clientCountry?: string;
+  clientAddress?: string;  // deprecated - use split fields
   clientEmail?: string;
   clientBankAccount?: string;
+  // CRM integration
+  crmClientId?: string;
+  crmIntegrationId?: string;
+  crmIntegration?: {
+    id: string;
+    name: string;
+    isActive: boolean;
+  };
+  // Invoice defaults
   hourlyRate?: number;
   hoursWorked?: number;
   description?: string;
+  defaultServiceName?: string;  // Default service name for CRM invoices
   currency: string;
   defaultLanguage: string;
   invoiceTemplate: InvoiceTemplate;
   googleAccountId?: string;
+  // Bank account for invoices
+  bankAccountId?: string;
+  bankAccount?: BankAccount;
   // Email template fields
   emailSubjectTemplate?: string;
   emailBodyTemplate?: string;
@@ -51,6 +71,10 @@ export interface Invoice {
   hoursWorked?: number;
   hourlyRate?: number;
   createdByAI?: boolean;  // True if created via AI assistant
+  crmInvoiceId?: string;  // ID in external CRM system
+  crmSyncedAt?: string;   // When synced to CRM
+  crmPdfUrl?: string;     // URL to PDF in external CRM system
+  crmPdfPath?: string;    // Local path to downloaded CRM PDF
   taskId: string;
   userId: string;
   createdAt: string;
@@ -63,17 +87,29 @@ export interface CreateTaskDto {
   type?: 'INVOICE';
   warningDate: number;
   deadlineDate: number;
+  // Client info
   clientName?: string;
-  clientAddress?: string;
+  clientNip?: string;
+  clientStreetAddress?: string;
+  clientPostcode?: string;
+  clientCity?: string;
+  clientCountry?: string;
+  clientAddress?: string;  // deprecated
   clientEmail?: string;
   clientBankAccount?: string;
+  // CRM integration
+  crmClientId?: string;
+  crmIntegrationId?: string;
+  // Invoice defaults
   hourlyRate?: number;
   hoursWorked?: number;
   description?: string;
+  defaultServiceName?: string;
   currency?: string;
   defaultLanguage?: string;
   invoiceTemplate?: InvoiceTemplate;
   googleAccountId?: string;
+  bankAccountId?: string;
   // Email template fields
   emailSubjectTemplate?: string;
   emailBodyTemplate?: string;

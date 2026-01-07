@@ -394,3 +394,36 @@ export async function deleteInvoice(req: AuthRequest, res: Response): Promise<vo
     res.status(500).json({ error: 'Failed to delete invoice' });
   }
 }
+
+export async function downloadCrmPdf(req: AuthRequest, res: Response): Promise<void> {
+  const prisma: PrismaClient = req.app.get('prisma');
+  const { id } = req.params;
+
+  try {
+    const invoice = await prisma.invoice.findFirst({
+      where: { id, userId: req.userId }
+    });
+
+    if (!invoice) {
+      res.status(404).json({ error: 'Invoice not found' });
+      return;
+    }
+
+    if (!invoice.crmPdfPath) {
+      res.status(404).json({ error: 'CRM PDF not available. Please fetch it from CRM first.' });
+      return;
+    }
+
+    // Check if file exists
+    if (!fs.existsSync(invoice.crmPdfPath)) {
+      res.status(404).json({ error: 'CRM PDF file not found on disk' });
+      return;
+    }
+
+    const fileName = path.basename(invoice.crmPdfPath);
+    res.download(invoice.crmPdfPath, `crm-${invoice.number}.pdf`);
+  } catch (error) {
+    console.error('DownloadCrmPdf error:', error);
+    res.status(500).json({ error: 'Failed to download CRM PDF' });
+  }
+}

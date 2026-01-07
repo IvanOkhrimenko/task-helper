@@ -2,7 +2,10 @@ import { Component, inject, signal, OnInit, computed, ElementRef, ViewChild } fr
 import { CommonModule } from '@angular/common';
 import { Router, ActivatedRoute, RouterLink } from '@angular/router';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { QuillModule, QuillEditorComponent } from 'ngx-quill';
 import { TaskService, CreateTaskDto, InvoiceTemplate } from '../../../core/services/task.service';
+import { BankAccountService, BankAccount } from '../../../core/services/bank-account.service';
+import { CRMIntegrationService, CRMIntegration } from '../../../core/services/crm-integration.service';
 import { NotificationService } from '../../../core/services/notification.service';
 import { GoogleService } from '../../../core/services/google.service';
 import { ChatService } from '../../../core/services/chat.service';
@@ -13,7 +16,7 @@ import { TemplateSelectorComponent } from '../../../shared/components/template-s
 @Component({
   selector: 'app-task-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink, ToastComponent, TemplateSelectorComponent],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink, ToastComponent, TemplateSelectorComponent, QuillModule],
   template: `
     <app-toast />
     <div class="task-form-page">
@@ -85,37 +88,138 @@ import { TemplateSelectorComponent } from '../../../shared/components/template-s
           <section class="form-section">
             <h2 class="section-title">Client Details</h2>
 
+            <div class="form-row">
+              <div class="form-group">
+                <label for="clientName" class="form-label">Client Name</label>
+                <input
+                  type="text"
+                  id="clientName"
+                  formControlName="clientName"
+                  class="form-input"
+                  placeholder="Acme Corporation"
+                />
+              </div>
+
+              <div class="form-group">
+                <label for="clientNip" class="form-label">Client NIP / Tax ID</label>
+                <input
+                  type="text"
+                  id="clientNip"
+                  formControlName="clientNip"
+                  class="form-input"
+                  placeholder="1234567890"
+                />
+              </div>
+            </div>
+
             <div class="form-group">
-              <label for="clientName" class="form-label">Client Name</label>
+              <label for="clientStreetAddress" class="form-label">Street Address</label>
               <input
                 type="text"
-                id="clientName"
-                formControlName="clientName"
+                id="clientStreetAddress"
+                formControlName="clientStreetAddress"
                 class="form-input"
-                placeholder="Acme Corporation"
+                placeholder="ul. Przykładowa 123/45"
               />
             </div>
 
-            <div class="form-group">
-              <label for="clientEmail" class="form-label">Client Email</label>
-              <input
-                type="email"
-                id="clientEmail"
-                formControlName="clientEmail"
-                class="form-input"
-                placeholder="billing@acme.com"
-              />
+            <div class="form-row form-row--three">
+              <div class="form-group">
+                <label for="clientPostcode" class="form-label">Postcode</label>
+                <input
+                  type="text"
+                  id="clientPostcode"
+                  formControlName="clientPostcode"
+                  class="form-input"
+                  placeholder="00-000"
+                />
+              </div>
+
+              <div class="form-group">
+                <label for="clientCity" class="form-label">City</label>
+                <input
+                  type="text"
+                  id="clientCity"
+                  formControlName="clientCity"
+                  class="form-input"
+                  placeholder="Warszawa"
+                />
+              </div>
+
+              <div class="form-group">
+                <label for="clientCountry" class="form-label">Country</label>
+                <input
+                  type="text"
+                  id="clientCountry"
+                  formControlName="clientCountry"
+                  class="form-input"
+                  placeholder="Polska"
+                />
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="clientEmail" class="form-label">Client Email</label>
+                <input
+                  type="email"
+                  id="clientEmail"
+                  formControlName="clientEmail"
+                  class="form-input"
+                  placeholder="billing@acme.com"
+                />
+              </div>
+
+              <div class="form-group">
+                <label for="crmClientId" class="form-label">CRM Client ID</label>
+                <input
+                  type="text"
+                  id="crmClientId"
+                  formControlName="crmClientId"
+                  class="form-input"
+                  placeholder="e.g., 8769"
+                />
+                <span class="form-hint">Client ID in the CRM system</span>
+              </div>
             </div>
 
             <div class="form-group">
-              <label for="clientAddress" class="form-label">Client Address</label>
-              <textarea
-                id="clientAddress"
-                formControlName="clientAddress"
-                class="form-input form-textarea"
-                placeholder="123 Business St, Suite 100&#10;New York, NY 10001"
-                rows="3"
-              ></textarea>
+              <label for="crmIntegrationId" class="form-label">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="label-icon label-icon--crm">
+                  <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+                  <path d="M2 17l10 5 10-5"/>
+                  <path d="M2 12l10 5 10-5"/>
+                </svg>
+                CRM Integration
+              </label>
+              @if (isLoadingCrmIntegrations()) {
+                <div class="skeleton-select"></div>
+                <span class="form-hint">Loading CRM integrations...</span>
+              } @else if (crmIntegrations().length > 0) {
+                <select
+                  id="crmIntegrationId"
+                  formControlName="crmIntegrationId"
+                  class="form-input"
+                >
+                  <option value="">Use default integration</option>
+                  @for (integration of crmIntegrations(); track integration.id) {
+                    <option [value]="integration.id">{{ integration.name }} {{ integration.isActive ? '' : '(Inactive)' }}</option>
+                  }
+                </select>
+                <span class="form-hint">Select which CRM to sync invoices to for this client</span>
+              } @else {
+                <div class="no-accounts-message">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+                    <path d="M2 17l10 5 10-5"/>
+                    <path d="M2 12l10 5 10-5"/>
+                  </svg>
+                  <div>
+                    <p>No CRM integrations configured</p>
+                    <a routerLink="/profile" class="link-primary">Add CRM integrations in your profile settings</a>
+                  </div>
+                </div>
+              }
             </div>
           </section>
 
@@ -160,15 +264,29 @@ import { TemplateSelectorComponent } from '../../../shared/components/template-s
               </div>
             }
 
-            <div class="form-group">
-              <label for="description" class="form-label">Work Description</label>
-              <textarea
-                id="description"
-                formControlName="description"
-                class="form-input form-textarea"
-                placeholder="Software development services for the month of..."
-                rows="3"
-              ></textarea>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="description" class="form-label">Work Description</label>
+                <textarea
+                  id="description"
+                  formControlName="description"
+                  class="form-input form-textarea"
+                  placeholder="Software development services for the month of..."
+                  rows="3"
+                ></textarea>
+              </div>
+
+              <div class="form-group">
+                <label for="defaultServiceName" class="form-label">Default Service Name</label>
+                <input
+                  type="text"
+                  id="defaultServiceName"
+                  formControlName="defaultServiceName"
+                  class="form-input"
+                  placeholder="Tworzenie oprogramowania"
+                />
+                <span class="form-hint">Service name used in CRM invoices</span>
+              </div>
             </div>
 
             <div class="form-row">
@@ -200,6 +318,28 @@ import { TemplateSelectorComponent } from '../../../shared/components/template-s
             </div>
 
             <div class="form-row">
+              <div class="form-group">
+                <label for="bankAccountId" class="form-label">Bank Account for Invoices</label>
+                @if (isLoadingBankAccounts()) {
+                  <div class="skeleton-select"></div>
+                  <span class="form-hint">Loading bank accounts...</span>
+                } @else if (bankAccounts().length > 0) {
+                  <select
+                    id="bankAccountId"
+                    formControlName="bankAccountId"
+                    class="form-input"
+                  >
+                    <option value="">Select bank account...</option>
+                    @for (account of bankAccounts(); track account.id) {
+                      <option [value]="account.id">{{ account.name }} ({{ account.currency }}) {{ account.isDefault ? '- Default' : '' }}</option>
+                    }
+                  </select>
+                  <span class="form-hint">Bank account used for CRM invoice sync</span>
+                } @else {
+                  <div class="form-hint">No bank accounts configured. <a routerLink="/profile">Add bank accounts in your profile</a></div>
+                }
+              </div>
+
               <div class="form-group">
                 <label for="defaultLanguage" class="form-label">Default Invoice Language</label>
                 <select
@@ -322,18 +462,19 @@ import { TemplateSelectorComponent } from '../../../shared/components/template-s
                   />
                 </div>
 
-                <!-- Body Textarea -->
+                <!-- Body Rich Text Editor -->
                 <div class="form-group">
                   <label for="emailBodyTemplate" class="form-label">Email Body</label>
-                  <textarea
-                    #bodyInput
-                    id="emailBodyTemplate"
+                  <quill-editor
+                    #bodyEditor
                     formControlName="emailBodyTemplate"
-                    class="form-input form-textarea template-input template-body"
-                    [attr.placeholder]="bodyPlaceholder"
-                    rows="12"
-                    (focus)="setActiveField('body')"
-                  ></textarea>
+                    [modules]="quillModules"
+                    [placeholder]="bodyPlaceholder"
+                    [styles]="{ height: '250px' }"
+                    theme="snow"
+                    (onFocus)="setActiveField('body')"
+                    class="email-body-editor"
+                  ></quill-editor>
                 </div>
 
                 <!-- Live Preview -->
@@ -353,7 +494,7 @@ import { TemplateSelectorComponent } from '../../../shared/components/template-s
                     </div>
                     <div class="preview-body">
                       <span class="preview-label">Body:</span>
-                      <pre class="preview-text">{{ previewBody() }}</pre>
+                      <div class="preview-text preview-html" [innerHTML]="previewBody()"></div>
                     </div>
                   </div>
                 </div>
@@ -602,6 +743,18 @@ import { TemplateSelectorComponent } from '../../../shared/components/template-s
       }
     }
 
+    .form-row--three {
+      grid-template-columns: 1fr 1.5fr 1fr;
+
+      @media (max-width: 600px) {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      @media (max-width: 400px) {
+        grid-template-columns: 1fr;
+      }
+    }
+
     .form-group--full {
       grid-column: 1 / -1;
       margin-top: var(--space-md);
@@ -768,6 +921,17 @@ import { TemplateSelectorComponent } from '../../../shared/components/template-s
       height: 20px;
       margin-right: var(--space-sm);
       vertical-align: middle;
+    }
+
+    .label-icon {
+      width: 16px;
+      height: 16px;
+      vertical-align: middle;
+      margin-right: 4px;
+    }
+
+    .label-icon--crm {
+      color: #6366f1;
     }
 
     .no-accounts-message {
@@ -973,6 +1137,84 @@ import { TemplateSelectorComponent } from '../../../shared/components/template-s
     .template-body {
       min-height: 200px;
       line-height: 1.6;
+    }
+
+    /* Quill Editor Styles */
+    .email-body-editor {
+      ::ng-deep {
+        .ql-toolbar {
+          background: var(--color-bg);
+          border: 1px solid var(--color-border);
+          border-radius: var(--radius-md) var(--radius-md) 0 0;
+
+          .ql-stroke {
+            stroke: var(--color-text-secondary);
+          }
+
+          .ql-fill {
+            fill: var(--color-text-secondary);
+          }
+
+          .ql-picker {
+            color: var(--color-text-secondary);
+          }
+
+          button:hover,
+          button.ql-active {
+            .ql-stroke {
+              stroke: var(--color-primary);
+            }
+            .ql-fill {
+              fill: var(--color-primary);
+            }
+          }
+        }
+
+        .ql-container {
+          background: var(--color-surface);
+          border: 1px solid var(--color-border);
+          border-top: none;
+          border-radius: 0 0 var(--radius-md) var(--radius-md);
+          font-family: var(--font-body);
+          font-size: 0.9375rem;
+
+          .ql-editor {
+            color: var(--color-text);
+            min-height: 200px;
+
+            &.ql-blank::before {
+              color: var(--color-text-muted);
+              font-style: normal;
+            }
+
+            p {
+              margin-bottom: 0.5em;
+            }
+
+            strong {
+              font-weight: 600;
+            }
+          }
+        }
+
+        .ql-snow .ql-picker-options {
+          background: var(--color-surface);
+          border-color: var(--color-border);
+        }
+      }
+    }
+
+    .preview-html {
+      p { margin-bottom: 0.5em; }
+      strong { font-weight: 600; }
+      em { font-style: italic; }
+      u { text-decoration: underline; }
+      ul, ol { margin-left: 1.5em; margin-bottom: 0.5em; }
+      h1, h2, h3 { margin-bottom: 0.5em; font-weight: 600; }
+      h1 { font-size: 1.5em; }
+      h2 { font-size: 1.25em; }
+      h3 { font-size: 1.1em; }
+      a { color: var(--color-primary); }
     }
 
     .preview-section {
@@ -1243,10 +1485,23 @@ export class TaskFormComponent implements OnInit {
   private notificationService = inject(NotificationService);
   private googleService = inject(GoogleService);
   private chatService = inject(ChatService);
+  private bankAccountService = inject(BankAccountService);
+  private crmIntegrationService = inject(CRMIntegrationService);
   private authService = inject(AuthService);
 
   @ViewChild('subjectInput') subjectInput!: ElementRef<HTMLInputElement>;
-  @ViewChild('bodyInput') bodyInput!: ElementRef<HTMLTextAreaElement>;
+  @ViewChild('bodyEditor') bodyEditor!: QuillEditorComponent;
+
+  // Quill editor configuration
+  quillModules = {
+    toolbar: [
+      ['bold', 'italic', 'underline', 'strike'],
+      [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+      [{ 'header': [1, 2, 3, false] }],
+      ['link'],
+      ['clean']
+    ]
+  };
 
   isLoading = signal(false);
   isEditing = signal(false);
@@ -1257,6 +1512,10 @@ export class TaskFormComponent implements OnInit {
   isArchived = signal(false);
   taskId: string | null = null;
   googleAccounts = this.googleService.accounts;
+  bankAccounts = signal<BankAccount[]>([]);
+  isLoadingBankAccounts = signal(true);
+  crmIntegrations = signal<CRMIntegration[]>([]);
+  isLoadingCrmIntegrations = signal(true);
   selectedTemplate = signal<InvoiceTemplate>('STANDARD');
   activeField = signal<'subject' | 'body'>('subject');
   isGeneratingTemplate = signal(false);
@@ -1328,17 +1587,28 @@ Best regards,
     name: ['', Validators.required],
     warningDate: [1, [Validators.required, Validators.min(1), Validators.max(31)]],
     deadlineDate: [5, [Validators.required, Validators.min(1), Validators.max(31)]],
+    // Client info
     clientName: [''],
+    clientNip: [''],
+    clientStreetAddress: [''],
+    clientPostcode: [''],
+    clientCity: [''],
+    clientCountry: [''],
     clientEmail: [''],
-    clientAddress: [''],
+    clientBankAccount: [''],
+    // CRM integration
+    crmClientId: [''],
+    crmIntegrationId: [''],
+    // Invoice defaults
     hourlyRate: [null as number | null],
     hoursWorked: [null as number | null],
     description: [''],
-    clientBankAccount: [''],
+    defaultServiceName: [''],
     currency: ['USD'],
     defaultLanguage: ['PL'],
     invoiceTemplate: ['STANDARD'],
     googleAccountId: [''],  // Use empty string instead of null for reliable select binding
+    bankAccountId: [''],    // Bank account for invoices
     useCustomEmailTemplate: [false],
     emailSubjectTemplate: [''],
     emailBodyTemplate: ['']
@@ -1385,17 +1655,20 @@ Best regards,
         input.focus();
         input.setSelectionRange(start + placeholder.length, start + placeholder.length);
       });
-    } else if (field === 'body' && this.bodyInput) {
-      const textarea = this.bodyInput.nativeElement;
-      const start = textarea.selectionStart || 0;
-      const end = textarea.selectionEnd || 0;
-      const currentValue = this.form.get('emailBodyTemplate')?.value || '';
-      const newValue = currentValue.substring(0, start) + placeholder + currentValue.substring(end);
-      this.form.patchValue({ emailBodyTemplate: newValue });
-      setTimeout(() => {
-        textarea.focus();
-        textarea.setSelectionRange(start + placeholder.length, start + placeholder.length);
-      });
+    } else if (field === 'body' && this.bodyEditor) {
+      // Insert placeholder at current cursor position in Quill editor
+      const quill = this.bodyEditor.quillEditor;
+      if (quill) {
+        const range = quill.getSelection(true);
+        if (range) {
+          quill.insertText(range.index, placeholder);
+          quill.setSelection(range.index + placeholder.length);
+        } else {
+          // If no selection, append to end
+          const length = quill.getLength();
+          quill.insertText(length - 1, placeholder);
+        }
+      }
     }
   }
 
@@ -1482,6 +1755,28 @@ Best regards,
       }
     });
 
+    // Fetch bank accounts
+    this.bankAccountService.getBankAccounts().subscribe({
+      next: (accounts) => {
+        this.bankAccounts.set(accounts);
+        this.isLoadingBankAccounts.set(false);
+      },
+      error: () => {
+        this.isLoadingBankAccounts.set(false);
+      }
+    });
+
+    // Fetch CRM integrations
+    this.crmIntegrationService.getIntegrations().subscribe({
+      next: (integrations) => {
+        this.crmIntegrations.set(integrations);
+        this.isLoadingCrmIntegrations.set(false);
+      },
+      error: () => {
+        this.isLoadingCrmIntegrations.set(false);
+      }
+    });
+
     // Update preview on init
     this.updatePreview();
   }
@@ -1499,17 +1794,28 @@ Best regards,
           name: task.name,
           warningDate: task.warningDate,
           deadlineDate: task.deadlineDate,
+          // Client info
           clientName: task.clientName || '',
+          clientNip: task.clientNip || '',
+          clientStreetAddress: task.clientStreetAddress || '',
+          clientPostcode: task.clientPostcode || '',
+          clientCity: task.clientCity || '',
+          clientCountry: task.clientCountry || '',
           clientEmail: task.clientEmail || '',
-          clientAddress: task.clientAddress || '',
+          clientBankAccount: task.clientBankAccount || '',
+          // CRM integration
+          crmClientId: task.crmClientId || '',
+          crmIntegrationId: task.crmIntegrationId || '',
+          // Invoice defaults
           hourlyRate: task.hourlyRate || null,
           hoursWorked: task.hoursWorked || null,
           description: task.description || '',
-          clientBankAccount: task.clientBankAccount || '',
+          defaultServiceName: task.defaultServiceName || '',
           currency: task.currency || 'USD',
           defaultLanguage: task.defaultLanguage || 'PL',
           invoiceTemplate: template,
           googleAccountId: task.googleAccountId || '',  // Use empty string for "None"
+          bankAccountId: task.bankAccountId || '',
           useCustomEmailTemplate: task.useCustomEmailTemplate || false,
           emailSubjectTemplate: task.emailSubjectTemplate || '',
           emailBodyTemplate: task.emailBodyTemplate || ''
@@ -1595,17 +1901,28 @@ Best regards,
       name: formValue.name,
       warningDate: formValue.warningDate,
       deadlineDate: formValue.deadlineDate,
+      // Client info
       clientName: formValue.clientName || undefined,
+      clientNip: formValue.clientNip || undefined,
+      clientStreetAddress: formValue.clientStreetAddress || undefined,
+      clientPostcode: formValue.clientPostcode || undefined,
+      clientCity: formValue.clientCity || undefined,
+      clientCountry: formValue.clientCountry || undefined,
       clientEmail: formValue.clientEmail || undefined,
-      clientAddress: formValue.clientAddress || undefined,
+      clientBankAccount: formValue.clientBankAccount || undefined,
+      // CRM integration
+      crmClientId: formValue.crmClientId || undefined,
+      crmIntegrationId: formValue.crmIntegrationId || undefined,
+      // Invoice defaults
       hourlyRate: formValue.hourlyRate || undefined,
       hoursWorked: formValue.hoursWorked || undefined,
       description: formValue.description || undefined,
-      clientBankAccount: formValue.clientBankAccount || undefined,
+      defaultServiceName: formValue.defaultServiceName || undefined,
       currency: formValue.currency || undefined,
       defaultLanguage: formValue.defaultLanguage || undefined,
       invoiceTemplate: formValue.invoiceTemplate as any || undefined,
       googleAccountId: formValue.googleAccountId || undefined,
+      bankAccountId: formValue.bankAccountId || undefined,
       useCustomEmailTemplate: formValue.useCustomEmailTemplate,
       emailSubjectTemplate: formValue.emailSubjectTemplate || undefined,
       emailBodyTemplate: formValue.emailBodyTemplate || undefined
