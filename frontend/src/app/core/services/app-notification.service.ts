@@ -1,7 +1,8 @@
-import { Injectable, inject, signal, computed, OnDestroy } from '@angular/core';
+import { Injectable, inject, signal, computed, OnDestroy, effect } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, interval, Subscription, tap, catchError, of } from 'rxjs';
 import { environment } from '../../../environments/environment';
+import { AuthService } from './auth.service';
 
 export type NotificationType = 'IN_APP' | 'BROWSER_PUSH' | 'EMAIL';
 export type NotificationStatus = 'PENDING' | 'SENT' | 'READ' | 'FAILED';
@@ -46,6 +47,7 @@ export interface PushSubscriptionData {
 })
 export class AppNotificationService implements OnDestroy {
   private http = inject(HttpClient);
+  private authService = inject(AuthService);
   private apiUrl = `${environment.apiUrl}/notifications`;
 
   private pollSubscription?: Subscription;
@@ -62,10 +64,22 @@ export class AppNotificationService implements OnDestroy {
   recentNotifications = computed(() => this.notifications().slice(0, 5));
 
   constructor() {
-    // Start polling for notifications when service is created
-    this.startPolling();
-    // Initial fetch
-    this.refreshNotifications();
+    // Only start polling when user is authenticated
+    effect(() => {
+      if (this.authService.isAuthenticated()) {
+        this.startPolling();
+        this.refreshNotifications();
+      } else {
+        this.stopPolling();
+        this.clearLocalState();
+      }
+    });
+  }
+
+  private clearLocalState(): void {
+    this.notifications.set([]);
+    this.unreadCount.set(0);
+    this.totalCount.set(0);
   }
 
   ngOnDestroy(): void {
