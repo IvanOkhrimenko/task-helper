@@ -556,8 +556,9 @@ export async function createInvite(req: Request, res: Response) {
       role,
     });
 
-    // Return invite with invite link
-    const baseUrl = process.env.FRONTEND_URL || 'http://localhost:4200';
+    // Return invite with invite link - use origin from request or fallback
+    const origin = req.get('origin') || req.get('referer')?.replace(/\/[^/]*$/, '') || process.env.FRONTEND_URL || 'http://localhost:4200';
+    const baseUrl = origin.replace(/\/$/, ''); // Remove trailing slash if any
     const inviteLink = `${baseUrl}/invite/${token}`;
 
     res.status(201).json({
@@ -594,7 +595,8 @@ export async function getInvites(req: Request, res: Response) {
       orderBy: { createdAt: 'desc' },
     });
 
-    const baseUrl = process.env.FRONTEND_URL || 'http://localhost:4200';
+    const origin = req.get('origin') || req.get('referer')?.replace(/\/[^/]*$/, '') || process.env.FRONTEND_URL || 'http://localhost:4200';
+    const baseUrl = origin.replace(/\/$/, '');
     const invitesWithLinks = invites.map(i => ({
       ...i,
       inviteLink: `${baseUrl}/invite/${i.token}`,
