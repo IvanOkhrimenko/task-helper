@@ -2,15 +2,20 @@ import { Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink, Router } from '@angular/router';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { AuthService } from '../../../core/services/auth.service';
 import { NotificationService } from '../../../core/services/notification.service';
+import { LanguageSwitcherComponent } from '../../../shared/components/language-switcher/language-switcher.component';
 
 @Component({
   selector: 'app-register',
   standalone: true,
-  imports: [CommonModule, RouterLink, ReactiveFormsModule],
+  imports: [CommonModule, RouterLink, ReactiveFormsModule, TranslateModule, LanguageSwitcherComponent],
   template: `
     <div class="auth-page">
+      <div class="language-switcher-wrapper">
+        <app-language-switcher />
+      </div>
       <div class="auth-container">
         <div class="auth-header">
           <div class="auth-logo">
@@ -19,53 +24,53 @@ import { NotificationService } from '../../../core/services/notification.service
               <path d="M12 20L18 26L28 14" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
             </svg>
           </div>
-          <h1 class="auth-title">Create account</h1>
-          <p class="auth-subtitle">Start managing your tasks efficiently</p>
+          <h1 class="auth-title">{{ 'auth.register.title' | translate }}</h1>
+          <p class="auth-subtitle">{{ 'auth.register.subtitle' | translate }}</p>
         </div>
 
         <form [formGroup]="form" (ngSubmit)="onSubmit()" class="auth-form">
           <div class="form-group">
-            <label for="name" class="form-label">Full name</label>
+            <label for="name" class="form-label">{{ 'auth.register.name' | translate }}</label>
             <input
               type="text"
               id="name"
               formControlName="name"
               class="form-input"
-              placeholder="John Doe"
+              [placeholder]="'auth.register.namePlaceholder' | translate"
               [class.form-input--error]="form.get('name')?.touched && form.get('name')?.invalid"
             />
             @if (form.get('name')?.touched && form.get('name')?.errors?.['required']) {
-              <span class="form-error">Name is required</span>
+              <span class="form-error">{{ 'auth.validation.nameRequired' | translate }}</span>
             }
           </div>
 
           <div class="form-group">
-            <label for="email" class="form-label">Email</label>
+            <label for="email" class="form-label">{{ 'auth.register.email' | translate }}</label>
             <input
               type="email"
               id="email"
               formControlName="email"
               class="form-input"
-              placeholder="you@example.com"
+              [placeholder]="'auth.register.emailPlaceholder' | translate"
               [class.form-input--error]="form.get('email')?.touched && form.get('email')?.invalid"
             />
             @if (form.get('email')?.touched && form.get('email')?.errors?.['required']) {
-              <span class="form-error">Email is required</span>
+              <span class="form-error">{{ 'auth.validation.emailRequired' | translate }}</span>
             }
             @if (form.get('email')?.touched && form.get('email')?.errors?.['email']) {
-              <span class="form-error">Please enter a valid email</span>
+              <span class="form-error">{{ 'auth.validation.emailInvalid' | translate }}</span>
             }
           </div>
 
           <div class="form-group">
-            <label for="password" class="form-label">Password</label>
+            <label for="password" class="form-label">{{ 'auth.register.password' | translate }}</label>
             <div class="password-wrapper">
               <input
                 [type]="showPassword() ? 'text' : 'password'"
                 id="password"
                 formControlName="password"
                 class="form-input"
-                placeholder="At least 6 characters"
+                [placeholder]="'auth.register.passwordPlaceholder' | translate"
                 [class.form-input--error]="form.get('password')?.touched && form.get('password')?.invalid"
               />
               <button
@@ -87,10 +92,10 @@ import { NotificationService } from '../../../core/services/notification.service
               </button>
             </div>
             @if (form.get('password')?.touched && form.get('password')?.errors?.['required']) {
-              <span class="form-error">Password is required</span>
+              <span class="form-error">{{ 'auth.validation.passwordRequired' | translate }}</span>
             }
             @if (form.get('password')?.touched && form.get('password')?.errors?.['minlength']) {
-              <span class="form-error">Password must be at least 6 characters</span>
+              <span class="form-error">{{ 'auth.validation.passwordMinLength' | translate }}</span>
             }
           </div>
 
@@ -101,15 +106,15 @@ import { NotificationService } from '../../../core/services/notification.service
           >
             @if (isLoading()) {
               <span class="btn__spinner"></span>
-              Creating account...
+              {{ 'auth.register.submitting' | translate }}
             } @else {
-              Create account
+              {{ 'auth.register.submit' | translate }}
             }
           </button>
         </form>
 
         <p class="auth-footer">
-          Already have an account? <a routerLink="/login">Sign in</a>
+          {{ 'auth.register.hasAccount' | translate }} <a routerLink="/login">{{ 'auth.register.signIn' | translate }}</a>
         </p>
       </div>
 
@@ -133,6 +138,13 @@ import { NotificationService } from '../../../core/services/notification.service
         radial-gradient(ellipse at 20% 0%, rgba(16, 185, 129, 0.06) 0%, transparent 50%),
         radial-gradient(ellipse at 80% 100%, rgba(16, 185, 129, 0.04) 0%, transparent 50%),
         var(--color-bg);
+    }
+
+    .language-switcher-wrapper {
+      position: absolute;
+      top: var(--space-lg);
+      right: var(--space-lg);
+      z-index: 10;
     }
 
     .auth-container {
@@ -362,6 +374,7 @@ export class RegisterComponent {
   private authService = inject(AuthService);
   private router = inject(Router);
   private notificationService = inject(NotificationService);
+  private translateService = inject(TranslateService);
 
   showPassword = signal(false);
   isLoading = signal(false);
@@ -380,7 +393,7 @@ export class RegisterComponent {
 
     this.authService.register(email, password, name).subscribe({
       next: () => {
-        this.notificationService.success('Account created successfully!');
+        this.notificationService.success(this.translateService.instant('auth.register.success'));
         this.router.navigate(['/dashboard']);
       },
       error: (error) => {

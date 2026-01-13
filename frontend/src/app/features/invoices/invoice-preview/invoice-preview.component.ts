@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterLink, Router } from '@angular/router';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { FormsModule } from '@angular/forms';
+import { TranslateModule } from '@ngx-translate/core';
 import { InvoiceService, EmailDraft } from '../../../core/services/invoice.service';
 import { Invoice } from '../../../core/services/task.service';
 import { NotificationService } from '../../../core/services/notification.service';
@@ -17,7 +18,7 @@ import { ActivityTimelineComponent } from '../../../shared/components/activity-t
 @Component({
   selector: 'app-invoice-preview',
   standalone: true,
-  imports: [CommonModule, RouterLink, ToastComponent, FormsModule, ActivityTimelineComponent],
+  imports: [CommonModule, RouterLink, ToastComponent, FormsModule, TranslateModule, ActivityTimelineComponent],
   template: `
     <app-toast />
     <div class="invoice-page">
@@ -28,7 +29,7 @@ import { ActivityTimelineComponent } from '../../../shared/components/activity-t
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M19 12H5M12 19l-7-7 7-7"/>
             </svg>
-            Back to Dashboard
+            {{ 'invoices.preview.backToDashboard' | translate }}
           </a>
           <a routerLink="/invoices" class="nav-link">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -37,14 +38,14 @@ import { ActivityTimelineComponent } from '../../../shared/components/activity-t
               <line x1="16" y1="13" x2="8" y2="13"/>
               <line x1="16" y1="17" x2="8" y2="17"/>
             </svg>
-            All Invoices
+            {{ 'invoices.preview.allInvoices' | translate }}
           </a>
         </header>
 
         @if (isLoading()) {
           <div class="loading">
             <div class="loading__spinner"></div>
-            <p>Loading invoice...</p>
+            <p>{{ 'invoices.preview.loading' | translate }}</p>
           </div>
         } @else if (invoice()) {
           <!-- Main Content Grid -->
@@ -54,7 +55,7 @@ import { ActivityTimelineComponent } from '../../../shared/components/activity-t
               <!-- Invoice Header Card -->
               <div class="card card--header">
                 <div class="invoice-badge">
-                  <span class="invoice-badge__label">Invoice</span>
+                  <span class="invoice-badge__label">{{ 'invoices.card.invoice' | translate }}</span>
                   <span class="invoice-badge__number">#{{ invoice()!.number }}</span>
                 </div>
                 <div class="status-row">
@@ -86,7 +87,7 @@ import { ActivityTimelineComponent } from '../../../shared/components/activity-t
                     <line x1="8" y1="2" x2="8" y2="6"/>
                     <line x1="3" y1="10" x2="21" y2="10"/>
                   </svg>
-                  Billing Period
+                  {{ 'invoices.preview.billingPeriod' | translate }}
                 </h3>
                 <div class="period-display">
                   <span class="period-month">{{ getMonthName(invoice()!.invoiceMonth) }}</span>
@@ -101,12 +102,12 @@ import { ActivityTimelineComponent } from '../../../shared/components/activity-t
                     <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/>
                     <circle cx="12" cy="7" r="4"/>
                   </svg>
-                  Client Details
+                  {{ 'invoices.preview.clientDetails' | translate }}
                 </h3>
                 <div class="info-grid">
                   @if (invoice()!.task) {
                     <div class="info-item info-item--full">
-                      <span class="info-label">Task</span>
+                      <span class="info-label">{{ 'invoices.card.task' | translate }}</span>
                       <a [routerLink]="['/tasks', invoice()!.task!.id]" class="info-value info-value--link">
                         {{ invoice()!.task!.name }}
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -117,11 +118,11 @@ import { ActivityTimelineComponent } from '../../../shared/components/activity-t
                       </a>
                     </div>
                     <div class="info-item">
-                      <span class="info-label">Client Name</span>
+                      <span class="info-label">{{ 'invoices.preview.clientName' | translate }}</span>
                       <span class="info-value">{{ invoice()!.task!.client?.name || '—' }}</span>
                     </div>
                     <div class="info-item">
-                      <span class="info-label">Email</span>
+                      <span class="info-label">{{ 'invoices.preview.email' | translate }}</span>
                       <span class="info-value">
                         @if (invoice()!.task!.client?.email) {
                           <a href="mailto:{{ invoice()!.task!.client!.email }}" class="email-link">
@@ -134,7 +135,7 @@ import { ActivityTimelineComponent } from '../../../shared/components/activity-t
                     </div>
                     @if (getClientAddress()) {
                       <div class="info-item info-item--full">
-                        <span class="info-label">Address</span>
+                        <span class="info-label">{{ 'invoices.preview.address' | translate }}</span>
                         <span class="info-value info-value--address">{{ getClientAddress() }}</span>
                       </div>
                     }
@@ -149,19 +150,19 @@ import { ActivityTimelineComponent } from '../../../shared/components/activity-t
                     <line x1="12" y1="1" x2="12" y2="23"/>
                     <path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/>
                   </svg>
-                  Financial Summary
+                  {{ 'invoices.preview.financialSummary' | translate }}
                 </h3>
                 <div class="financial-grid">
                   @if (isFixedAmountInvoice()) {
                     <!-- Fixed Amount Invoice -->
                     <div class="financial-item financial-item--fixed">
-                      <span class="financial-label">Billing Type</span>
+                      <span class="financial-label">{{ 'invoices.preview.billingType' | translate }}</span>
                       <span class="financial-value">
-                        <span class="billing-type-badge">Fixed Amount</span>
+                        <span class="billing-type-badge">{{ 'invoices.preview.fixedAmount' | translate }}</span>
                       </span>
                     </div>
                     <div class="financial-item financial-item--total">
-                      <span class="financial-label">Monthly Amount</span>
+                      <span class="financial-label">{{ 'invoices.preview.monthlyAmount' | translate }}</span>
                       <span class="financial-value financial-value--total">
                         {{ getCurrencySymbol() }}{{ invoice()!.amount }}
                         <span class="currency-code">{{ invoice()!.currency }}</span>
@@ -170,15 +171,15 @@ import { ActivityTimelineComponent } from '../../../shared/components/activity-t
                   } @else {
                     <!-- Hourly Invoice -->
                     <div class="financial-item">
-                      <span class="financial-label">Hours Worked</span>
-                      <span class="financial-value">{{ invoice()!.hoursWorked || 0 }} hrs</span>
+                      <span class="financial-label">{{ 'invoices.preview.hoursWorked' | translate }}</span>
+                      <span class="financial-value">{{ invoice()!.hoursWorked || 0 }} {{ 'invoices.preview.hrs' | translate }}</span>
                     </div>
                     <div class="financial-item">
-                      <span class="financial-label">Hourly Rate</span>
+                      <span class="financial-label">{{ 'invoices.preview.hourlyRate' | translate }}</span>
                       <span class="financial-value">{{ getCurrencySymbol() }}{{ invoice()!.hourlyRate || 0 }}</span>
                     </div>
                     <div class="financial-item financial-item--total">
-                      <span class="financial-label">Total Amount</span>
+                      <span class="financial-label">{{ 'invoices.preview.totalAmount' | translate }}</span>
                       <span class="financial-value financial-value--total">
                         {{ getCurrencySymbol() }}{{ invoice()!.amount }}
                         <span class="currency-code">{{ invoice()!.currency }}</span>
@@ -196,17 +197,17 @@ import { ActivityTimelineComponent } from '../../../shared/components/activity-t
                     <line x1="12" y1="16" x2="12" y2="12"/>
                     <line x1="12" y1="8" x2="12.01" y2="8"/>
                   </svg>
-                  Additional Information
+                  {{ 'invoices.preview.additionalInfo' | translate }}
                 </h3>
                 <div class="info-grid">
                   <div class="info-item">
-                    <span class="info-label">Language</span>
+                    <span class="info-label">{{ 'invoices.preview.language' | translate }}</span>
                     <span class="info-value">
-                      <span class="language-badge">{{ invoice()!.language === 'PL' ? 'Polski (Bilingual)' : 'English' }}</span>
+                      <span class="language-badge">{{ invoice()!.language === 'PL' ? ('invoices.preview.languagePL' | translate) : ('invoices.preview.languageEN' | translate) }}</span>
                     </span>
                   </div>
                   <div class="info-item">
-                    <span class="info-label">Created</span>
+                    <span class="info-label">{{ 'invoices.preview.created' | translate }}</span>
                     <span class="info-value">{{ invoice()!.createdAt | date:'medium' }}</span>
                   </div>
                 </div>
@@ -220,15 +221,15 @@ import { ActivityTimelineComponent } from '../../../shared/components/activity-t
                       <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
                       <polyline points="22,6 12,13 2,6"/>
                     </svg>
-                    Email Draft
+                    {{ 'invoices.preview.emailDraft' | translate }}
                   </h3>
                   <div class="email-draft">
                     <div class="email-field">
-                      <span class="email-field__label">To:</span>
-                      <span class="email-field__value">{{ emailDraft()!.to || 'No email specified' }}</span>
+                      <span class="email-field__label">{{ 'invoices.preview.emailTo' | translate }}</span>
+                      <span class="email-field__value">{{ emailDraft()!.to || ('invoices.preview.noEmailSpecified' | translate) }}</span>
                     </div>
                     <div class="email-field">
-                      <span class="email-field__label">Subject:</span>
+                      <span class="email-field__label">{{ 'invoices.preview.emailSubject' | translate }}</span>
                       <span class="email-field__value">{{ emailDraft()!.subject }}</span>
                     </div>
                     <div class="email-body">
@@ -240,27 +241,27 @@ import { ActivityTimelineComponent } from '../../../shared/components/activity-t
                           <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
                           <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>
                         </svg>
-                        Copy Subject
+                        {{ 'invoices.preview.copySubject' | translate }}
                       </button>
                       <button class="btn btn--ghost" (click)="copyBody()">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                           <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
                           <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>
                         </svg>
-                        Copy Body
+                        {{ 'invoices.preview.copyBody' | translate }}
                       </button>
                     </div>
                     @if (googleEnabled() && googleService.accounts().length > 0) {
                       <div class="gmail-draft-section">
                         @if (googleService.accounts().length > 1 && !invoice()?.task?.client?.googleAccountId) {
                           <div class="account-select">
-                            <label class="account-select__label">Send from:</label>
+                            <label class="account-select__label">{{ 'invoices.preview.sendFrom' | translate }}</label>
                             <select
                               class="account-select__dropdown"
                               [value]="selectedGoogleAccountId() || ''"
                               (change)="selectGoogleAccount($any($event.target).value)"
                             >
-                              <option value="" disabled>Select account...</option>
+                              <option value="" disabled>{{ 'invoices.preview.selectAccount' | translate }}</option>
                               @for (account of googleService.accounts(); track account.id) {
                                 <option [value]="account.id">{{ account.email }}</option>
                               }
@@ -282,7 +283,7 @@ import { ActivityTimelineComponent } from '../../../shared/components/activity-t
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                               <path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48"/>
                             </svg>
-                            Attach PDF:
+                            {{ 'invoices.preview.attachPdf' | translate }}
                           </label>
                           <div class="attachment-options">
                             <button
@@ -290,7 +291,7 @@ import { ActivityTimelineComponent } from '../../../shared/components/activity-t
                               [class.attachment-btn--active]="selectedAttachment() === 'local'"
                               (click)="selectAttachmentSource('local')"
                             >
-                              Local
+                              {{ 'invoices.preview.attachLocal' | translate }}
                             </button>
                             @if (hasCrmPdf()) {
                               <button
@@ -298,7 +299,7 @@ import { ActivityTimelineComponent } from '../../../shared/components/activity-t
                                 [class.attachment-btn--active]="selectedAttachment() === 'crm'"
                                 (click)="selectAttachmentSource('crm')"
                               >
-                                CRM
+                                {{ 'invoices.preview.attachCrm' | translate }}
                               </button>
                             }
                             <button
@@ -306,7 +307,7 @@ import { ActivityTimelineComponent } from '../../../shared/components/activity-t
                               [class.attachment-btn--active]="selectedAttachment() === 'none'"
                               (click)="selectAttachmentSource('none')"
                             >
-                              None
+                              {{ 'invoices.preview.attachNone' | translate }}
                             </button>
                           </div>
                         </div>
@@ -318,7 +319,7 @@ import { ActivityTimelineComponent } from '../../../shared/components/activity-t
                         >
                           @if (isCreatingDraft()) {
                             <span class="btn__spinner btn__spinner--dark"></span>
-                            Creating...
+                            {{ 'invoices.preview.creating' | translate }}
                           } @else {
                             <svg viewBox="0 0 24 24" fill="currentColor">
                               <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -326,7 +327,7 @@ import { ActivityTimelineComponent } from '../../../shared/components/activity-t
                               <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
                               <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
                             </svg>
-                            Create Gmail Draft
+                            {{ 'invoices.preview.createGmailDraft' | translate }}
                           }
                         </button>
                       </div>
@@ -339,7 +340,7 @@ import { ActivityTimelineComponent } from '../../../shared/components/activity-t
                             <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
                             <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
                           </svg>
-                          Connect Google Account
+                          {{ 'invoices.preview.connectGoogleAccount' | translate }}
                         </a>
                       </div>
                     }
@@ -354,7 +355,7 @@ import { ActivityTimelineComponent } from '../../../shared/components/activity-t
                     <polyline points="9 11 12 14 22 4"/>
                     <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/>
                   </svg>
-                  Update Status
+                  {{ 'invoices.preview.updateStatus' | translate }}
                 </h3>
                 <div class="status-buttons">
                   <button
@@ -363,7 +364,7 @@ import { ActivityTimelineComponent } from '../../../shared/components/activity-t
                     (click)="updateStatus('DRAFT')"
                   >
                     <span class="status-btn__dot status-btn__dot--draft"></span>
-                    Draft
+                    {{ 'invoices.status.draft' | translate }}
                   </button>
                   <button
                     class="status-btn"
@@ -371,7 +372,7 @@ import { ActivityTimelineComponent } from '../../../shared/components/activity-t
                     (click)="updateStatus('SENT')"
                   >
                     <span class="status-btn__dot status-btn__dot--sent"></span>
-                    Sent
+                    {{ 'invoices.status.sent' | translate }}
                   </button>
                   <button
                     class="status-btn"
@@ -379,7 +380,7 @@ import { ActivityTimelineComponent } from '../../../shared/components/activity-t
                     (click)="updateStatus('PAID')"
                   >
                     <span class="status-btn__dot status-btn__dot--paid"></span>
-                    Paid
+                    {{ 'invoices.status.paid' | translate }}
                   </button>
                 </div>
               </div>
@@ -391,7 +392,7 @@ import { ActivityTimelineComponent } from '../../../shared/components/activity-t
                     <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/>
                     <path d="M12 6v6l4 2"/>
                   </svg>
-                  Actions
+                  {{ 'invoices.preview.actions' | translate }}
                 </h3>
                 <div class="action-buttons">
                   @if (!invoice()!.isArchived) {
@@ -402,14 +403,14 @@ import { ActivityTimelineComponent } from '../../../shared/components/activity-t
                     >
                       @if (isArchiving()) {
                         <span class="btn__spinner btn__spinner--dark"></span>
-                        Archiving...
+                        {{ 'invoices.preview.archiving' | translate }}
                       } @else {
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                           <polyline points="21 8 21 21 3 21 3 8"/>
                           <rect x="1" y="3" width="22" height="5"/>
                           <line x1="10" y1="12" x2="14" y2="12"/>
                         </svg>
-                        Archive Invoice
+                        {{ 'invoices.preview.archiveInvoice' | translate }}
                       }
                     </button>
                   } @else {
@@ -420,13 +421,13 @@ import { ActivityTimelineComponent } from '../../../shared/components/activity-t
                     >
                       @if (isArchiving()) {
                         <span class="btn__spinner btn__spinner--dark"></span>
-                        Restoring...
+                        {{ 'invoices.preview.restoring' | translate }}
                       } @else {
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                           <polyline points="1 4 1 10 7 10"/>
                           <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/>
                         </svg>
-                        Restore from Archive
+                        {{ 'invoices.preview.restoreFromArchive' | translate }}
                       }
                     </button>
                   }
@@ -437,7 +438,7 @@ import { ActivityTimelineComponent } from '../../../shared/components/activity-t
                   >
                     @if (isDeleting()) {
                       <span class="btn__spinner btn__spinner--dark"></span>
-                      Deleting...
+                      {{ 'invoices.preview.deleting' | translate }}
                     } @else {
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <polyline points="3 6 5 6 21 6"/>
@@ -445,7 +446,7 @@ import { ActivityTimelineComponent } from '../../../shared/components/activity-t
                         <line x1="10" y1="11" x2="10" y2="17"/>
                         <line x1="14" y1="11" x2="14" y2="17"/>
                       </svg>
-                      Delete Invoice
+                      {{ 'invoices.preview.deleteInvoice' | translate }}
                     }
                   </button>
                 </div>
@@ -486,7 +487,7 @@ import { ActivityTimelineComponent } from '../../../shared/components/activity-t
                             <polyline points="22 4 12 14.01 9 11.01"/>
                           </svg>
                           <div class="crm-synced-info">
-                            <span class="crm-synced-label">Synced to CRM</span>
+                            <span class="crm-synced-label">{{ 'invoices.preview.syncedToCrm' | translate }}</span>
                             @if (invoice()?.crmSyncedAt) {
                               <span class="crm-synced-date">{{ invoice()!.crmSyncedAt | date:'medium' }}</span>
                             }
@@ -501,14 +502,14 @@ import { ActivityTimelineComponent } from '../../../shared/components/activity-t
                         >
                           @if (isSyncingCRM()) {
                             <span class="btn__spinner btn__spinner--dark"></span>
-                            Syncing...
+                            {{ 'invoices.preview.syncing' | translate }}
                           } @else {
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                               <polyline points="23 4 23 10 17 10"/>
                               <polyline points="1 20 1 14 7 14"/>
                               <path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/>
                             </svg>
-                            Sync to CRM
+                            {{ 'invoices.preview.syncToCrm' | translate }}
                           }
                         </button>
                       }
@@ -524,7 +525,7 @@ import { ActivityTimelineComponent } from '../../../shared/components/activity-t
                             <polyline points="7 10 12 15 17 10"/>
                             <line x1="12" y1="15" x2="12" y2="3"/>
                           </svg>
-                          Download CRM PDF
+                          {{ 'invoices.preview.downloadCrmPdf' | translate }}
                         </button>
                       } @else if (invoice()?.crmSyncedAt || invoice()?.crmInvoiceId) {
                         <!-- Only show fetch button if invoice was synced -->
@@ -535,7 +536,7 @@ import { ActivityTimelineComponent } from '../../../shared/components/activity-t
                         >
                           @if (isFetchingCrmPdf()) {
                             <span class="btn__spinner btn__spinner--dark"></span>
-                            Fetching...
+                            {{ 'invoices.preview.fetching' | translate }}
                           } @else {
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                               <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
@@ -543,7 +544,7 @@ import { ActivityTimelineComponent } from '../../../shared/components/activity-t
                               <line x1="12" y1="18" x2="12" y2="12"/>
                               <line x1="9" y1="15" x2="15" y2="15"/>
                             </svg>
-                            Fetch PDF from CRM
+                            {{ 'invoices.preview.fetchPdfFromCrm' | translate }}
                           }
                         </button>
                       }
@@ -558,7 +559,7 @@ import { ActivityTimelineComponent } from '../../../shared/components/activity-t
                       <line x1="12" y1="8" x2="12" y2="12"/>
                       <line x1="12" y1="16" x2="12.01" y2="16"/>
                     </svg>
-                    This invoice is archived
+                    {{ 'invoices.preview.invoiceIsArchived' | translate }}
                   </div>
                 }
               </div>
@@ -570,7 +571,7 @@ import { ActivityTimelineComponent } from '../../../shared/components/activity-t
                     <circle cx="12" cy="12" r="10"/>
                     <polyline points="12 6 12 12 16 14"/>
                   </svg>
-                  Activity History
+                  {{ 'invoices.preview.activityHistory' | translate }}
                 </h3>
                 <app-activity-timeline [activityLogs]="activityLogs()" />
               </div>
@@ -581,7 +582,7 @@ import { ActivityTimelineComponent } from '../../../shared/components/activity-t
               <div class="pdf-card">
                 <div class="pdf-header">
                   <div class="pdf-header__left">
-                    <h3 class="pdf-title">Document Preview</h3>
+                    <h3 class="pdf-title">{{ 'invoices.preview.documentPreview' | translate }}</h3>
                     @if (hasCrmPdf()) {
                       <div class="pdf-tabs">
                         <button
@@ -589,14 +590,14 @@ import { ActivityTimelineComponent } from '../../../shared/components/activity-t
                           [class.pdf-tab--active]="activePdfTab() === 'local'"
                           (click)="switchPdfTab('local')"
                         >
-                          Local
+                          {{ 'invoices.preview.attachLocal' | translate }}
                         </button>
                         <button
                           class="pdf-tab"
                           [class.pdf-tab--active]="activePdfTab() === 'crm'"
                           (click)="switchPdfTab('crm')"
                         >
-                          CRM
+                          {{ 'invoices.preview.attachCrm' | translate }}
                         </button>
                       </div>
                     }
@@ -608,14 +609,14 @@ import { ActivityTimelineComponent } from '../../../shared/components/activity-t
                   >
                     @if (isDownloading()) {
                       <span class="btn__spinner"></span>
-                      Downloading...
+                      {{ 'invoices.preview.downloading' | translate }}
                     } @else {
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
                         <polyline points="7 10 12 15 17 10"/>
                         <line x1="12" y1="15" x2="12" y2="3"/>
                       </svg>
-                      Download {{ activePdfTab() === 'crm' ? 'CRM' : '' }} PDF
+                      {{ activePdfTab() === 'crm' ? ('invoices.preview.downloadCrmPdf' | translate) : ('invoices.preview.downloadPdf' | translate) }}
                     }
                   </button>
                 </div>
@@ -624,7 +625,7 @@ import { ActivityTimelineComponent } from '../../../shared/components/activity-t
                     @if (isPdfLoading()) {
                       <div class="pdf-loading">
                         <div class="loading__spinner"></div>
-                        <p>Loading preview...</p>
+                        <p>{{ 'invoices.preview.loadingPreview' | translate }}</p>
                       </div>
                     } @else if (pdfUrl()) {
                       <iframe
@@ -639,9 +640,9 @@ import { ActivityTimelineComponent } from '../../../shared/components/activity-t
                           <line x1="12" y1="8" x2="12" y2="12"/>
                           <line x1="12" y1="16" x2="12.01" y2="16"/>
                         </svg>
-                        <p>Could not load PDF preview</p>
+                        <p>{{ 'invoices.preview.couldNotLoadPdf' | translate }}</p>
                         <button class="btn btn--ghost" (click)="loadPdfPreview(invoice()!.id)">
-                          Try Again
+                          {{ 'invoices.preview.tryAgain' | translate }}
                         </button>
                       </div>
                     }
@@ -649,7 +650,7 @@ import { ActivityTimelineComponent } from '../../../shared/components/activity-t
                     @if (isCrmPdfLoading()) {
                       <div class="pdf-loading">
                         <div class="loading__spinner"></div>
-                        <p>Loading CRM PDF...</p>
+                        <p>{{ 'invoices.preview.loadingCrmPdf' | translate }}</p>
                       </div>
                     } @else if (crmPdfUrl()) {
                       <iframe
@@ -664,9 +665,9 @@ import { ActivityTimelineComponent } from '../../../shared/components/activity-t
                           <line x1="12" y1="8" x2="12" y2="12"/>
                           <line x1="12" y1="16" x2="12.01" y2="16"/>
                         </svg>
-                        <p>Could not load CRM PDF preview</p>
+                        <p>{{ 'invoices.preview.couldNotLoadCrmPdf' | translate }}</p>
                         <button class="btn btn--ghost" (click)="loadCrmPdfPreview(invoice()!.id)">
-                          Try Again
+                          {{ 'invoices.preview.tryAgain' | translate }}
                         </button>
                       </div>
                     }

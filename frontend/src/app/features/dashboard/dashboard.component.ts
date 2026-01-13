@@ -1,11 +1,13 @@
 import { Component, inject, signal, computed, OnInit, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink, Router } from '@angular/router';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { TaskService, Task } from '../../core/services/task.service';
 import { AuthService } from '../../core/services/auth.service';
 import { NotificationService } from '../../core/services/notification.service';
 import { DashboardService, DashboardEvent, DashboardStats } from '../../core/services/dashboard.service';
 import { ReminderService } from '../../core/services/reminder.service';
+import { LanguageService } from '../../core/services/language.service';
 import { ToastComponent } from '../../shared/components/toast/toast.component';
 import { InvoiceModalComponent, InvoiceGenerationData } from '../../shared/components/invoice-modal/invoice-modal.component';
 
@@ -22,7 +24,7 @@ interface GroupedEvents {
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, RouterLink, ToastComponent, InvoiceModalComponent],
+  imports: [CommonModule, RouterLink, TranslateModule, ToastComponent, InvoiceModalComponent],
   template: `
     <app-toast />
     <app-invoice-modal
@@ -46,14 +48,14 @@ interface GroupedEvents {
                 <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/>
                 <path d="M13.73 21a2 2 0 01-3.46 0"/>
               </svg>
-              New Reminder
+              {{ 'dashboard.newReminder' | translate }}
             </a>
             <a routerLink="/tasks/new" class="btn btn--primary">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <line x1="12" y1="5" x2="12" y2="19"/>
                 <line x1="5" y1="12" x2="19" y2="12"/>
               </svg>
-              New Task
+              {{ 'dashboard.newTask' | translate }}
             </a>
           </div>
         </div>
@@ -70,7 +72,7 @@ interface GroupedEvents {
           </div>
           <div class="stat-card__content">
             <span class="stat-card__value">{{ stats()?.activeReminders || 0 }}</span>
-            <span class="stat-card__label">Active Reminders</span>
+            <span class="stat-card__label">{{ 'dashboard.stats.activeReminders' | translate }}</span>
           </div>
         </div>
 
@@ -83,7 +85,7 @@ interface GroupedEvents {
           </div>
           <div class="stat-card__content">
             <span class="stat-card__value">{{ todayEventsCount() }}</span>
-            <span class="stat-card__label">Today's Events</span>
+            <span class="stat-card__label">{{ 'dashboard.stats.todaysEvents' | translate }}</span>
           </div>
         </div>
 
@@ -98,7 +100,7 @@ interface GroupedEvents {
           </div>
           <div class="stat-card__content">
             <span class="stat-card__value">{{ stats()?.unpaidInvoices || 0 }}</span>
-            <span class="stat-card__label">Unpaid Invoices</span>
+            <span class="stat-card__label">{{ 'dashboard.stats.unpaidInvoices' | translate }}</span>
           </div>
         </div>
 
@@ -111,7 +113,7 @@ interface GroupedEvents {
           </div>
           <div class="stat-card__content">
             <span class="stat-card__value">{{ formatCurrency(stats()?.monthlyTotal || 0) }}</span>
-            <span class="stat-card__label">This Month</span>
+            <span class="stat-card__label">{{ 'dashboard.stats.thisMonth' | translate }}</span>
           </div>
         </div>
       </section>
@@ -119,7 +121,7 @@ interface GroupedEvents {
       <!-- Agenda Section -->
       <section class="agenda">
         <div class="agenda__header">
-          <h2 class="agenda__title">Agenda</h2>
+          <h2 class="agenda__title">{{ 'dashboard.agenda.title' | translate }}</h2>
           <div class="period-tabs">
             @for (period of periods; track period.value) {
               <button
@@ -139,7 +141,7 @@ interface GroupedEvents {
         @if (isLoading()) {
           <div class="loading">
             <div class="loading__spinner"></div>
-            <p>Loading events...</p>
+            <p>{{ 'dashboard.agenda.loadingEvents' | translate }}</p>
           </div>
         } @else if (filteredGroupedEvents().length === 0) {
           <div class="empty-state">
@@ -152,8 +154,8 @@ interface GroupedEvents {
                 <path d="M9 16l2 2 4-4"/>
               </svg>
             </div>
-            <h3>All clear!</h3>
-            <p>No events {{ getPeriodDescription() }}. Enjoy your free time!</p>
+            <h3>{{ 'dashboard.agenda.allClear' | translate }}</h3>
+            <p>{{ getEmptyMessage() }} {{ 'dashboard.agenda.enjoyFreeTime' | translate }}</p>
           </div>
         } @else {
           <div class="timeline">
@@ -163,9 +165,9 @@ interface GroupedEvents {
                   <div class="date-group__line"></div>
                   <span class="date-group__label" [class.date-group__label--today]="group.isToday">
                     @if (group.isToday) {
-                      Today
+                      {{ 'dashboard.agenda.today' | translate }}
                     } @else if (group.isTomorrow) {
-                      Tomorrow
+                      {{ 'dashboard.agenda.tomorrow' | translate }}
                     } @else {
                       {{ group.dateLabel }}
                     }
@@ -219,9 +221,9 @@ interface GroupedEvents {
                           <h4 class="event-card__title">{{ event.title }}</h4>
                           <div class="event-card__badges">
                             @if (event.status === 'overdue') {
-                              <span class="badge badge--danger">Overdue</span>
+                              <span class="badge badge--danger">{{ 'dashboard.events.overdue' | translate }}</span>
                             } @else if (event.status === 'today') {
-                              <span class="badge badge--warning">Today</span>
+                              <span class="badge badge--warning">{{ 'dashboard.agenda.today' | translate }}</span>
                             }
                             @if (event.type === 'reminder' && event.reminderScheduleType && event.reminderScheduleType !== 'ONE_TIME') {
                               <span class="badge badge--info">{{ getScheduleLabel(event.reminderScheduleType) }}</span>
@@ -924,6 +926,7 @@ export class DashboardComponent implements OnInit {
   private dashboardService = inject(DashboardService);
   private reminderService = inject(ReminderService);
   private router = inject(Router);
+  private translateService = inject(TranslateService);
 
   @ViewChild('invoiceModal') invoiceModal!: InvoiceModalComponent;
 
@@ -937,19 +940,21 @@ export class DashboardComponent implements OnInit {
 
   user = this.authService.user;
 
-  periods: { value: TimePeriod; label: string }[] = [
-    { value: 'today', label: 'Today' },
-    { value: 'tomorrow', label: 'Tomorrow' },
-    { value: 'week', label: 'This Week' },
-    { value: 'month', label: 'This Month' },
-    { value: 'later', label: 'Later' }
-  ];
+  get periods(): { value: TimePeriod; label: string }[] {
+    return [
+      { value: 'today', label: this.translateService.instant('dashboard.agenda.today') },
+      { value: 'tomorrow', label: this.translateService.instant('dashboard.agenda.tomorrow') },
+      { value: 'week', label: this.translateService.instant('dashboard.agenda.thisWeek') },
+      { value: 'month', label: this.translateService.instant('dashboard.agenda.thisMonth') },
+      { value: 'later', label: this.translateService.instant('dashboard.agenda.later') }
+    ];
+  }
 
   greeting = computed(() => {
     const hour = new Date().getHours();
-    if (hour < 12) return 'Good morning';
-    if (hour < 18) return 'Good afternoon';
-    return 'Good evening';
+    if (hour < 12) return this.translateService.instant('dashboard.greeting.morning');
+    if (hour < 18) return this.translateService.instant('dashboard.greeting.afternoon');
+    return this.translateService.instant('dashboard.greeting.evening');
   });
 
   userName = computed(() => {
@@ -1164,6 +1169,17 @@ export class DashboardComponent implements OnInit {
       case 'week': return 'this week';
       case 'month': return 'this month';
       case 'later': return 'scheduled for later';
+      default: return '';
+    }
+  }
+
+  getEmptyMessage(): string {
+    switch (this.selectedPeriod()) {
+      case 'today': return this.translateService.instant('dashboard.agenda.noEventsToday');
+      case 'tomorrow': return this.translateService.instant('dashboard.agenda.noEventsTomorrow');
+      case 'week': return this.translateService.instant('dashboard.agenda.noEventsWeek');
+      case 'month': return this.translateService.instant('dashboard.agenda.noEventsMonth');
+      case 'later': return this.translateService.instant('dashboard.agenda.noEventsLater');
       default: return '';
     }
   }

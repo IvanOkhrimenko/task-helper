@@ -17,6 +17,11 @@ export const routes: Routes = [
     loadComponent: () => import('./features/auth/register/register.component').then(m => m.RegisterComponent),
     canActivate: [guestGuard]
   },
+  // Invite acceptance (public - handles auth internally)
+  {
+    path: 'invite/:token',
+    loadComponent: () => import('./features/business/invite-accept/invite-accept.component').then(m => m.InviteAcceptComponent)
+  },
   // All authenticated routes wrapped in MainLayout
   {
     path: '',
@@ -149,6 +154,42 @@ export const routes: Routes = [
       {
         path: 'expenses/:id/edit',
         loadComponent: () => import('./features/taxes/expenses/expense-form/expense-form.component').then(m => m.ExpenseFormComponent)
+      },
+      // Business Finance
+      {
+        path: 'business',
+        loadComponent: () => import('./features/business/business-list/business-list.component').then(m => m.BusinessListComponent)
+      },
+      {
+        path: 'business/:businessId',
+        loadComponent: () => import('./features/business/business-view/business-view.component').then(m => m.BusinessViewComponent),
+        children: [
+          {
+            path: '',
+            redirectTo: 'overview',
+            pathMatch: 'full'
+          },
+          {
+            path: 'overview',
+            loadComponent: () => import('./features/business/business-overview/business-overview.component').then(m => m.BusinessOverviewComponent)
+          },
+          {
+            path: 'transactions',
+            loadComponent: () => import('./features/business/business-transactions/business-transactions.component').then(m => m.BusinessTransactionsComponent)
+          },
+          {
+            path: 'analytics',
+            loadComponent: () => import('./features/business/business-analytics/business-analytics.component').then(m => m.BusinessAnalyticsComponent)
+          },
+          {
+            path: 'members',
+            loadComponent: () => import('./features/business/business-members/business-members.component').then(m => m.BusinessMembersComponent)
+          },
+          {
+            path: 'settings',
+            loadComponent: () => import('./features/business/business-settings/business-settings.component').then(m => m.BusinessSettingsComponent)
+          }
+        ]
       }
     ]
   },

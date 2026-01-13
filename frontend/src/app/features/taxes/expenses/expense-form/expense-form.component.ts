@@ -2,13 +2,14 @@ import { Component, inject, signal, OnInit, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink, ActivatedRoute } from '@angular/router';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { TranslateModule } from '@ngx-translate/core';
 import { ExpenseService, Expense, ExpenseCategory, ExpenseType, CreateExpenseDto } from '../../../../core/services/expense.service';
 import { NotificationService } from '../../../../core/services/notification.service';
 
 @Component({
   selector: 'app-expense-form',
   standalone: true,
-  imports: [CommonModule, RouterLink, ReactiveFormsModule],
+  imports: [CommonModule, RouterLink, ReactiveFormsModule, TranslateModule],
   template: `
     <div class="expense-form-page">
       <header class="header">
@@ -16,18 +17,18 @@ import { NotificationService } from '../../../../core/services/notification.serv
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <polyline points="15 18 9 12 15 6"/>
           </svg>
-          Back to expenses
+          {{ 'taxes.expenses.form.backToExpenses' | translate }}
         </a>
         <div class="header__content">
-          <h1 class="header__title">{{ isEditMode() ? 'Edit expense' : 'New expense' }}</h1>
-          <p class="header__subtitle">{{ isEditMode() ? 'Update expense details' : 'Add a new expense' }}</p>
+          <h1 class="header__title">{{ isEditMode() ? ('taxes.expenses.form.editTitle' | translate) : ('taxes.expenses.form.newTitle' | translate) }}</h1>
+          <p class="header__subtitle">{{ isEditMode() ? ('taxes.expenses.form.editSubtitle' | translate) : ('taxes.expenses.form.newSubtitle' | translate) }}</p>
         </div>
       </header>
 
       @if (isLoading()) {
         <div class="loading-state">
           <div class="loading-spinner"></div>
-          <p>Loading...</p>
+          <p>{{ 'taxes.expenses.form.loading' | translate }}</p>
         </div>
       } @else {
         <form [formGroup]="form" (ngSubmit)="onSubmit()" class="form-container">
@@ -44,7 +45,7 @@ import { NotificationService } from '../../../../core/services/notification.serv
                   <rect x="2" y="7" width="20" height="14" rx="2"/>
                   <path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/>
                 </svg>
-                Business
+                {{ 'taxes.expenses.form.type.business' | translate }}
               </button>
               <button
                 type="button"
@@ -56,34 +57,34 @@ import { NotificationService } from '../../../../core/services/notification.serv
                   <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/>
                   <circle cx="12" cy="7" r="4"/>
                 </svg>
-                Personal
+                {{ 'taxes.expenses.form.type.personal' | translate }}
               </button>
             </div>
             @if (form.get('expenseType')?.value === 'PERSONAL') {
-              <p class="type-hint">Personal expenses are not tax deductible</p>
+              <p class="type-hint">{{ 'taxes.expenses.form.type.personalHint' | translate }}</p>
             }
           </section>
 
           <!-- Basic Info Section -->
           <section class="form-section">
-            <h2 class="section-title">Basic information</h2>
+            <h2 class="section-title">{{ 'taxes.expenses.form.basicInfo.title' | translate }}</h2>
 
             <div class="form-row">
               <div class="form-group form-group--large">
-                <label class="form-label">Expense name *</label>
+                <label class="form-label">{{ 'taxes.expenses.form.basicInfo.name' | translate }} *</label>
                 <input
                   type="text"
                   formControlName="name"
                   class="form-input"
-                  placeholder="e.g. JetBrains license"
+                  [placeholder]="'taxes.expenses.form.basicInfo.namePlaceholder' | translate"
                 />
                 @if (form.get('name')?.touched && form.get('name')?.errors?.['required']) {
-                  <span class="form-error">Name is required</span>
+                  <span class="form-error">{{ 'taxes.expenses.form.basicInfo.nameRequired' | translate }}</span>
                 }
               </div>
 
               <div class="form-group">
-                <label class="form-label">Category *</label>
+                <label class="form-label">{{ 'taxes.expenses.form.basicInfo.category' | translate }} *</label>
                 <div class="select-wrapper">
                   <select formControlName="category" class="form-select">
                     @for (cat of categories; track cat.value) {
@@ -98,23 +99,23 @@ import { NotificationService } from '../../../../core/services/notification.serv
             </div>
 
             <div class="form-group">
-              <label class="form-label">Description</label>
+              <label class="form-label">{{ 'taxes.expenses.form.basicInfo.description' | translate }}</label>
               <textarea
                 formControlName="description"
                 class="form-textarea"
                 rows="3"
-                placeholder="Additional details about the expense..."
+                [placeholder]="'taxes.expenses.form.basicInfo.descriptionPlaceholder' | translate"
               ></textarea>
             </div>
           </section>
 
           <!-- Amount Section -->
           <section class="form-section">
-            <h2 class="section-title">Amount</h2>
+            <h2 class="section-title">{{ 'taxes.expenses.form.amount.title' | translate }}</h2>
 
             <div class="form-row form-row--three">
               <div class="form-group">
-                <label class="form-label">Gross amount *</label>
+                <label class="form-label">{{ 'taxes.expenses.form.amount.grossAmount' | translate }} *</label>
                 <div class="input-wrapper">
                   <input
                     type="number"
@@ -125,18 +126,19 @@ import { NotificationService } from '../../../../core/services/notification.serv
                   />
                 </div>
                 @if (form.get('amount')?.touched && form.get('amount')?.errors?.['required']) {
-                  <span class="form-error">Amount is required</span>
+                  <span class="form-error">{{ 'taxes.expenses.form.amount.amountRequired' | translate }}</span>
                 }
               </div>
 
               <div class="form-group">
-                <label class="form-label">Currency</label>
+                <label class="form-label">{{ 'taxes.expenses.form.amount.currency' | translate }}</label>
                 <div class="select-wrapper">
                   <select formControlName="currency" class="form-select">
                     <option value="PLN">PLN</option>
                     <option value="EUR">EUR</option>
                     <option value="USD">USD</option>
                     <option value="GBP">GBP</option>
+                    <option value="UAH">UAH</option>
                   </select>
                   <svg class="select-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <polyline points="6 9 12 15 18 9"/>
@@ -145,10 +147,10 @@ import { NotificationService } from '../../../../core/services/notification.serv
               </div>
 
               <div class="form-group">
-                <label class="form-label">VAT rate</label>
+                <label class="form-label">{{ 'taxes.expenses.form.amount.vatRate' | translate }}</label>
                 <div class="select-wrapper">
                   <select formControlName="vatRate" class="form-select">
-                    <option [ngValue]="null">No VAT</option>
+                    <option [ngValue]="null">{{ 'taxes.expenses.form.amount.noVat' | translate }}</option>
                     <option [ngValue]="23">23%</option>
                     <option [ngValue]="8">8%</option>
                     <option [ngValue]="5">5%</option>
@@ -168,35 +170,35 @@ import { NotificationService } from '../../../../core/services/notification.serv
                   <line x1="12" y1="16" x2="12" y2="12"/>
                   <line x1="12" y1="8" x2="12.01" y2="8"/>
                 </svg>
-                <p>Amount will be converted to PLN using NBP exchange rate from the expense date.</p>
+                <p>{{ 'taxes.expenses.form.amount.currencyInfo' | translate }}</p>
               </div>
             }
           </section>
 
           <!-- Date & Document Section -->
           <section class="form-section">
-            <h2 class="section-title">Date & document</h2>
+            <h2 class="section-title">{{ 'taxes.expenses.form.dateDocument.title' | translate }}</h2>
 
             <div class="form-row">
               <div class="form-group">
-                <label class="form-label">Expense date *</label>
+                <label class="form-label">{{ 'taxes.expenses.form.dateDocument.expenseDate' | translate }} *</label>
                 <input
                   type="date"
                   formControlName="expenseDate"
                   class="form-input"
                 />
                 @if (form.get('expenseDate')?.touched && form.get('expenseDate')?.errors?.['required']) {
-                  <span class="form-error">Date is required</span>
+                  <span class="form-error">{{ 'taxes.expenses.form.dateDocument.dateRequired' | translate }}</span>
                 }
               </div>
 
               <div class="form-group">
-                <label class="form-label">Document number</label>
+                <label class="form-label">{{ 'taxes.expenses.form.dateDocument.documentNumber' | translate }}</label>
                 <input
                   type="text"
                   formControlName="documentNumber"
                   class="form-input"
-                  placeholder="e.g. INV/2024/001"
+                  [placeholder]="'taxes.expenses.form.dateDocument.documentPlaceholder' | translate"
                 />
               </div>
             </div>
@@ -205,7 +207,7 @@ import { NotificationService } from '../../../../core/services/notification.serv
           <!-- Tax Deduction Section (only for business expenses) -->
           @if (form.get('expenseType')?.value === 'BUSINESS') {
           <section class="form-section">
-            <h2 class="section-title">Tax deduction</h2>
+            <h2 class="section-title">{{ 'taxes.expenses.form.taxDeduction.title' | translate }}</h2>
 
             <div class="toggle-group">
               <label class="toggle">
@@ -215,16 +217,16 @@ import { NotificationService } from '../../../../core/services/notification.serv
                   class="toggle__input"
                 />
                 <span class="toggle__switch"></span>
-                <span class="toggle__label">Tax deductible expense</span>
+                <span class="toggle__label">{{ 'taxes.expenses.form.taxDeduction.isDeductible' | translate }}</span>
               </label>
               <p class="toggle__description">
-                Mark if this expense can be deducted from income
+                {{ 'taxes.expenses.form.taxDeduction.isDeductibleHint' | translate }}
               </p>
             </div>
 
             @if (form.get('isDeductible')?.value) {
               <div class="form-group" style="margin-top: var(--space-lg);">
-                <label class="form-label">Deduction percentage</label>
+                <label class="form-label">{{ 'taxes.expenses.form.taxDeduction.percentage' | translate }}</label>
                 <div class="deduction-chips">
                   @for (percent of deductionPercents; track percent) {
                     <button
@@ -238,7 +240,7 @@ import { NotificationService } from '../../../../core/services/notification.serv
                   }
                 </div>
                 <p class="form-hint">
-                  Some expenses can only be partially deducted (e.g. car 75%)
+                  {{ 'taxes.expenses.form.taxDeduction.percentageHint' | translate }}
                 </p>
               </div>
             }
@@ -248,7 +250,7 @@ import { NotificationService } from '../../../../core/services/notification.serv
           <!-- Actions -->
           <div class="form-actions">
             <button type="button" class="btn btn--secondary" routerLink="/expenses">
-              Cancel
+              {{ 'taxes.expenses.form.cancel' | translate }}
             </button>
             <button
               type="submit"
@@ -257,14 +259,14 @@ import { NotificationService } from '../../../../core/services/notification.serv
             >
               @if (isSaving()) {
                 <span class="btn__spinner"></span>
-                Saving...
+                {{ 'taxes.expenses.form.saving' | translate }}
               } @else {
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/>
                   <polyline points="17 21 17 13 7 13 7 21"/>
                   <polyline points="7 3 7 8 15 8"/>
                 </svg>
-                {{ isEditMode() ? 'Save changes' : 'Add expense' }}
+                {{ isEditMode() ? ('taxes.expenses.form.saveChanges' | translate) : ('taxes.expenses.form.addExpense' | translate) }}
               }
             </button>
           </div>

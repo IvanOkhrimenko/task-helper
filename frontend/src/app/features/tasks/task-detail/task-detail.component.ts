@@ -2,6 +2,7 @@ import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute, RouterLink } from '@angular/router';
+import { TranslateModule } from '@ngx-translate/core';
 import { TaskService, Task, Invoice } from '../../../core/services/task.service';
 import { InvoiceService } from '../../../core/services/invoice.service';
 import { ActivityLogService, ActivityLog } from '../../../core/services/activity-log.service';
@@ -15,7 +16,7 @@ const MONTH_NAMES = [
 @Component({
   selector: 'app-task-detail',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, ActivityTimelineComponent],
+  imports: [CommonModule, FormsModule, RouterLink, ActivityTimelineComponent, TranslateModule],
   template: `
     <div class="page">
       <div class="page__container">
@@ -25,23 +26,23 @@ const MONTH_NAMES = [
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M19 12H5M12 19l-7-7 7-7"/>
             </svg>
-            Dashboard
+            {{ 'tasks.detail.dashboard' | translate }}
           </a>
           <span class="breadcrumb__separator">/</span>
-          <span class="breadcrumb__current">{{ task()?.name || 'Task' }}</span>
+          <span class="breadcrumb__current">{{ task()?.name || ('tasks.detail.task' | translate) }}</span>
         </nav>
 
         @if (loading()) {
           <div class="loading-state">
             <div class="loading-spinner"></div>
-            <p>Loading task details...</p>
+            <p>{{ 'tasks.detail.loading' | translate }}</p>
           </div>
         } @else if (task()) {
           <!-- Task Header Card -->
           <header class="task-header" style="animation-delay: 0.1s">
             <div class="task-header__main">
               <div class="task-header__badge">
-                <span class="type-badge">Invoice Task</span>
+                <span class="type-badge">{{ 'tasks.detail.invoiceTask' | translate }}</span>
                 @if (task()!.isActive) {
                   <span class="status-dot status-dot--active"></span>
                 } @else {
@@ -74,24 +75,24 @@ const MONTH_NAMES = [
             <div class="task-header__details">
               <div class="detail-grid">
                 <div class="detail-item">
-                  <span class="detail-label">Warning Day</span>
+                  <span class="detail-label">{{ 'tasks.detail.warningDay' | translate }}</span>
                   <span class="detail-value">
                     <span class="day-badge day-badge--warning">{{ task()!.warningDate }}</span>
                   </span>
                 </div>
                 <div class="detail-item">
-                  <span class="detail-label">Deadline Day</span>
+                  <span class="detail-label">{{ 'tasks.detail.deadlineDay' | translate }}</span>
                   <span class="detail-value">
                     <span class="day-badge day-badge--deadline">{{ task()!.deadlineDate }}</span>
                   </span>
                 </div>
                 <div class="detail-item">
-                  <span class="detail-label">Total Invoices</span>
+                  <span class="detail-label">{{ 'tasks.detail.totalInvoices' | translate }}</span>
                   <span class="detail-value">{{ invoices().length }}</span>
                 </div>
                 @if (task()!.client?.hourlyRate) {
                   <div class="detail-item">
-                    <span class="detail-label">Hourly Rate</span>
+                    <span class="detail-label">{{ 'tasks.detail.hourlyRate' | translate }}</span>
                     <span class="detail-value detail-value--highlight">{{ task()!.client!.currency || 'USD' }} {{ task()!.client!.hourlyRate }}</span>
                   </div>
                 }
@@ -99,7 +100,7 @@ const MONTH_NAMES = [
 
               @if (clientAddress()) {
                 <div class="address-block">
-                  <span class="detail-label">Client Address</span>
+                  <span class="detail-label">{{ 'tasks.detail.clientAddress' | translate }}</span>
                   <p class="address-text">{{ clientAddress() }}</p>
                 </div>
               }
@@ -110,7 +111,7 @@ const MONTH_NAMES = [
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/>
                 </svg>
-                Edit Task
+                {{ 'tasks.detail.editTask' | translate }}
               </a>
             </div>
           </header>
@@ -125,9 +126,9 @@ const MONTH_NAMES = [
                   <line x1="16" y1="13" x2="8" y2="13"/>
                   <line x1="16" y1="17" x2="8" y2="17"/>
                 </svg>
-                Invoice History
+                {{ 'tasks.detail.invoiceHistory' | translate }}
               </h2>
-              <span class="invoice-count">{{ invoices().length }} invoice{{ invoices().length !== 1 ? 's' : '' }}</span>
+              <span class="invoice-count">{{ invoices().length }} {{ invoices().length !== 1 ? ('tasks.detail.invoices' | translate) : ('tasks.detail.invoice' | translate) }}</span>
             </div>
 
             @if (invoices().length === 0) {
@@ -140,10 +141,10 @@ const MONTH_NAMES = [
                     <line x1="9" y1="15" x2="15" y2="15"/>
                   </svg>
                 </div>
-                <h3 class="empty-state__title">No invoices yet</h3>
-                <p class="empty-state__text">Generate your first invoice from the dashboard to see it here.</p>
+                <h3 class="empty-state__title">{{ 'tasks.detail.noInvoices.title' | translate }}</h3>
+                <p class="empty-state__text">{{ 'tasks.detail.noInvoices.description' | translate }}</p>
                 <a routerLink="/dashboard" class="btn btn--primary">
-                  Go to Dashboard
+                  {{ 'tasks.detail.noInvoices.goToDashboard' | translate }}
                 </a>
               </div>
             } @else {
@@ -168,36 +169,36 @@ const MONTH_NAMES = [
                       <div class="invoice-card__body">
                         <div class="invoice-stats">
                           <div class="stat">
-                            <span class="stat__label">Amount</span>
+                            <span class="stat__label">{{ 'tasks.detail.invoiceCard.amount' | translate }}</span>
                             <span class="stat__value stat__value--primary">\${{ invoice.amount }}</span>
                           </div>
                           <div class="stat">
-                            <span class="stat__label">Hours</span>
+                            <span class="stat__label">{{ 'tasks.detail.invoiceCard.hours' | translate }}</span>
                             <span class="stat__value">{{ invoice.hoursWorked || 0 }}h</span>
                           </div>
                           <div class="stat">
-                            <span class="stat__label">Rate</span>
+                            <span class="stat__label">{{ 'tasks.detail.invoiceCard.rate' | translate }}</span>
                             <span class="stat__value">\${{ invoice.hourlyRate || 0 }}/h</span>
                           </div>
                           <div class="stat">
-                            <span class="stat__label">Created</span>
+                            <span class="stat__label">{{ 'tasks.detail.invoiceCard.created' | translate }}</span>
                             <span class="stat__value">{{ formatDate(invoice.createdAt) }}</span>
                           </div>
                         </div>
 
                         <div class="invoice-card__controls">
                           <div class="control-group">
-                            <label class="control-label">Status</label>
+                            <label class="control-label">{{ 'tasks.detail.invoiceCard.status' | translate }}</label>
                             <select
                               class="status-select"
                               [value]="invoice.status"
                               (change)="onStatusChange(invoice.id, $event)"
                               [disabled]="updatingStatus() === invoice.id"
                             >
-                              <option value="DRAFT">Draft</option>
-                              <option value="SENT">Sent</option>
-                              <option value="PAID">Paid</option>
-                              <option value="CANCELLED">Cancelled</option>
+                              <option value="DRAFT">{{ 'tasks.detail.invoiceCard.statusDraft' | translate }}</option>
+                              <option value="SENT">{{ 'tasks.detail.invoiceCard.statusSent' | translate }}</option>
+                              <option value="PAID">{{ 'tasks.detail.invoiceCard.statusPaid' | translate }}</option>
+                              <option value="CANCELLED">{{ 'tasks.detail.invoiceCard.statusCancelled' | translate }}</option>
                             </select>
                           </div>
 
@@ -206,7 +207,7 @@ const MONTH_NAMES = [
                               class="action-btn action-btn--download"
                               (click)="downloadPdf(invoice)"
                               [disabled]="!invoice.pdfPath"
-                              title="Download PDF"
+                              [title]="'tasks.detail.invoiceCard.downloadPdf' | translate"
                             >
                               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
@@ -218,13 +219,13 @@ const MONTH_NAMES = [
                             <button
                               class="action-btn action-btn--email"
                               (click)="copyEmailDraft(invoice)"
-                              title="Copy email draft"
+                              [title]="'tasks.detail.invoiceCard.copyEmailDraft' | translate"
                             >
                               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
                                 <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
                               </svg>
-                              Email
+                              {{ 'tasks.detail.invoiceCard.email' | translate }}
                             </button>
                           </div>
                         </div>
@@ -238,7 +239,7 @@ const MONTH_NAMES = [
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                               <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
                             </svg>
-                            {{ invoice.comments ? 'View' : 'Add' }} Comments
+                            {{ invoice.comments ? ('tasks.detail.comments.view' | translate) : ('tasks.detail.comments.add' | translate) }} {{ 'tasks.detail.comments.title' | translate }}
                             <svg
                               class="chevron"
                               [class.chevron--open]="expandedComments().has(invoice.id)"
@@ -257,7 +258,7 @@ const MONTH_NAMES = [
                                 class="comments-textarea"
                                 [value]="invoice.comments || ''"
                                 (input)="onCommentsInput(invoice.id, $event)"
-                                placeholder="Add notes about this invoice..."
+                                [placeholder]="'tasks.detail.comments.placeholder' | translate"
                                 rows="3"
                               ></textarea>
                               <button
@@ -267,9 +268,9 @@ const MONTH_NAMES = [
                               >
                                 @if (savingComments() === invoice.id) {
                                   <span class="spinner"></span>
-                                  Saving...
+                                  {{ 'tasks.detail.comments.saving' | translate }}
                                 } @else {
-                                  Save
+                                  {{ 'tasks.detail.comments.save' | translate }}
                                 }
                               </button>
                             </div>
@@ -291,9 +292,9 @@ const MONTH_NAMES = [
                   <circle cx="12" cy="12" r="10"/>
                   <polyline points="12,6 12,12 16,14"/>
                 </svg>
-                Activity History
+                {{ 'tasks.detail.activityHistory' | translate }}
               </h2>
-              <span class="invoice-count">{{ activityLogs().length }} entries</span>
+              <span class="invoice-count">{{ activityLogs().length }} {{ 'tasks.detail.entries' | translate }}</span>
             </div>
 
             <app-activity-timeline [activityLogs]="activityLogs()"></app-activity-timeline>

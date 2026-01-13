@@ -11,12 +11,13 @@ import {
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+import { TranslateModule } from '@ngx-translate/core';
 import { ChatService, ChatMessage, PendingAction } from '../../core/services/chat.service';
 
 @Component({
   selector: 'app-chat',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, TranslateModule],
   template: `
     <!-- FAB Button -->
     <button
@@ -24,7 +25,7 @@ import { ChatService, ChatMessage, PendingAction } from '../../core/services/cha
       [class.chat-fab--active]="isOpen()"
       [class.chat-fab--pulse]="pendingActions().length > 0"
       (click)="toggleChat()"
-      [attr.aria-label]="isOpen() ? 'Close chat' : 'Open AI assistant'"
+      [attr.aria-label]="(isOpen() ? 'shared.chat.closeChat' : 'shared.chat.openAiAssistant') | translate"
     >
       @if (isOpen()) {
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -55,14 +56,14 @@ import { ChatService, ChatMessage, PendingAction } from '../../core/services/cha
               </svg>
             </div>
             <div class="chat-header__title">
-              <span class="chat-header__name">Daylium AI</span>
+              <span class="chat-header__name">{{ 'shared.chat.dayliumAi' | translate }}</span>
               <span class="chat-header__status">
                 @if (isStreaming()) {
                   <span class="status-dot status-dot--active"></span>
-                  Thinking...
+                  {{ 'shared.chat.thinking' | translate }}
                 } @else {
                   <span class="status-dot"></span>
-                  Ready to help
+                  {{ 'shared.chat.readyToHelp' | translate }}
                 }
               </span>
             </div>
@@ -71,7 +72,7 @@ import { ChatService, ChatMessage, PendingAction } from '../../core/services/cha
             <button
               class="header-btn"
               (click)="startNewChat()"
-              title="New conversation"
+              [title]="'shared.chat.newConversation' | translate"
             >
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M12 5v14M5 12h14"/>
@@ -80,7 +81,7 @@ import { ChatService, ChatMessage, PendingAction } from '../../core/services/cha
             <button
               class="header-btn"
               (click)="toggleChat()"
-              title="Close"
+              [title]="'shared.chat.close' | translate"
             >
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M18 6L6 18M6 6l12 12"/>
@@ -108,8 +109,8 @@ import { ChatService, ChatMessage, PendingAction } from '../../core/services/cha
                   </defs>
                 </svg>
               </div>
-              <h3 class="chat-welcome__title">How can I help you today?</h3>
-              <p class="chat-welcome__subtitle">I can create invoices, set reminders, show analytics, and more.</p>
+              <h3 class="chat-welcome__title">{{ 'shared.chat.howCanIHelp' | translate }}</h3>
+              <p class="chat-welcome__subtitle">{{ 'shared.chat.capabilities' | translate }}</p>
               <div class="chat-suggestions">
                 @for (suggestion of suggestions; track suggestion) {
                   <button
@@ -186,7 +187,7 @@ import { ChatService, ChatMessage, PendingAction } from '../../core/services/cha
                     <path d="M12 9v4M12 17h.01"/>
                     <circle cx="12" cy="12" r="10"/>
                   </svg>
-                  <span>Action Required</span>
+                  <span>{{ 'shared.chat.actionRequired' | translate }}</span>
                 </div>
                 <div class="action-card__body">
                   <p class="action-card__title">{{ getActionTitle(action.toolName) }}</p>
@@ -204,7 +205,7 @@ import { ChatService, ChatMessage, PendingAction } from '../../core/services/cha
                     class="action-btn action-btn--cancel"
                     (click)="rejectAction(action.id)"
                   >
-                    Cancel
+                    {{ 'shared.chat.cancel' | translate }}
                   </button>
                   <button
                     class="action-btn action-btn--approve"
@@ -213,7 +214,7 @@ import { ChatService, ChatMessage, PendingAction } from '../../core/services/cha
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                       <path d="M5 12l5 5L20 7"/>
                     </svg>
-                    Approve
+                    {{ 'shared.chat.approve' | translate }}
                   </button>
                 </div>
               </div>
@@ -230,7 +231,7 @@ import { ChatService, ChatMessage, PendingAction } from '../../core/services/cha
               class="chat-input__field"
               [(ngModel)]="inputMessage"
               (keydown)="onKeyDown($event)"
-              placeholder="Ask me anything..."
+              [placeholder]="'shared.chat.askAnything' | translate"
               rows="1"
               [disabled]="isStreaming()"
             ></textarea>
@@ -245,7 +246,7 @@ import { ChatService, ChatMessage, PendingAction } from '../../core/services/cha
               </svg>
             </button>
           </div>
-          <p class="chat-input__hint">Press Enter to send, Shift+Enter for new line</p>
+          <p class="chat-input__hint">{{ 'shared.chat.inputHint' | translate }}</p>
         </div>
       </div>
     }

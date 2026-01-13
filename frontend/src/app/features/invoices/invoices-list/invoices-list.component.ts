@@ -2,6 +2,7 @@ import { Component, inject, signal, computed, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { TranslateModule } from '@ngx-translate/core';
 import { InvoiceService, InvoiceFilters } from '../../../core/services/invoice.service';
 import { Invoice } from '../../../core/services/task.service';
 import { ToastComponent } from '../../../shared/components/toast/toast.component';
@@ -17,7 +18,7 @@ interface TaskOption {
 @Component({
   selector: 'app-invoices-list',
   standalone: true,
-  imports: [CommonModule, RouterLink, FormsModule, ToastComponent],
+  imports: [CommonModule, RouterLink, FormsModule, TranslateModule, ToastComponent],
   template: `
     <app-toast />
     <div class="invoices-page">
@@ -26,8 +27,8 @@ interface TaskOption {
         <header class="page-header">
           <div class="header-content">
             <div class="header-title">
-              <h1>Invoices</h1>
-              <p class="header-subtitle">Manage and track all your generated invoices</p>
+              <h1>{{ 'invoices.title' | translate }}</h1>
+              <p class="header-subtitle">{{ 'invoices.subtitle' | translate }}</p>
             </div>
           </div>
         </header>
@@ -35,7 +36,7 @@ interface TaskOption {
         @if (isLoading()) {
           <div class="loading-state">
             <div class="loading-spinner"></div>
-            <p>Loading invoices...</p>
+            <p>{{ 'invoices.loading' | translate }}</p>
           </div>
         } @else {
           <!-- Stats Row -->
@@ -49,7 +50,7 @@ interface TaskOption {
               </div>
               <div class="stat-content">
                 <span class="stat-value">{{ invoices().length }}</span>
-                <span class="stat-label">Total Invoices</span>
+                <span class="stat-label">{{ 'invoices.stats.total' | translate }}</span>
               </div>
             </div>
 
@@ -62,7 +63,7 @@ interface TaskOption {
               </div>
               <div class="stat-content">
                 <span class="stat-value">{{ paidCount() }}</span>
-                <span class="stat-label">Paid</span>
+                <span class="stat-label">{{ 'invoices.status.paid' | translate }}</span>
               </div>
             </div>
 
@@ -75,7 +76,7 @@ interface TaskOption {
               </div>
               <div class="stat-content">
                 <span class="stat-value">{{ sentCount() }}</span>
-                <span class="stat-label">Sent</span>
+                <span class="stat-label">{{ 'invoices.status.sent' | translate }}</span>
               </div>
             </div>
 
@@ -88,7 +89,7 @@ interface TaskOption {
               </div>
               <div class="stat-content">
                 <span class="stat-value">{{ draftCount() }}</span>
-                <span class="stat-label">Draft</span>
+                <span class="stat-label">{{ 'invoices.status.draft' | translate }}</span>
               </div>
             </div>
           </div>
@@ -102,7 +103,7 @@ interface TaskOption {
                   [class.filter-tab--active]="activeFilter() === 'ALL'"
                   (click)="setFilter('ALL')"
                 >
-                  All
+                  {{ 'invoices.filters.all' | translate }}
                   <span class="filter-count">{{ invoices().length }}</span>
                 </button>
                 <button
@@ -110,7 +111,7 @@ interface TaskOption {
                   [class.filter-tab--active]="activeFilter() === 'DRAFT'"
                   (click)="setFilter('DRAFT')"
                 >
-                  Draft
+                  {{ 'invoices.status.draft' | translate }}
                   <span class="filter-count filter-count--draft">{{ draftCount() }}</span>
                 </button>
                 <button
@@ -118,7 +119,7 @@ interface TaskOption {
                   [class.filter-tab--active]="activeFilter() === 'SENT'"
                   (click)="setFilter('SENT')"
                 >
-                  Sent
+                  {{ 'invoices.status.sent' | translate }}
                   <span class="filter-count filter-count--sent">{{ sentCount() }}</span>
                 </button>
                 <button
@@ -126,7 +127,7 @@ interface TaskOption {
                   [class.filter-tab--active]="activeFilter() === 'PAID'"
                   (click)="setFilter('PAID')"
                 >
-                  Paid
+                  {{ 'invoices.status.paid' | translate }}
                   <span class="filter-count filter-count--paid">{{ paidCount() }}</span>
                 </button>
               </div>
@@ -143,7 +144,7 @@ interface TaskOption {
                     <rect x="1" y="3" width="22" height="5"/>
                     <line x1="10" y1="12" x2="14" y2="12"/>
                   </svg>
-                  Show Archived
+                  {{ 'invoices.filters.showArchived' | translate }}
                 </label>
                 <button
                   class="advanced-toggle"
@@ -153,7 +154,7 @@ interface TaskOption {
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
                   </svg>
-                  Filters
+                  {{ 'invoices.filters.filters' | translate }}
                   @if (hasActiveFilters()) {
                     <span class="active-filter-badge">{{ activeFilterCount() }}</span>
                   }
@@ -175,7 +176,7 @@ interface TaskOption {
                         <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/>
                         <circle cx="12" cy="7" r="4"/>
                       </svg>
-                      Task / Client
+                      {{ 'invoices.filters.taskClient' | translate }}
                     </label>
                     <div class="select-wrapper">
                       <select
@@ -183,7 +184,7 @@ interface TaskOption {
                         [ngModel]="selectedTaskId()"
                         (ngModelChange)="onTaskChange($event)"
                       >
-                        <option value="">All Tasks</option>
+                        <option value="">{{ 'invoices.filters.allTasks' | translate }}</option>
                         @for (task of uniqueTasks(); track task.id) {
                           <option [value]="task.id">{{ task.name }} — {{ task.clientName }}</option>
                         }
@@ -203,7 +204,7 @@ interface TaskOption {
                         <line x1="8" y1="2" x2="8" y2="6"/>
                         <line x1="3" y1="10" x2="21" y2="10"/>
                       </svg>
-                      Date Range
+                      {{ 'invoices.filters.dateRange' | translate }}
                     </label>
                     <div class="date-range">
                       <div class="date-input-wrapper">
@@ -223,7 +224,7 @@ interface TaskOption {
                           </button>
                         }
                       </div>
-                      <span class="date-separator">to</span>
+                      <span class="date-separator">{{ 'invoices.filters.to' | translate }}</span>
                       <div class="date-input-wrapper">
                         <input
                           type="date"
@@ -278,7 +279,7 @@ interface TaskOption {
                         <path d="M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
                         <path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6"/>
                       </svg>
-                      Clear All
+                      {{ 'invoices.filters.clearAll' | translate }}
                     </button>
                   </div>
                 }
@@ -297,12 +298,12 @@ interface TaskOption {
                   <line x1="16" y1="17" x2="8" y2="17"/>
                 </svg>
               </div>
-              <h3>No invoices found</h3>
+              <h3>{{ 'invoices.empty.title' | translate }}</h3>
               <p>
                 @if (activeFilter() === 'ALL') {
-                  You haven't generated any invoices yet. Go to a task and click "Generate Invoice" to create one.
+                  {{ 'invoices.empty.description' | translate }}
                 } @else {
-                  No invoices with status "{{ activeFilter().toLowerCase() }}" found.
+                  {{ 'invoices.empty.noStatus' | translate: { status: activeFilter().toLowerCase() } }}
                 }
               </p>
               <a routerLink="/dashboard" class="btn btn--primary">
@@ -310,7 +311,7 @@ interface TaskOption {
                   <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
                   <polyline points="9 22 9 12 15 12 15 22"/>
                 </svg>
-                Go to Dashboard
+                {{ 'invoices.empty.goToDashboard' | translate }}
               </a>
             </div>
           } @else {
@@ -319,7 +320,7 @@ interface TaskOption {
                 <a [routerLink]="['/invoices', invoice.id]" class="invoice-card" [style.animation-delay]="(i * 0.05) + 's'">
                   <div class="invoice-card__header">
                     <div class="invoice-number">
-                      <span class="invoice-number__label">Invoice</span>
+                      <span class="invoice-number__label">{{ 'invoices.card.invoice' | translate }}</span>
                       <span class="invoice-number__value">#{{ invoice.number }}</span>
                     </div>
                     <div class="header-badges">
@@ -349,15 +350,15 @@ interface TaskOption {
 
                   <div class="invoice-card__body">
                     <div class="invoice-detail">
-                      <span class="detail-label">Task</span>
-                      <span class="detail-value">{{ invoice.task?.name || 'Unknown Task' }}</span>
+                      <span class="detail-label">{{ 'invoices.card.task' | translate }}</span>
+                      <span class="detail-value">{{ invoice.task?.name || ('invoices.card.unknownTask' | translate) }}</span>
                     </div>
                     <div class="invoice-detail">
-                      <span class="detail-label">Client</span>
+                      <span class="detail-label">{{ 'invoices.card.client' | translate }}</span>
                       <span class="detail-value">{{ invoice.task?.client?.name || '—' }}</span>
                     </div>
                     <div class="invoice-detail">
-                      <span class="detail-label">Period</span>
+                      <span class="detail-label">{{ 'invoices.card.period' | translate }}</span>
                       <span class="detail-value">{{ getMonthName(invoice.invoiceMonth) }} {{ invoice.invoiceYear }}</span>
                     </div>
                   </div>

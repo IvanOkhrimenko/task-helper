@@ -1,28 +1,29 @@
 import { Component, inject, signal, computed, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
+import { TranslateModule } from '@ngx-translate/core';
 import { ClientService, Client } from '../../../core/services/client.service';
 import { NotificationService } from '../../../core/services/notification.service';
 
 @Component({
   selector: 'app-clients-list',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, TranslateModule],
   template: `
     <div class="clients-page">
       <!-- Header -->
       <header class="page-header">
         <div class="header-content">
           <div class="header-text">
-            <h1 class="page-title">Clients</h1>
-            <p class="page-subtitle">Manage your client relationships</p>
+            <h1 class="page-title">{{ 'clients.title' | translate }}</h1>
+            <p class="page-subtitle">{{ 'clients.subtitle' | translate }}</p>
           </div>
           <a routerLink="/clients/new" class="btn-primary">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <line x1="12" y1="5" x2="12" y2="19"/>
               <line x1="5" y1="12" x2="19" y2="12"/>
             </svg>
-            Add Client
+            {{ 'clients.addClient' | translate }}
           </a>
         </div>
       </header>
@@ -31,19 +32,19 @@ import { NotificationService } from '../../../core/services/notification.service
       <div class="stats-row">
         <div class="stat-card">
           <div class="stat-value">{{ stats().total }}</div>
-          <div class="stat-label">Total Clients</div>
+          <div class="stat-label">{{ 'clients.stats.totalClients' | translate }}</div>
         </div>
         <div class="stat-card">
           <div class="stat-value">{{ stats().active }}</div>
-          <div class="stat-label">Active</div>
+          <div class="stat-label">{{ 'clients.stats.active' | translate }}</div>
         </div>
         <div class="stat-card">
           <div class="stat-value">{{ stats().totalInvoices }}</div>
-          <div class="stat-label">Invoices</div>
+          <div class="stat-label">{{ 'clients.stats.invoices' | translate }}</div>
         </div>
         <div class="stat-card">
           <div class="stat-value">{{ stats().withCRM }}</div>
-          <div class="stat-label">CRM Linked</div>
+          <div class="stat-label">{{ 'clients.stats.crmLinked' | translate }}</div>
         </div>
       </div>
 
@@ -55,7 +56,7 @@ import { NotificationService } from '../../../core/services/notification.service
             [checked]="showArchived()"
             (change)="toggleArchived()"
           />
-          <span class="toggle-label">Show archived</span>
+          <span class="toggle-label">{{ 'clients.showArchived' | translate }}</span>
         </label>
       </div>
 
@@ -85,14 +86,14 @@ import { NotificationService } from '../../../core/services/notification.service
               <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
             </svg>
           </div>
-          <h3 class="empty-title">No clients yet</h3>
-          <p class="empty-description">Add your first client to start generating invoices</p>
+          <h3 class="empty-title">{{ 'clients.empty.title' | translate }}</h3>
+          <p class="empty-description">{{ 'clients.empty.description' | translate }}</p>
           <a routerLink="/clients/new" class="btn-primary">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <line x1="12" y1="5" x2="12" y2="19"/>
               <line x1="5" y1="12" x2="19" y2="12"/>
             </svg>
-            Add Your First Client
+            {{ 'clients.empty.addFirstClient' | translate }}
           </a>
         </div>
       }
@@ -128,7 +129,7 @@ import { NotificationService } from '../../../core/services/notification.service
                       <line x1="8" y1="2" x2="8" y2="6"/>
                       <line x1="3" y1="10" x2="21" y2="10"/>
                     </svg>
-                    <span>{{ client._count?.tasks || 0 }} tasks</span>
+                    <span>{{ client._count?.tasks || 0 }} {{ 'clients.card.tasks' | translate }}</span>
                   </div>
                   <div class="card-stat">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -137,7 +138,7 @@ import { NotificationService } from '../../../core/services/notification.service
                       <line x1="16" y1="13" x2="8" y2="13"/>
                       <line x1="16" y1="17" x2="8" y2="17"/>
                     </svg>
-                    <span>{{ client._count?.invoices || 0 }} invoices</span>
+                    <span>{{ client._count?.invoices || 0 }} {{ 'clients.card.invoices' | translate }}</span>
                   </div>
                 </div>
 
@@ -154,13 +155,13 @@ import { NotificationService } from '../../../core/services/notification.service
               </a>
 
               <div class="card-actions">
-                <a [routerLink]="['/clients', client.id]" class="action-btn" title="View Details">
+                <a [routerLink]="['/clients', client.id]" class="action-btn" [title]="'clients.actions.viewDetails' | translate">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
                     <circle cx="12" cy="12" r="3"/>
                   </svg>
                 </a>
-                <a [routerLink]="['/clients', client.id, 'edit']" class="action-btn" title="Edit">
+                <a [routerLink]="['/clients', client.id, 'edit']" class="action-btn" [title]="'clients.actions.edit' | translate">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
                     <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
@@ -168,7 +169,7 @@ import { NotificationService } from '../../../core/services/notification.service
                 </a>
                 <button
                   class="action-btn"
-                  [title]="client.isArchived ? 'Unarchive' : 'Archive'"
+                  [title]="client.isArchived ? ('clients.actions.unarchive' | translate) : ('clients.actions.archive' | translate)"
                   (click)="toggleArchive(client, $event)"
                 >
                   @if (client.isArchived) {
@@ -187,7 +188,7 @@ import { NotificationService } from '../../../core/services/notification.service
               </div>
 
               @if (client.isArchived) {
-                <div class="archived-badge">Archived</div>
+                <div class="archived-badge">{{ 'clients.archived' | translate }}</div>
               }
             </div>
           }

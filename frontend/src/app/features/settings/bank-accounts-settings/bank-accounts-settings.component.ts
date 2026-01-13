@@ -1,27 +1,28 @@
 import { Component, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { TranslateModule } from '@ngx-translate/core';
 import { BankAccountService, BankAccount } from '../../../core/services/bank-account.service';
 import { NotificationService } from '../../../core/services/notification.service';
 
 @Component({
   selector: 'app-bank-accounts-settings',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, TranslateModule],
   template: `
     <div class="bank-settings">
       <!-- Page Header -->
       <div class="page-header">
         <div class="page-header__content">
-          <h1 class="page-title">Bank Accounts</h1>
-          <p class="page-description">Manage bank accounts for invoice payments</p>
+          <h1 class="page-title">{{ 'settings.bank.title' | translate }}</h1>
+          <p class="page-description">{{ 'settings.bank.subtitle' | translate }}</p>
         </div>
         <button class="btn btn--primary" (click)="openAddModal()">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <line x1="12" y1="5" x2="12" y2="19"/>
             <line x1="5" y1="12" x2="19" y2="12"/>
           </svg>
-          Add Account
+          {{ 'settings.bank.addAccount' | translate }}
         </button>
       </div>
 
@@ -30,7 +31,7 @@ import { NotificationService } from '../../../core/services/notification.service
         @if (isLoading()) {
           <div class="loading-state">
             <div class="loading-spinner"></div>
-            <span>Loading accounts...</span>
+            <span>{{ 'settings.bank.loading' | translate }}</span>
           </div>
         } @else if (accounts().length === 0) {
           <div class="empty-state">
@@ -40,16 +41,16 @@ import { NotificationService } from '../../../core/services/notification.service
                 <line x1="1" y1="10" x2="23" y2="10"/>
               </svg>
             </div>
-            <h3 class="empty-state__title">No bank accounts yet</h3>
+            <h3 class="empty-state__title">{{ 'settings.bank.empty.title' | translate }}</h3>
             <p class="empty-state__description">
-              Add your bank account details for invoices and CRM integrations.
+              {{ 'settings.bank.empty.description' | translate }}
             </p>
             <button class="btn btn--primary btn--lg" (click)="openAddModal()">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <line x1="12" y1="5" x2="12" y2="19"/>
                 <line x1="5" y1="12" x2="19" y2="12"/>
               </svg>
-              Add Your First Account
+              {{ 'settings.bank.empty.addFirst' | translate }}
             </button>
           </div>
         } @else {
@@ -68,7 +69,7 @@ import { NotificationService } from '../../../core/services/notification.service
                     </svg>
                   </div>
                   @if (account.isDefault) {
-                    <div class="account-card__badge">Default</div>
+                    <div class="account-card__badge">{{ 'settings.bank.default' | translate }}</div>
                   }
                 </div>
 
@@ -77,22 +78,22 @@ import { NotificationService } from '../../../core/services/notification.service
                   <div class="account-card__bank">{{ account.bankName }}</div>
                   <div class="account-card__details">
                     <div class="detail-row">
-                      <span class="detail-label">IBAN</span>
+                      <span class="detail-label">{{ 'settings.bank.fields.iban' | translate }}</span>
                       <span class="detail-value detail-value--mono">{{ formatIban(account.iban) }}</span>
                     </div>
                     @if (account.swift) {
                       <div class="detail-row">
-                        <span class="detail-label">SWIFT</span>
+                        <span class="detail-label">{{ 'settings.bank.fields.swift' | translate }}</span>
                         <span class="detail-value detail-value--mono">{{ account.swift }}</span>
                       </div>
                     }
                     <div class="detail-row">
-                      <span class="detail-label">Currency</span>
+                      <span class="detail-label">{{ 'settings.bank.fields.currency' | translate }}</span>
                       <span class="detail-value">{{ account.currency }}</span>
                     </div>
                     @if (account.crmRequisitesId) {
                       <div class="detail-row">
-                        <span class="detail-label">CRM ID</span>
+                        <span class="detail-label">{{ 'settings.bank.fields.crmId' | translate }}</span>
                         <span class="detail-value detail-value--mono">{{ account.crmRequisitesId }}</span>
                       </div>
                     }
@@ -105,7 +106,7 @@ import { NotificationService } from '../../../core/services/notification.service
                       class="card-action card-action--default"
                       (click)="setDefault(account)"
                       [disabled]="settingDefaultId() === account.id"
-                      title="Set as default"
+                      [title]="'settings.bank.actions.setDefault' | translate"
                     >
                       @if (settingDefaultId() === account.id) {
                         <span class="btn-spinner btn-spinner--small"></span>
@@ -119,7 +120,7 @@ import { NotificationService } from '../../../core/services/notification.service
                   <button
                     class="card-action card-action--edit"
                     (click)="openEditModal(account)"
-                    title="Edit"
+                    [title]="'common.edit' | translate"
                   >
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                       <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
@@ -129,7 +130,7 @@ import { NotificationService } from '../../../core/services/notification.service
                   <button
                     class="card-action card-action--delete"
                     (click)="confirmDelete(account)"
-                    title="Delete"
+                    [title]="'common.delete' | translate"
                   >
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                       <polyline points="3 6 5 6 21 6"/>
@@ -148,7 +149,7 @@ import { NotificationService } from '../../../core/services/notification.service
         <div class="modal-overlay" (click)="closeModal()">
           <div class="modal" (click)="$event.stopPropagation()">
             <div class="modal__header">
-              <h2 class="modal__title">{{ editingAccount() ? 'Edit Account' : 'Add Account' }}</h2>
+              <h2 class="modal__title">{{ editingAccount() ? ('settings.bank.modal.editTitle' | translate) : ('settings.bank.modal.addTitle' | translate) }}</h2>
               <button class="modal__close" (click)="closeModal()">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <line x1="18" y1="6" x2="6" y2="18"/>
@@ -159,38 +160,39 @@ import { NotificationService } from '../../../core/services/notification.service
 
             <form [formGroup]="form" (ngSubmit)="saveAccount()" class="modal__body">
               <div class="form-group">
-                <label class="form-label">Account Name *</label>
+                <label class="form-label">{{ 'settings.bank.form.accountName' | translate }} *</label>
                 <input
                   type="text"
                   formControlName="name"
                   class="form-input"
-                  placeholder="e.g., Main Business Account"
+                  [placeholder]="'settings.bank.form.accountNamePlaceholder' | translate"
                 />
               </div>
 
               <div class="form-row">
                 <div class="form-group">
-                  <label class="form-label">Bank Name *</label>
+                  <label class="form-label">{{ 'settings.bank.form.bankName' | translate }} *</label>
                   <input
                     type="text"
                     formControlName="bankName"
                     class="form-input"
-                    placeholder="e.g., mBank"
+                    [placeholder]="'settings.bank.form.bankNamePlaceholder' | translate"
                   />
                 </div>
                 <div class="form-group">
-                  <label class="form-label">Currency *</label>
+                  <label class="form-label">{{ 'settings.bank.form.currency' | translate }} *</label>
                   <select formControlName="currency" class="form-input">
-                    <option value="PLN">PLN - Polish Zloty</option>
-                    <option value="EUR">EUR - Euro</option>
-                    <option value="USD">USD - US Dollar</option>
-                    <option value="GBP">GBP - British Pound</option>
+                    <option value="PLN">PLN - {{ 'settings.bank.currencies.pln' | translate }}</option>
+                    <option value="EUR">EUR - {{ 'settings.bank.currencies.eur' | translate }}</option>
+                    <option value="USD">USD - {{ 'settings.bank.currencies.usd' | translate }}</option>
+                    <option value="GBP">GBP - {{ 'settings.bank.currencies.gbp' | translate }}</option>
+                    <option value="UAH">UAH - {{ 'settings.bank.currencies.uah' | translate }}</option>
                   </select>
                 </div>
               </div>
 
               <div class="form-group">
-                <label class="form-label">IBAN *</label>
+                <label class="form-label">{{ 'settings.bank.form.iban' | translate }} *</label>
                 <input
                   type="text"
                   formControlName="iban"
@@ -201,23 +203,23 @@ import { NotificationService } from '../../../core/services/notification.service
 
               <div class="form-row">
                 <div class="form-group">
-                  <label class="form-label">SWIFT/BIC</label>
+                  <label class="form-label">{{ 'settings.bank.form.swift' | translate }}</label>
                   <input
                     type="text"
                     formControlName="swift"
                     class="form-input form-input--mono"
-                    placeholder="e.g., BREXPLPW"
+                    [placeholder]="'settings.bank.form.swiftPlaceholder' | translate"
                   />
                 </div>
                 <div class="form-group">
-                  <label class="form-label">CRM Requisites ID</label>
+                  <label class="form-label">{{ 'settings.bank.form.crmRequisitesId' | translate }}</label>
                   <input
                     type="text"
                     formControlName="crmRequisitesId"
                     class="form-input form-input--mono"
-                    placeholder="e.g., 2929"
+                    [placeholder]="'settings.bank.form.crmRequisitesIdPlaceholder' | translate"
                   />
-                  <span class="form-hint">ID from your CRM system</span>
+                  <span class="form-hint">{{ 'settings.bank.form.crmRequisitesIdHint' | translate }}</span>
                 </div>
               </div>
 
@@ -225,12 +227,12 @@ import { NotificationService } from '../../../core/services/notification.service
                 <label class="checkbox-label">
                   <input type="checkbox" formControlName="isDefault" class="checkbox-input" />
                   <span class="checkbox-custom"></span>
-                  Set as default account
+                  {{ 'settings.bank.form.setAsDefault' | translate }}
                 </label>
               </div>
 
               <div class="modal__actions">
-                <button type="button" class="btn btn--ghost" (click)="closeModal()">Cancel</button>
+                <button type="button" class="btn btn--ghost" (click)="closeModal()">{{ 'common.cancel' | translate }}</button>
                 <button
                   type="submit"
                   class="btn btn--primary"
@@ -238,9 +240,9 @@ import { NotificationService } from '../../../core/services/notification.service
                 >
                   @if (isSaving()) {
                     <span class="btn-spinner"></span>
-                    Saving...
+                    {{ 'common.saving' | translate }}
                   } @else {
-                    {{ editingAccount() ? 'Update' : 'Add' }} Account
+                    {{ editingAccount() ? ('settings.bank.modal.update' | translate) : ('settings.bank.modal.add' | translate) }}
                   }
                 </button>
               </div>
@@ -261,16 +263,16 @@ import { NotificationService } from '../../../core/services/notification.service
                   <line x1="12" y1="17" x2="12.01" y2="17"/>
                 </svg>
               </div>
-              <h2 class="modal__title">Delete Account</h2>
+              <h2 class="modal__title">{{ 'settings.bank.delete.title' | translate }}</h2>
             </div>
             <div class="modal__body">
               <p class="delete-text">
-                Are you sure you want to delete <strong>{{ deletingAccount()?.name }}</strong>?
+                {{ 'settings.bank.delete.confirm' | translate }} <strong>{{ deletingAccount()?.name }}</strong>?
               </p>
-              <p class="delete-hint">This cannot be undone.</p>
+              <p class="delete-hint">{{ 'settings.bank.delete.hint' | translate }}</p>
             </div>
             <div class="modal__actions">
-              <button type="button" class="btn btn--ghost" (click)="cancelDelete()">Cancel</button>
+              <button type="button" class="btn btn--ghost" (click)="cancelDelete()">{{ 'common.cancel' | translate }}</button>
               <button
                 type="button"
                 class="btn btn--danger"
@@ -279,9 +281,9 @@ import { NotificationService } from '../../../core/services/notification.service
               >
                 @if (isDeleting()) {
                   <span class="btn-spinner btn-spinner--white"></span>
-                  Deleting...
+                  {{ 'common.deleting' | translate }}
                 } @else {
-                  Delete Account
+                  {{ 'settings.bank.delete.button' | translate }}
                 }
               </button>
             </div>

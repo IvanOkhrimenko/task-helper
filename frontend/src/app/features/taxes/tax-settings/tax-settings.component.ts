@@ -2,13 +2,14 @@ import { Component, inject, signal, OnInit, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { TranslateModule } from '@ngx-translate/core';
 import { TaxService, TaxSettings, TaxForm, ZUSType } from '../../../core/services/tax.service';
 import { NotificationService } from '../../../core/services/notification.service';
 
 @Component({
   selector: 'app-tax-settings',
   standalone: true,
-  imports: [CommonModule, RouterLink, ReactiveFormsModule],
+  imports: [CommonModule, RouterLink, ReactiveFormsModule, TranslateModule],
   template: `
     <div class="settings-page">
       <!-- Header -->
@@ -17,26 +18,26 @@ import { NotificationService } from '../../../core/services/notification.service
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <polyline points="15 18 9 12 15 6"/>
           </svg>
-          Powrót
+          {{ 'taxes.settings.back' | translate }}
         </a>
         <div class="header__content">
-          <h1 class="header__title">Ustawienia podatkowe</h1>
-          <p class="header__subtitle">Konfiguracja formy opodatkowania i składek ZUS</p>
+          <h1 class="header__title">{{ 'taxes.settings.title' | translate }}</h1>
+          <p class="header__subtitle">{{ 'taxes.settings.subtitle' | translate }}</p>
         </div>
       </header>
 
       @if (isLoading()) {
         <div class="loading-state">
           <div class="loading-spinner"></div>
-          <p>Ładowanie ustawień...</p>
+          <p>{{ 'taxes.settings.loading' | translate }}</p>
         </div>
       } @else {
         <form [formGroup]="form" (ngSubmit)="onSubmit()" class="settings-form">
           <!-- Tax Form Section -->
           <section class="settings-section" [style.animation-delay]="'0ms'">
             <div class="section-header">
-              <h2 class="section-title">Forma opodatkowania</h2>
-              <p class="section-description">Wybierz sposób rozliczania podatku dochodowego</p>
+              <h2 class="section-title">{{ 'taxes.settings.taxFormSection.title' | translate }}</h2>
+              <p class="section-description">{{ 'taxes.settings.taxFormSection.description' | translate }}</p>
             </div>
 
             <div class="tax-form-grid">
@@ -59,10 +60,10 @@ import { NotificationService } from '../../../core/services/notification.service
                   </svg>
                 </div>
                 <div class="tax-form-card__content">
-                  <span class="tax-form-card__name">Podatek liniowy</span>
+                  <span class="tax-form-card__name">{{ 'taxes.settings.taxFormSection.liniowy.name' | translate }}</span>
                   <span class="tax-form-card__rate">19%</span>
                   <p class="tax-form-card__description">
-                    Stała stawka niezależna od wysokości dochodu. Brak kwoty wolnej od podatku.
+                    {{ 'taxes.settings.taxFormSection.liniowy.description' | translate }}
                   </p>
                 </div>
                 <div class="tax-form-card__check">
@@ -91,10 +92,10 @@ import { NotificationService } from '../../../core/services/notification.service
                   </svg>
                 </div>
                 <div class="tax-form-card__content">
-                  <span class="tax-form-card__name">Skala podatkowa</span>
+                  <span class="tax-form-card__name">{{ 'taxes.settings.taxFormSection.skala.name' | translate }}</span>
                   <span class="tax-form-card__rate">12% / 32%</span>
                   <p class="tax-form-card__description">
-                    12% do 120 000 zł, powyżej 32%. Kwota wolna 30 000 zł rocznie.
+                    {{ 'taxes.settings.taxFormSection.skala.description' | translate }}
                   </p>
                 </div>
                 <div class="tax-form-card__check">
@@ -125,10 +126,10 @@ import { NotificationService } from '../../../core/services/notification.service
                   </svg>
                 </div>
                 <div class="tax-form-card__content">
-                  <span class="tax-form-card__name">Ryczałt ewidencjonowany</span>
+                  <span class="tax-form-card__name">{{ 'taxes.settings.taxFormSection.ryczalt.name' | translate }}</span>
                   <span class="tax-form-card__rate">2% - 17%</span>
                   <p class="tax-form-card__description">
-                    Podatek od przychodu (bez odliczania kosztów). Stawka zależy od rodzaju działalności.
+                    {{ 'taxes.settings.taxFormSection.ryczalt.description' | translate }}
                   </p>
                 </div>
                 <div class="tax-form-card__check">
@@ -144,8 +145,8 @@ import { NotificationService } from '../../../core/services/notification.service
           @if (form.get('taxForm')?.value === 'RYCZALT') {
             <section class="settings-section" [style.animation-delay]="'50ms'">
               <div class="section-header">
-                <h2 class="section-title">Stawka ryczałtu</h2>
-                <p class="section-description">Wybierz stawkę odpowiednią dla Twojej działalności</p>
+                <h2 class="section-title">{{ 'taxes.settings.ryczaltRate.title' | translate }}</h2>
+                <p class="section-description">{{ 'taxes.settings.ryczaltRate.description' | translate }}</p>
               </div>
 
               <div class="rate-grid">
@@ -174,7 +175,7 @@ import { NotificationService } from '../../../core/services/notification.service
                   <line x1="12" y1="16" x2="12" y2="12"/>
                   <line x1="12" y1="8" x2="12.01" y2="8"/>
                 </svg>
-                <p>Dla usług programistycznych (PKD 62.01.Z) standardowa stawka to <strong>12%</strong>.</p>
+                <p>{{ 'taxes.settings.ryczaltRate.info' | translate }}</p>
               </div>
             </section>
           }
@@ -182,12 +183,12 @@ import { NotificationService } from '../../../core/services/notification.service
           <!-- ZUS Section -->
           <section class="settings-section" [style.animation-delay]="'100ms'">
             <div class="section-header">
-              <h2 class="section-title">Składki ZUS</h2>
-              <p class="section-description">Wybierz rodzaj opłacanych składek społecznych</p>
+              <h2 class="section-title">{{ 'taxes.settings.zusSection.title' | translate }}</h2>
+              <p class="section-description">{{ 'taxes.settings.zusSection.description' | translate }}</p>
             </div>
 
             <div class="form-group">
-              <label class="form-label">Rodzaj ZUS</label>
+              <label class="form-label">{{ 'taxes.settings.zusSection.typeLabel' | translate }}</label>
               <div class="select-wrapper">
                 <select formControlName="zusType" class="form-select">
                   @for (type of zusTypes; track type.value) {
@@ -203,26 +204,26 @@ import { NotificationService } from '../../../core/services/notification.service
             <!-- ZUS Info Cards -->
             <div class="zus-info-grid">
               <div class="zus-info-card" [class.zus-info-card--active]="form.get('zusType')?.value === 'STANDARD'">
-                <span class="zus-info-card__label">Pełny ZUS</span>
+                <span class="zus-info-card__label">{{ 'taxes.settings.zusSection.standard.label' | translate }}</span>
                 <span class="zus-info-card__amount">~1 600 zł</span>
-                <span class="zus-info-card__note">miesięcznie</span>
+                <span class="zus-info-card__note">{{ 'taxes.settings.zusSection.standard.note' | translate }}</span>
               </div>
               <div class="zus-info-card" [class.zus-info-card--active]="form.get('zusType')?.value === 'MALY_ZUS_PLUS'">
-                <span class="zus-info-card__label">Mały ZUS Plus</span>
+                <span class="zus-info-card__label">{{ 'taxes.settings.zusSection.malyZusPlus.label' | translate }}</span>
                 <span class="zus-info-card__amount">~400 zł</span>
-                <span class="zus-info-card__note">pierwsze 3 lata</span>
+                <span class="zus-info-card__note">{{ 'taxes.settings.zusSection.malyZusPlus.note' | translate }}</span>
               </div>
               <div class="zus-info-card" [class.zus-info-card--active]="form.get('zusType')?.value === 'PREFERENCYJNY'">
-                <span class="zus-info-card__label">Preferencyjny</span>
+                <span class="zus-info-card__label">{{ 'taxes.settings.zusSection.preferencyjny.label' | translate }}</span>
                 <span class="zus-info-card__amount">~300 zł</span>
-                <span class="zus-info-card__note">pierwsze 6 mies.</span>
+                <span class="zus-info-card__note">{{ 'taxes.settings.zusSection.preferencyjny.note' | translate }}</span>
               </div>
             </div>
 
             <!-- Custom ZUS Amount -->
             @if (form.get('zusType')?.value === 'CUSTOM') {
               <div class="form-group" style="margin-top: var(--space-lg);">
-                <label class="form-label">Własna kwota ZUS (miesięcznie)</label>
+                <label class="form-label">{{ 'taxes.settings.zusSection.customAmount' | translate }}</label>
                 <div class="input-wrapper">
                   <input
                     type="number"
@@ -240,11 +241,11 @@ import { NotificationService } from '../../../core/services/notification.service
           <!-- Additional Settings -->
           <section class="settings-section" [style.animation-delay]="'150ms'">
             <div class="section-header">
-              <h2 class="section-title">Dodatkowe ustawienia</h2>
+              <h2 class="section-title">{{ 'taxes.settings.additionalSection.title' | translate }}</h2>
             </div>
 
             <div class="form-group">
-              <label class="form-label">Początek roku podatkowego</label>
+              <label class="form-label">{{ 'taxes.settings.additionalSection.fiscalYearStart' | translate }}</label>
               <div class="select-wrapper">
                 <select formControlName="fiscalYearStart" class="form-select">
                   @for (month of months; track month.value) {
@@ -255,14 +256,14 @@ import { NotificationService } from '../../../core/services/notification.service
                   <polyline points="6 9 12 15 18 9"/>
                 </svg>
               </div>
-              <p class="form-hint">Standardowo rok podatkowy zaczyna się w styczniu</p>
+              <p class="form-hint">{{ 'taxes.settings.additionalSection.fiscalYearHint' | translate }}</p>
             </div>
           </section>
 
           <!-- Submit -->
           <div class="form-actions">
             <button type="button" class="btn btn--secondary" routerLink="/taxes">
-              Anuluj
+              {{ 'taxes.settings.cancel' | translate }}
             </button>
             <button
               type="submit"
@@ -271,14 +272,14 @@ import { NotificationService } from '../../../core/services/notification.service
             >
               @if (isSaving()) {
                 <span class="btn__spinner"></span>
-                Zapisywanie...
+                {{ 'taxes.settings.saving' | translate }}
               } @else {
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/>
                   <polyline points="17 21 17 13 7 13 7 21"/>
                   <polyline points="7 3 7 8 15 8"/>
                 </svg>
-                Zapisz ustawienia
+                {{ 'taxes.settings.save' | translate }}
               }
             </button>
           </div>

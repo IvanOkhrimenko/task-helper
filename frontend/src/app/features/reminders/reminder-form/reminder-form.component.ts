@@ -2,12 +2,13 @@ import { Component, inject, signal, computed, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute, RouterLink } from '@angular/router';
+import { TranslateModule } from '@ngx-translate/core';
 import { ReminderService, Reminder, ScheduleType, ScheduleConfig, CreateReminderDto } from '../../../core/services/reminder.service';
 
 @Component({
   selector: 'app-reminder-form',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink, TranslateModule],
   template: `
     <div class="form-page">
       <header class="page-header">
@@ -15,49 +16,49 @@ import { ReminderService, Reminder, ScheduleType, ScheduleConfig, CreateReminder
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M19 12H5M12 19l-7-7 7-7"/>
           </svg>
-          Back to Reminders
+          {{ 'reminders.form.backToReminders' | translate }}
         </a>
-        <h1 class="page-title">{{ isEditing() ? 'Edit Reminder' : 'New Reminder' }}</h1>
+        <h1 class="page-title">{{ isEditing() ? ('reminders.form.editTitle' | translate) : ('reminders.form.newTitle' | translate) }}</h1>
       </header>
 
       <form class="form-card" (ngSubmit)="save()">
         <!-- Basic Info -->
         <section class="form-section">
-          <h2 class="section-title">Basic Information</h2>
+          <h2 class="section-title">{{ 'reminders.form.basicInfo.title' | translate }}</h2>
 
           <div class="form-group">
-            <label for="name" class="form-label">Reminder Name *</label>
+            <label for="name" class="form-label">{{ 'reminders.form.basicInfo.reminderName' | translate }} *</label>
             <input
               type="text"
               id="name"
               [(ngModel)]="name"
               name="name"
               class="form-input"
-              placeholder="e.g., Team meeting, Pay bills"
+              [placeholder]="'reminders.form.basicInfo.reminderNamePlaceholder' | translate"
               required
             >
           </div>
 
           <div class="form-group">
-            <label for="title" class="form-label">Notification Title</label>
+            <label for="title" class="form-label">{{ 'reminders.form.basicInfo.notificationTitle' | translate }}</label>
             <input
               type="text"
               id="title"
               [(ngModel)]="reminderTitle"
               name="reminderTitle"
               class="form-input"
-              placeholder="Title shown in notification (optional)"
+              [placeholder]="'reminders.form.basicInfo.notificationTitlePlaceholder' | translate"
             >
           </div>
 
           <div class="form-group">
-            <label for="message" class="form-label">Message</label>
+            <label for="message" class="form-label">{{ 'reminders.form.basicInfo.message' | translate }}</label>
             <textarea
               id="message"
               [(ngModel)]="reminderMessage"
               name="reminderMessage"
               class="form-input form-textarea"
-              placeholder="Additional details for this reminder"
+              [placeholder]="'reminders.form.basicInfo.messagePlaceholder' | translate"
               rows="3"
             ></textarea>
           </div>
@@ -65,10 +66,10 @@ import { ReminderService, Reminder, ScheduleType, ScheduleConfig, CreateReminder
 
         <!-- Schedule -->
         <section class="form-section">
-          <h2 class="section-title">Schedule</h2>
+          <h2 class="section-title">{{ 'reminders.form.schedule.title' | translate }}</h2>
 
           <div class="form-group">
-            <label class="form-label">Schedule Type *</label>
+            <label class="form-label">{{ 'reminders.form.schedule.scheduleType' | translate }} *</label>
             <div class="schedule-type-grid">
               @for (type of scheduleTypes; track type.value) {
                 <button
@@ -88,7 +89,7 @@ import { ReminderService, Reminder, ScheduleType, ScheduleConfig, CreateReminder
           @if (scheduleType === 'ONE_TIME') {
             <div class="form-row">
               <div class="form-group">
-                <label for="dateTime" class="form-label">Date & Time *</label>
+                <label for="dateTime" class="form-label">{{ 'reminders.form.schedule.dateTime' | translate }} *</label>
                 <input
                   type="datetime-local"
                   id="dateTime"
@@ -104,7 +105,7 @@ import { ReminderService, Reminder, ScheduleType, ScheduleConfig, CreateReminder
           <!-- Recurring types -->
           @if (scheduleType !== 'ONE_TIME') {
             <div class="form-group">
-              <label for="time" class="form-label">Time *</label>
+              <label for="time" class="form-label">{{ 'reminders.form.schedule.time' | translate }} *</label>
               <input
                 type="time"
                 id="time"
@@ -117,7 +118,7 @@ import { ReminderService, Reminder, ScheduleType, ScheduleConfig, CreateReminder
 
             @if (scheduleType === 'WEEKLY') {
               <div class="form-group">
-                <label class="form-label">Days of Week *</label>
+                <label class="form-label">{{ 'reminders.form.schedule.daysOfWeek' | translate }} *</label>
                 <div class="days-selector">
                   @for (day of weekDays; track day.value) {
                     <button
@@ -135,7 +136,7 @@ import { ReminderService, Reminder, ScheduleType, ScheduleConfig, CreateReminder
 
             @if (scheduleType === 'MONTHLY') {
               <div class="form-group">
-                <label for="dayOfMonth" class="form-label">Day of Month *</label>
+                <label for="dayOfMonth" class="form-label">{{ 'reminders.form.schedule.dayOfMonth' | translate }} *</label>
                 <select
                   id="dayOfMonth"
                   [(ngModel)]="dayOfMonth"
@@ -153,7 +154,7 @@ import { ReminderService, Reminder, ScheduleType, ScheduleConfig, CreateReminder
             @if (scheduleType === 'YEARLY') {
               <div class="form-row">
                 <div class="form-group">
-                  <label for="month" class="form-label">Month *</label>
+                  <label for="month" class="form-label">{{ 'reminders.form.schedule.month' | translate }} *</label>
                   <select
                     id="month"
                     [(ngModel)]="selectedMonth"
@@ -167,7 +168,7 @@ import { ReminderService, Reminder, ScheduleType, ScheduleConfig, CreateReminder
                   </select>
                 </div>
                 <div class="form-group">
-                  <label for="yearDayOfMonth" class="form-label">Day *</label>
+                  <label for="yearDayOfMonth" class="form-label">{{ 'reminders.form.schedule.day' | translate }} *</label>
                   <select
                     id="yearDayOfMonth"
                     [(ngModel)]="dayOfMonth"
@@ -185,7 +186,7 @@ import { ReminderService, Reminder, ScheduleType, ScheduleConfig, CreateReminder
 
             @if (scheduleType === 'CUSTOM') {
               <div class="form-group">
-                <label for="interval" class="form-label">Repeat every (minutes) *</label>
+                <label for="interval" class="form-label">{{ 'reminders.form.schedule.repeatEvery' | translate }} *</label>
                 <input
                   type="number"
                   id="interval"
@@ -203,11 +204,11 @@ import { ReminderService, Reminder, ScheduleType, ScheduleConfig, CreateReminder
 
         <!-- Advanced Options -->
         <section class="form-section">
-          <h2 class="section-title">Advanced Options</h2>
+          <h2 class="section-title">{{ 'reminders.form.advanced.title' | translate }}</h2>
 
           <div class="form-row">
             <div class="form-group">
-              <label for="warning" class="form-label">Warning (minutes before)</label>
+              <label for="warning" class="form-label">{{ 'reminders.form.advanced.warningMinutes' | translate }}</label>
               <input
                 type="number"
                 id="warning"
@@ -219,7 +220,7 @@ import { ReminderService, Reminder, ScheduleType, ScheduleConfig, CreateReminder
               >
             </div>
             <div class="form-group">
-              <label for="deadline" class="form-label">Overdue after (minutes)</label>
+              <label for="deadline" class="form-label">{{ 'reminders.form.advanced.overdueMinutes' | translate }}</label>
               <input
                 type="number"
                 id="deadline"
@@ -233,7 +234,7 @@ import { ReminderService, Reminder, ScheduleType, ScheduleConfig, CreateReminder
           </div>
 
           <div class="form-group">
-            <label for="notificationEmail" class="form-label">Notification Email (optional)</label>
+            <label for="notificationEmail" class="form-label">{{ 'reminders.form.advanced.notificationEmail' | translate }}</label>
             <div class="email-input-wrapper">
               <svg class="email-input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <rect x="2" y="4" width="20" height="16" rx="2"/>
@@ -245,10 +246,10 @@ import { ReminderService, Reminder, ScheduleType, ScheduleConfig, CreateReminder
                 [(ngModel)]="notificationEmail"
                 name="notificationEmail"
                 class="form-input form-input--with-icon"
-                placeholder="Leave empty to use your account email"
+                [placeholder]="'reminders.form.advanced.emailPlaceholder' | translate"
               >
             </div>
-            <p class="form-hint">Send email notifications to this address instead of your account email</p>
+            <p class="form-hint">{{ 'reminders.form.advanced.emailHint' | translate }}</p>
           </div>
 
           <div class="form-group">
@@ -257,21 +258,21 @@ import { ReminderService, Reminder, ScheduleType, ScheduleConfig, CreateReminder
               <span class="toggle-switch">
                 <span class="toggle-slider"></span>
               </span>
-              <span class="toggle-text">Active</span>
+              <span class="toggle-text">{{ 'reminders.form.advanced.active' | translate }}</span>
             </label>
-            <p class="form-hint">Inactive reminders won't trigger notifications</p>
+            <p class="form-hint">{{ 'reminders.form.advanced.activeHint' | translate }}</p>
           </div>
         </section>
 
         <!-- Actions -->
         <div class="form-actions">
-          <a routerLink="/tasks/reminders" class="btn btn--secondary">Cancel</a>
+          <a routerLink="/tasks/reminders" class="btn btn--secondary">{{ 'common.cancel' | translate }}</a>
           <button type="submit" class="btn btn--primary" [disabled]="isSaving()">
             @if (isSaving()) {
               <span class="btn-spinner"></span>
-              Saving...
+              {{ 'common.saving' | translate }}
             } @else {
-              {{ isEditing() ? 'Update' : 'Create' }} Reminder
+              {{ isEditing() ? ('reminders.form.updateReminder' | translate) : ('reminders.form.createReminder' | translate) }}
             }
           </button>
         </div>

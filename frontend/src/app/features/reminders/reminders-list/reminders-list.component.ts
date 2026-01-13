@@ -1,26 +1,27 @@
 import { Component, inject, signal, computed, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
+import { TranslateModule } from '@ngx-translate/core';
 import { ReminderService, Reminder, ScheduleType } from '../../../core/services/reminder.service';
 
 @Component({
   selector: 'app-reminders-list',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, TranslateModule],
   template: `
     <div class="reminders-page">
       <!-- Header -->
       <header class="page-header">
         <div class="page-header__info">
-          <h1 class="page-title">Reminders</h1>
-          <p class="page-subtitle">Manage your scheduled notifications</p>
+          <h1 class="page-title">{{ 'reminders.list.title' | translate }}</h1>
+          <p class="page-subtitle">{{ 'reminders.list.subtitle' | translate }}</p>
         </div>
         <a routerLink="/tasks/reminders/new" class="btn btn--primary">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <line x1="12" y1="5" x2="12" y2="19"/>
             <line x1="5" y1="12" x2="19" y2="12"/>
           </svg>
-          New Reminder
+          {{ 'reminders.list.newReminder' | translate }}
         </a>
       </header>
 
@@ -28,19 +29,19 @@ import { ReminderService, Reminder, ScheduleType } from '../../../core/services/
       <div class="stats-row">
         <div class="stat-card">
           <span class="stat-value">{{ reminders().length }}</span>
-          <span class="stat-label">Total</span>
+          <span class="stat-label">{{ 'reminders.list.stats.total' | translate }}</span>
         </div>
         <div class="stat-card stat-card--active">
           <span class="stat-value">{{ activeCount() }}</span>
-          <span class="stat-label">Active</span>
+          <span class="stat-label">{{ 'reminders.list.stats.active' | translate }}</span>
         </div>
         <div class="stat-card stat-card--inactive">
           <span class="stat-value">{{ inactiveCount() }}</span>
-          <span class="stat-label">Paused</span>
+          <span class="stat-label">{{ 'reminders.list.stats.paused' | translate }}</span>
         </div>
         <div class="stat-card stat-card--due">
           <span class="stat-value">{{ dueTodayCount() }}</span>
-          <span class="stat-label">Due Today</span>
+          <span class="stat-label">{{ 'reminders.list.stats.dueToday' | translate }}</span>
         </div>
       </div>
 
@@ -48,7 +49,7 @@ import { ReminderService, Reminder, ScheduleType } from '../../../core/services/
       @if (isLoading()) {
         <div class="loading-state">
           <div class="loading-spinner"></div>
-          <p>Loading reminders...</p>
+          <p>{{ 'reminders.list.loading' | translate }}</p>
         </div>
       } @else if (reminders().length === 0) {
         <div class="empty-state">
@@ -58,9 +59,9 @@ import { ReminderService, Reminder, ScheduleType } from '../../../core/services/
               <polyline points="12 6 12 12 16 14"/>
             </svg>
           </div>
-          <h3>No reminders yet</h3>
-          <p>Create your first reminder to stay on top of important tasks</p>
-          <a routerLink="/tasks/reminders/new" class="btn btn--primary">Create Reminder</a>
+          <h3>{{ 'reminders.list.empty.title' | translate }}</h3>
+          <p>{{ 'reminders.list.empty.description' | translate }}</p>
+          <a routerLink="/tasks/reminders/new" class="btn btn--primary">{{ 'reminders.list.empty.createBtn' | translate }}</a>
         </div>
       } @else {
         <div class="reminders-grid">
@@ -110,7 +111,7 @@ import { ReminderService, Reminder, ScheduleType } from '../../../core/services/
                   @if (reminder.nextOccurrence) {
                     <span>{{ formatNextOccurrence(reminder.nextOccurrence) }}</span>
                   } @else {
-                    <span class="text-muted">No upcoming occurrence</span>
+                    <span class="text-muted">{{ 'reminders.list.noUpcoming' | translate }}</span>
                   }
                 </div>
               </div>
@@ -124,7 +125,7 @@ import { ReminderService, Reminder, ScheduleType } from '../../../core/services/
                     <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/>
                     <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
                   </svg>
-                  Edit
+                  {{ 'common.edit' | translate }}
                 </a>
                 <button
                   class="btn btn--ghost btn--sm btn--danger"
@@ -134,7 +135,7 @@ import { ReminderService, Reminder, ScheduleType } from '../../../core/services/
                     <polyline points="3 6 5 6 21 6"/>
                     <path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
                   </svg>
-                  Delete
+                  {{ 'common.delete' | translate }}
                 </button>
               </div>
             </div>

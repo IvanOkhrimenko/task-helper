@@ -17,6 +17,7 @@ import bankAccountsRoutes from './routes/bank-accounts.routes.js';
 import activityLogRoutes from './routes/activity-log.routes.js';
 import taxRoutes from './routes/tax.routes.js';
 import expenseRoutes from './routes/expense.routes.js';
+import businessRoutes from './routes/business.routes.js';
 import { initScheduler } from './services/scheduler.service.js';
 
 const app = express();
@@ -49,6 +50,7 @@ app.use('/api/bank-accounts', bankAccountsRoutes);
 app.use('/api/activity', activityLogRoutes);
 app.use('/api/tax', taxRoutes);
 app.use('/api/expenses', expenseRoutes);
+app.use('/api/businesses', businessRoutes);
 
 // Health check
 app.get('/api/health', (_, res) => {

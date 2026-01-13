@@ -2,6 +2,7 @@ import { Component, inject, signal, OnInit, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { TranslateModule } from '@ngx-translate/core';
 import { AISettingsService, AIProvider, UpdateAISettings } from '../../../core/services/ai-settings.service';
 import { NotificationService } from '../../../core/services/notification.service';
 import { ToastComponent } from '../../../shared/components/toast/toast.component';
@@ -9,7 +10,7 @@ import { ToastComponent } from '../../../shared/components/toast/toast.component
 @Component({
   selector: 'app-ai-settings',
   standalone: true,
-  imports: [CommonModule, RouterLink, FormsModule, ToastComponent],
+  imports: [CommonModule, RouterLink, FormsModule, ToastComponent, TranslateModule],
   template: `
     <app-toast />
     <div class="ai-settings-page">
@@ -23,7 +24,7 @@ import { ToastComponent } from '../../../shared/components/toast/toast.component
               <line x1="19" y1="12" x2="5" y2="12"/>
               <polyline points="12 19 5 12 12 5"/>
             </svg>
-            Back to Dashboard
+            {{ 'common.backToDashboard' | translate }}
           </a>
           <div class="header-content">
             <div class="header-icon">
@@ -33,12 +34,12 @@ import { ToastComponent } from '../../../shared/components/toast/toast.component
               </svg>
             </div>
             <div>
-              <h1 class="page-title">AI Assistant Settings</h1>
-              <p class="page-subtitle">Configure AI provider, models, and API credentials</p>
+              <h1 class="page-title">{{ 'settings.ai.title' | translate }}</h1>
+              <p class="page-subtitle">{{ 'settings.ai.subtitle' | translate }}</p>
             </div>
             <div class="status-badge" [class.active]="formData.isActive" [class.inactive]="!formData.isActive">
               <span class="status-dot"></span>
-              {{ formData.isActive ? 'Active' : 'Inactive' }}
+              {{ formData.isActive ? ('common.active' | translate) : ('common.inactive' | translate) }}
             </div>
           </div>
         </header>
@@ -57,7 +58,7 @@ import { ToastComponent } from '../../../shared/components/toast/toast.component
         @if (aiSettings.isLoading() && !aiSettings.settings()) {
           <div class="loading-state">
             <div class="loading-spinner"></div>
-            <p>Loading settings...</p>
+            <p>{{ 'common.loadingSettings' | translate }}</p>
           </div>
         } @else {
           <form (ngSubmit)="onSubmit()" class="settings-form">
@@ -72,8 +73,8 @@ import { ToastComponent } from '../../../shared/components/toast/toast.component
                   </svg>
                 </div>
                 <div>
-                  <h2 class="section-title">AI Provider</h2>
-                  <p class="section-description">Select the AI service provider</p>
+                  <h2 class="section-title">{{ 'settings.ai.provider.title' | translate }}</h2>
+                  <p class="section-description">{{ 'settings.ai.provider.description' | translate }}</p>
                 </div>
               </div>
 
@@ -99,7 +100,7 @@ import { ToastComponent } from '../../../shared/components/toast/toast.component
                         <span class="provider-desc">{{ provider.description }}</span>
                       </div>
                       @if (!provider.available) {
-                        <span class="provider-badge">Coming Soon</span>
+                        <span class="provider-badge">{{ 'common.comingSoon' | translate }}</span>
                       }
                       @if (formData.provider === provider.id) {
                         <div class="check-mark">
@@ -125,14 +126,14 @@ import { ToastComponent } from '../../../shared/components/toast/toast.component
                   </svg>
                 </div>
                 <div>
-                  <h2 class="section-title">Model Configuration</h2>
-                  <p class="section-description">Fine-tune the AI model parameters</p>
+                  <h2 class="section-title">{{ 'settings.ai.model.title' | translate }}</h2>
+                  <p class="section-description">{{ 'settings.ai.model.description' | translate }}</p>
                 </div>
               </div>
 
               <div class="config-grid">
                 <div class="form-group">
-                  <label class="form-label">Model</label>
+                  <label class="form-label">{{ 'settings.ai.model.label' | translate }}</label>
                   <div class="select-wrapper">
                     <select
                       class="form-select"
@@ -153,7 +154,7 @@ import { ToastComponent } from '../../../shared/components/toast/toast.component
                 </div>
 
                 <div class="form-group">
-                  <label class="form-label">Max Tokens</label>
+                  <label class="form-label">{{ 'settings.ai.maxTokens.label' | translate }}</label>
                   <div class="number-input-wrapper">
                     <input
                       type="number"
@@ -164,14 +165,14 @@ import { ToastComponent } from '../../../shared/components/toast/toast.component
                       max="8192"
                       step="256"
                     />
-                    <span class="input-suffix">tokens</span>
+                    <span class="input-suffix">{{ 'settings.ai.maxTokens.suffix' | translate }}</span>
                   </div>
-                  <span class="form-hint">Response length limit (1024 - 8192)</span>
+                  <span class="form-hint">{{ 'settings.ai.maxTokens.hint' | translate }}</span>
                 </div>
 
                 <div class="form-group form-group--full">
                   <label class="form-label">
-                    Temperature
+                    {{ 'settings.ai.temperature.label' | translate }}
                     <span class="temp-value">{{ formData.temperature.toFixed(1) }}</span>
                   </label>
                   <div class="slider-wrapper">
@@ -185,9 +186,9 @@ import { ToastComponent } from '../../../shared/components/toast/toast.component
                       step="0.1"
                     />
                     <div class="slider-labels">
-                      <span>Precise</span>
-                      <span>Balanced</span>
-                      <span>Creative</span>
+                      <span>{{ 'settings.ai.temperature.precise' | translate }}</span>
+                      <span>{{ 'settings.ai.temperature.balanced' | translate }}</span>
+                      <span>{{ 'settings.ai.temperature.creative' | translate }}</span>
                     </div>
                   </div>
                 </div>
@@ -203,8 +204,8 @@ import { ToastComponent } from '../../../shared/components/toast/toast.component
                   </svg>
                 </div>
                 <div>
-                  <h2 class="section-title">API Credentials</h2>
-                  <p class="section-description">Securely manage your API keys</p>
+                  <h2 class="section-title">{{ 'settings.ai.credentials.title' | translate }}</h2>
+                  <p class="section-description">{{ 'settings.ai.credentials.description' | translate }}</p>
                 </div>
               </div>
 
@@ -218,21 +219,21 @@ import { ToastComponent } from '../../../shared/components/toast/toast.component
                       </svg>
                     </div>
                     <div class="api-key-info">
-                      <span class="api-key-name">Claude (Anthropic)</span>
+                      <span class="api-key-name">{{ 'settings.ai.credentials.claude' | translate }}</span>
                       <span class="api-key-status">
                         @if (aiSettings.settings()?.hasClaudeKey) {
                           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
                             <polyline points="22 4 12 14.01 9 11.01"/>
                           </svg>
-                          Configured
+                          {{ 'settings.ai.credentials.configured' | translate }}
                         } @else {
                           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <circle cx="12" cy="12" r="10"/>
                             <line x1="15" y1="9" x2="9" y2="15"/>
                             <line x1="9" y1="9" x2="15" y2="15"/>
                           </svg>
-                          Not configured
+                          {{ 'settings.ai.credentials.notConfigured' | translate }}
                         }
                       </span>
                     </div>
@@ -274,21 +275,21 @@ import { ToastComponent } from '../../../shared/components/toast/toast.component
                       </svg>
                     </div>
                     <div class="api-key-info">
-                      <span class="api-key-name">OpenAI</span>
+                      <span class="api-key-name">{{ 'settings.ai.credentials.openai' | translate }}</span>
                       <span class="api-key-status">
                         @if (aiSettings.settings()?.hasOpenaiKey) {
                           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
                             <polyline points="22 4 12 14.01 9 11.01"/>
                           </svg>
-                          Configured
+                          {{ 'settings.ai.credentials.configured' | translate }}
                         } @else {
                           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <circle cx="12" cy="12" r="10"/>
                             <line x1="15" y1="9" x2="9" y2="15"/>
                             <line x1="9" y1="9" x2="15" y2="15"/>
                           </svg>
-                          Not configured
+                          {{ 'settings.ai.credentials.notConfigured' | translate }}
                         }
                       </span>
                     </div>
@@ -333,8 +334,8 @@ import { ToastComponent } from '../../../shared/components/toast/toast.component
                   </svg>
                 </div>
                 <div>
-                  <h2 class="section-title">Service Status</h2>
-                  <p class="section-description">Enable or disable the AI assistant</p>
+                  <h2 class="section-title">{{ 'settings.ai.status.title' | translate }}</h2>
+                  <p class="section-description">{{ 'settings.ai.status.description' | translate }}</p>
                 </div>
               </div>
 
@@ -350,9 +351,9 @@ import { ToastComponent } from '../../../shared/components/toast/toast.component
                     <div class="toggle-thumb"></div>
                   </div>
                   <div class="toggle-label">
-                    <span class="toggle-title">AI Assistant</span>
+                    <span class="toggle-title">{{ 'settings.ai.status.toggleTitle' | translate }}</span>
                     <span class="toggle-desc">
-                      {{ formData.isActive ? 'Users can access the AI chat feature' : 'AI chat is disabled for all users' }}
+                      {{ formData.isActive ? ('settings.ai.status.enabledDesc' | translate) : ('settings.ai.status.disabledDesc' | translate) }}
                     </span>
                   </div>
                 </label>
@@ -363,7 +364,7 @@ import { ToastComponent } from '../../../shared/components/toast/toast.component
                       <circle cx="12" cy="12" r="10"/>
                       <polyline points="12 6 12 12 16 14"/>
                     </svg>
-                    Last updated: {{ formatDate(aiSettings.settings()!.updatedAt) }}
+                    {{ 'common.lastUpdated' | translate }}: {{ formatDate(aiSettings.settings()!.updatedAt) }}
                   </div>
                 }
               </div>
@@ -372,7 +373,7 @@ import { ToastComponent } from '../../../shared/components/toast/toast.component
             <!-- Form Actions -->
             <div class="form-actions" style="animation-delay: 0.5s">
               <a routerLink="/dashboard" class="btn btn--secondary">
-                Cancel
+                {{ 'common.cancel' | translate }}
               </a>
               <button
                 type="submit"
@@ -381,14 +382,14 @@ import { ToastComponent } from '../../../shared/components/toast/toast.component
               >
                 @if (aiSettings.isLoading()) {
                   <span class="btn__spinner"></span>
-                  Saving...
+                  {{ 'common.saving' | translate }}
                 } @else {
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="btn__icon">
                     <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
                     <polyline points="17 21 17 13 7 13 7 21"/>
                     <polyline points="7 3 7 8 15 8"/>
                   </svg>
-                  Save Changes
+                  {{ 'common.saveChanges' | translate }}
                 }
               </button>
             </div>

@@ -2,6 +2,7 @@ import { Component, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink, ActivatedRoute } from '@angular/router';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { TranslateModule } from '@ngx-translate/core';
 import { AuthService } from '../../core/services/auth.service';
 import { NotificationService } from '../../core/services/notification.service';
 import { GoogleService, GoogleAccount } from '../../core/services/google.service';
@@ -12,7 +13,7 @@ import { ToastComponent } from '../../shared/components/toast/toast.component';
 @Component({
   selector: 'app-profile',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink, ToastComponent],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink, ToastComponent, TranslateModule],
   template: `
     <app-toast />
     <div class="profile-page">
@@ -23,7 +24,7 @@ import { ToastComponent } from '../../shared/components/toast/toast.component';
               <line x1="19" y1="12" x2="5" y2="12"/>
               <polyline points="12 19 5 12 12 5"/>
             </svg>
-            Back to Dashboard
+            {{ 'profile.backToDashboard' | translate }}
           </a>
           <div class="header-content">
             <div class="header-icon">
@@ -33,8 +34,8 @@ import { ToastComponent } from '../../shared/components/toast/toast.component';
               </svg>
             </div>
             <div>
-              <h1 class="page-title">Your Business Profile</h1>
-              <p class="page-subtitle">This information will appear on your generated invoices as seller details</p>
+              <h1 class="page-title">{{ 'profile.title' | translate }}</h1>
+              <p class="page-subtitle">{{ 'profile.subtitle' | translate }}</p>
             </div>
           </div>
         </header>
@@ -50,26 +51,26 @@ import { ToastComponent } from '../../shared/components/toast/toast.component';
                 </svg>
               </div>
               <div>
-                <h2 class="section-title">Personal Information</h2>
-                <p class="section-description">Your account details</p>
+                <h2 class="section-title">{{ 'profile.personalInfo.title' | translate }}</h2>
+                <p class="section-description">{{ 'profile.personalInfo.description' | translate }}</p>
               </div>
             </div>
 
             <div class="form-grid">
               <div class="form-group">
-                <label class="form-label">Full Name</label>
+                <label class="form-label">{{ 'profile.personalInfo.fullName' | translate }}</label>
                 <input
                   type="text"
                   formControlName="name"
                   class="form-input"
-                  placeholder="Your full name"
+                  [placeholder]="'profile.personalInfo.fullNamePlaceholder' | translate"
                 />
               </div>
 
               <div class="form-group">
                 <label class="form-label">
-                  Email Address
-                  <span class="label-badge">Read-only</span>
+                  {{ 'profile.personalInfo.email' | translate }}
+                  <span class="label-badge">{{ 'profile.personalInfo.readOnly' | translate }}</span>
                 </label>
                 <input
                   type="email"
@@ -91,49 +92,49 @@ import { ToastComponent } from '../../shared/components/toast/toast.component';
                 </svg>
               </div>
               <div>
-                <h2 class="section-title">Business Address</h2>
-                <p class="section-description">Your company or personal business address for invoices</p>
+                <h2 class="section-title">{{ 'profile.businessAddress.title' | translate }}</h2>
+                <p class="section-description">{{ 'profile.businessAddress.description' | translate }}</p>
               </div>
             </div>
 
             <div class="form-group">
-              <label class="form-label">Street Address</label>
+              <label class="form-label">{{ 'profile.businessAddress.streetAddress' | translate }}</label>
               <input
                 type="text"
                 formControlName="streetAddress"
                 class="form-input"
-                placeholder="e.g., Racjonalizacji 3/64"
+                [placeholder]="'profile.businessAddress.streetAddressPlaceholder' | translate"
               />
             </div>
 
             <div class="form-grid form-grid--three">
               <div class="form-group">
-                <label class="form-label">Postcode</label>
+                <label class="form-label">{{ 'profile.businessAddress.postcode' | translate }}</label>
                 <input
                   type="text"
                   formControlName="postcode"
                   class="form-input"
-                  placeholder="e.g., 02-069"
+                  [placeholder]="'profile.businessAddress.postcodePlaceholder' | translate"
                 />
               </div>
 
               <div class="form-group">
-                <label class="form-label">City</label>
+                <label class="form-label">{{ 'profile.businessAddress.city' | translate }}</label>
                 <input
                   type="text"
                   formControlName="city"
                   class="form-input"
-                  placeholder="e.g., Warszawa"
+                  [placeholder]="'profile.businessAddress.cityPlaceholder' | translate"
                 />
               </div>
 
               <div class="form-group">
-                <label class="form-label">Country</label>
+                <label class="form-label">{{ 'profile.businessAddress.country' | translate }}</label>
                 <input
                   type="text"
                   formControlName="country"
                   class="form-input"
-                  placeholder="e.g., Polska"
+                  [placeholder]="'profile.businessAddress.countryPlaceholder' | translate"
                 />
               </div>
             </div>
@@ -152,20 +153,20 @@ import { ToastComponent } from '../../shared/components/toast/toast.component';
                 </svg>
               </div>
               <div>
-                <h2 class="section-title">Tax Information</h2>
-                <p class="section-description">Tax identification for legal invoices</p>
+                <h2 class="section-title">{{ 'profile.taxInfo.title' | translate }}</h2>
+                <p class="section-description">{{ 'profile.taxInfo.description' | translate }}</p>
               </div>
             </div>
 
             <div class="form-group">
-              <label class="form-label">NIP / Tax ID</label>
+              <label class="form-label">{{ 'profile.taxInfo.nipLabel' | translate }}</label>
               <input
                 type="text"
                 formControlName="nip"
                 class="form-input"
-                placeholder="e.g., 1234567890"
+                [placeholder]="'profile.taxInfo.nipPlaceholder' | translate"
               />
-              <span class="form-hint">Your tax identification number (NIP in Poland, VAT ID in EU, EIN in US)</span>
+              <span class="form-hint">{{ 'profile.taxInfo.nipHint' | translate }}</span>
             </div>
           </section>
 
@@ -185,8 +186,8 @@ import { ToastComponent } from '../../shared/components/toast/toast.component';
                 </svg>
               </div>
               <div>
-                <h2 class="section-title">Bank Accounts</h2>
-                <p class="section-description">Manage bank accounts for different currencies and CRM integration</p>
+                <h2 class="section-title">{{ 'profile.bankAccounts.title' | translate }}</h2>
+                <p class="section-description">{{ 'profile.bankAccounts.description' | translate }}</p>
               </div>
             </div>
 
@@ -194,7 +195,7 @@ import { ToastComponent } from '../../shared/components/toast/toast.component';
               @if (isLoadingBankAccounts()) {
                 <div class="bank-accounts-loading">
                   <div class="loading-spinner"></div>
-                  <span>Loading bank accounts...</span>
+                  <span>{{ 'profile.bankAccounts.loading' | translate }}</span>
                 </div>
               } @else if (bankAccounts().length === 0) {
                 <div class="empty-bank-accounts">
@@ -204,8 +205,8 @@ import { ToastComponent } from '../../shared/components/toast/toast.component';
                       <line x1="1" y1="10" x2="23" y2="10"/>
                     </svg>
                   </div>
-                  <p class="empty-bank-accounts__text">No bank accounts added yet</p>
-                  <p class="empty-bank-accounts__hint">Add bank accounts for different currencies to use in invoices and CRM sync</p>
+                  <p class="empty-bank-accounts__text">{{ 'profile.bankAccounts.noAccounts' | translate }}</p>
+                  <p class="empty-bank-accounts__hint">{{ 'profile.bankAccounts.noAccountsHint' | translate }}</p>
                 </div>
               } @else {
                 <div class="bank-accounts-list">
@@ -219,7 +220,7 @@ import { ToastComponent } from '../../shared/components/toast/toast.component';
                               <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
                               <polyline points="22 4 12 14.01 9 11.01"/>
                             </svg>
-                            Default
+                            {{ 'profile.bankAccounts.default' | translate }}
                           </div>
                         }
                       </div>
@@ -284,7 +285,7 @@ import { ToastComponent } from '../../shared/components/toast/toast.component';
                   <line x1="12" y1="5" x2="12" y2="19"/>
                   <line x1="5" y1="12" x2="19" y2="12"/>
                 </svg>
-                Add Bank Account
+                {{ 'profile.bankAccounts.addAccount' | translate }}
               </button>
             </div>
           </section>
@@ -294,7 +295,7 @@ import { ToastComponent } from '../../shared/components/toast/toast.component';
             <div class="modal-overlay" (click)="closeBankAccountModal()">
               <div class="modal-content" (click)="$event.stopPropagation()">
                 <div class="modal-header">
-                  <h3 class="modal-title">{{ editingBankAccount() ? 'Edit Bank Account' : 'Add Bank Account' }}</h3>
+                  <h3 class="modal-title">{{ editingBankAccount() ? ('profile.bankAccounts.modal.editTitle' | translate) : ('profile.bankAccounts.modal.addTitle' | translate) }}</h3>
                   <button type="button" class="modal-close" (click)="closeBankAccountModal()">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                       <line x1="18" y1="6" x2="6" y2="18"/>
@@ -304,68 +305,69 @@ import { ToastComponent } from '../../shared/components/toast/toast.component';
                 </div>
                 <form [formGroup]="bankAccountForm" (ngSubmit)="saveBankAccount()" class="modal-body">
                   <div class="form-group">
-                    <label class="form-label">Account Name *</label>
+                    <label class="form-label">{{ 'profile.bankAccounts.modal.accountName' | translate }} *</label>
                     <input
                       type="text"
                       formControlName="name"
                       class="form-input"
-                      placeholder="e.g., PKO PLN, Wise EUR"
+                      [placeholder]="'profile.bankAccounts.modal.accountNamePlaceholder' | translate"
                     />
-                    <span class="form-hint">A friendly name to identify this account</span>
+                    <span class="form-hint">{{ 'profile.bankAccounts.modal.accountNameHint' | translate }}</span>
                   </div>
 
                   <div class="form-grid">
                     <div class="form-group">
-                      <label class="form-label">Currency *</label>
+                      <label class="form-label">{{ 'profile.bankAccounts.modal.currency' | translate }} *</label>
                       <select formControlName="currency" class="form-input">
-                        <option value="PLN">PLN - Polish Zloty</option>
-                        <option value="EUR">EUR - Euro</option>
-                        <option value="USD">USD - US Dollar</option>
-                        <option value="GBP">GBP - British Pound</option>
+                        <option value="PLN">PLN - {{ 'profile.bankAccounts.modal.currencies.pln' | translate }}</option>
+                        <option value="EUR">EUR - {{ 'profile.bankAccounts.modal.currencies.eur' | translate }}</option>
+                        <option value="USD">USD - {{ 'profile.bankAccounts.modal.currencies.usd' | translate }}</option>
+                        <option value="GBP">GBP - {{ 'profile.bankAccounts.modal.currencies.gbp' | translate }}</option>
+                        <option value="UAH">UAH - {{ 'profile.bankAccounts.modal.currencies.uah' | translate }}</option>
                       </select>
                     </div>
 
                     <div class="form-group">
-                      <label class="form-label">Bank Name *</label>
+                      <label class="form-label">{{ 'profile.bankAccounts.modal.bankName' | translate }} *</label>
                       <input
                         type="text"
                         formControlName="bankName"
                         class="form-input"
-                        placeholder="e.g., PKO Bank Polski"
+                        [placeholder]="'profile.bankAccounts.modal.bankNamePlaceholder' | translate"
                       />
                     </div>
                   </div>
 
                   <div class="form-group">
-                    <label class="form-label">IBAN *</label>
+                    <label class="form-label">{{ 'profile.bankAccounts.modal.iban' | translate }} *</label>
                     <input
                       type="text"
                       formControlName="iban"
                       class="form-input"
-                      placeholder="e.g., PL61 1090 1014 0000 0712 1981 2874"
+                      [placeholder]="'profile.bankAccounts.modal.ibanPlaceholder' | translate"
                     />
                   </div>
 
                   <div class="form-grid">
                     <div class="form-group">
-                      <label class="form-label">SWIFT / BIC</label>
+                      <label class="form-label">{{ 'profile.bankAccounts.modal.swift' | translate }}</label>
                       <input
                         type="text"
                         formControlName="swift"
                         class="form-input"
-                        placeholder="e.g., BPKOPLPW"
+                        [placeholder]="'profile.bankAccounts.modal.swiftPlaceholder' | translate"
                       />
                     </div>
 
                     <div class="form-group">
-                      <label class="form-label">CRM Requisites ID</label>
+                      <label class="form-label">{{ 'profile.bankAccounts.modal.crmId' | translate }}</label>
                       <input
                         type="text"
                         formControlName="crmRequisitesId"
                         class="form-input"
-                        placeholder="e.g., 2929"
+                        [placeholder]="'profile.bankAccounts.modal.crmIdPlaceholder' | translate"
                       />
-                      <span class="form-hint">ID from CRM system</span>
+                      <span class="form-hint">{{ 'profile.bankAccounts.modal.crmIdHint' | translate }}</span>
                     </div>
                   </div>
 
@@ -373,13 +375,13 @@ import { ToastComponent } from '../../shared/components/toast/toast.component';
                     <label class="checkbox-label">
                       <input type="checkbox" formControlName="isDefault" class="checkbox-input" />
                       <span class="checkbox-custom"></span>
-                      Set as default bank account
+                      {{ 'profile.bankAccounts.modal.setAsDefault' | translate }}
                     </label>
                   </div>
 
                   <div class="modal-actions">
                     <button type="button" class="btn btn--secondary" (click)="closeBankAccountModal()">
-                      Cancel
+                      {{ 'common.cancel' | translate }}
                     </button>
                     <button
                       type="submit"
@@ -388,9 +390,9 @@ import { ToastComponent } from '../../shared/components/toast/toast.component';
                     >
                       @if (isSavingBankAccount()) {
                         <span class="btn__spinner"></span>
-                        Saving...
+                        {{ 'common.saving' | translate }}
                       } @else {
-                        {{ editingBankAccount() ? 'Update' : 'Add' }} Account
+                        {{ editingBankAccount() ? ('profile.bankAccounts.modal.updateAccount' | translate) : ('profile.bankAccounts.modal.addAccountBtn' | translate) }}
                       }
                     </button>
                   </div>
@@ -411,17 +413,17 @@ import { ToastComponent } from '../../shared/components/toast/toast.component';
                       <line x1="12" y1="17" x2="12.01" y2="17"/>
                     </svg>
                   </div>
-                  <h3 class="modal-title">Delete Bank Account</h3>
+                  <h3 class="modal-title">{{ 'profile.bankAccounts.deleteModal.title' | translate }}</h3>
                 </div>
                 <div class="modal-body">
                   <p class="delete-confirm-text">
-                    Are you sure you want to delete <strong>{{ deletingAccount()?.name }}</strong>?
+                    {{ 'profile.bankAccounts.deleteModal.confirmText' | translate }} <strong>{{ deletingAccount()?.name }}</strong>?
                   </p>
-                  <p class="delete-confirm-hint">This action cannot be undone.</p>
+                  <p class="delete-confirm-hint">{{ 'profile.bankAccounts.deleteModal.warning' | translate }}</p>
                 </div>
                 <div class="modal-actions">
                   <button type="button" class="btn btn--secondary" (click)="cancelDeleteBankAccount()">
-                    Cancel
+                    {{ 'common.cancel' | translate }}
                   </button>
                   <button
                     type="button"
@@ -431,9 +433,9 @@ import { ToastComponent } from '../../shared/components/toast/toast.component';
                   >
                     @if (isDeletingBankAccount()) {
                       <span class="btn__spinner btn__spinner--white"></span>
-                      Deleting...
+                      {{ 'common.deleting' | translate }}
                     } @else {
-                      Delete Account
+                      {{ 'profile.bankAccounts.deleteModal.deleteBtn' | translate }}
                     }
                   </button>
                 </div>
@@ -454,8 +456,8 @@ import { ToastComponent } from '../../shared/components/toast/toast.component';
                   </svg>
                 </div>
                 <div>
-                  <h2 class="section-title">Connected Accounts</h2>
-                  <p class="section-description">Link your Google account to create Gmail drafts for invoices</p>
+                  <h2 class="section-title">{{ 'profile.connectedAccounts.title' | translate }}</h2>
+                  <p class="section-description">{{ 'profile.connectedAccounts.description' | translate }}</p>
                 </div>
               </div>
 
@@ -467,8 +469,8 @@ import { ToastComponent } from '../../shared/components/toast/toast.component';
                         <path d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244"/>
                       </svg>
                     </div>
-                    <p class="empty-accounts__text">No Google accounts connected yet</p>
-                    <p class="empty-accounts__hint">Connect your Google account to send invoices directly via Gmail</p>
+                    <p class="empty-accounts__text">{{ 'profile.connectedAccounts.noAccounts' | translate }}</p>
+                    <p class="empty-accounts__hint">{{ 'profile.connectedAccounts.noAccountsHint' | translate }}</p>
                   </div>
                 } @else {
                   <div class="accounts-list">
@@ -493,7 +495,7 @@ import { ToastComponent } from '../../shared/components/toast/toast.component';
                           @if (isDisconnecting() && disconnectingId() === account.id) {
                             <span class="btn__spinner btn__spinner--small"></span>
                           } @else {
-                            Remove
+                            {{ 'common.remove' | translate }}
                           }
                         </button>
                       </div>
@@ -512,7 +514,7 @@ import { ToastComponent } from '../../shared/components/toast/toast.component';
                     <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
                     <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
                   </svg>
-                  Connect Google Account
+                  {{ 'profile.connectedAccounts.connectGoogle' | translate }}
                 </button>
               </div>
             </section>
@@ -521,7 +523,7 @@ import { ToastComponent } from '../../shared/components/toast/toast.component';
           <!-- Form Actions -->
           <div class="form-actions" style="animation-delay: 0.6s">
             <a routerLink="/dashboard" class="btn btn--secondary">
-              Cancel
+              {{ 'common.cancel' | translate }}
             </a>
             <button
               type="submit"
@@ -530,14 +532,14 @@ import { ToastComponent } from '../../shared/components/toast/toast.component';
             >
               @if (isLoading()) {
                 <span class="btn__spinner"></span>
-                Saving...
+                {{ 'common.saving' | translate }}
               } @else {
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="btn__icon">
                   <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
                   <polyline points="17 21 17 13 7 13 7 21"/>
                   <polyline points="7 3 7 8 15 8"/>
                 </svg>
-                Save Changes
+                {{ 'common.saveChanges' | translate }}
               }
             </button>
           </div>

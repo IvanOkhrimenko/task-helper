@@ -1,11 +1,12 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { TranslateModule } from '@ngx-translate/core';
 import { InvoiceTemplate } from '../../../core/services/client.service';
 
 interface TemplateOption {
   id: InvoiceTemplate;
-  name: string;
-  description: string;
+  nameKey: string;
+  descriptionKey: string;
   colors: {
     primary: string;
     secondary: string;
@@ -18,7 +19,7 @@ interface TemplateOption {
 @Component({
   selector: 'app-template-selector',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, TranslateModule],
   template: `
     <div class="template-selector">
       <div class="template-grid">
@@ -74,8 +75,8 @@ interface TemplateOption {
             </div>
 
             <div class="template-info">
-              <h4 class="template-name">{{ template.name }}</h4>
-              <p class="template-description">{{ template.description }}</p>
+              <h4 class="template-name">{{ template.nameKey | translate }}</h4>
+              <p class="template-description">{{ template.descriptionKey | translate }}</p>
             </div>
 
             <!-- Color dots indicator -->
@@ -396,8 +397,8 @@ export class TemplateSelectorComponent {
   templates: TemplateOption[] = [
     {
       id: 'STANDARD',
-      name: 'Standard',
-      description: 'Professional bilingual format',
+      nameKey: 'shared.templateSelector.templates.standard.name',
+      descriptionKey: 'shared.templateSelector.templates.standard.description',
       colors: {
         primary: '#4a5568',
         secondary: '#e2e8f0',
@@ -408,8 +409,8 @@ export class TemplateSelectorComponent {
     },
     {
       id: 'MINIMAL',
-      name: 'Minimal',
-      description: 'Clean & simple design',
+      nameKey: 'shared.templateSelector.templates.minimal.name',
+      descriptionKey: 'shared.templateSelector.templates.minimal.description',
       colors: {
         primary: '#f7fafc',
         secondary: '#edf2f7',
@@ -420,8 +421,8 @@ export class TemplateSelectorComponent {
     },
     {
       id: 'MODERN',
-      name: 'Modern',
-      description: 'Contemporary blue accent',
+      nameKey: 'shared.templateSelector.templates.modern.name',
+      descriptionKey: 'shared.templateSelector.templates.modern.description',
       colors: {
         primary: '#2563eb',
         secondary: '#f1f5f9',
@@ -432,8 +433,8 @@ export class TemplateSelectorComponent {
     },
     {
       id: 'CORPORATE',
-      name: 'Corporate',
-      description: 'Formal navy & gold',
+      nameKey: 'shared.templateSelector.templates.corporate.name',
+      descriptionKey: 'shared.templateSelector.templates.corporate.description',
       colors: {
         primary: '#1e3a5f',
         secondary: '#f8fafc',
@@ -444,8 +445,8 @@ export class TemplateSelectorComponent {
     },
     {
       id: 'CREATIVE',
-      name: 'Creative',
-      description: 'Bold purple & pink',
+      nameKey: 'shared.templateSelector.templates.creative.name',
+      descriptionKey: 'shared.templateSelector.templates.creative.description',
       colors: {
         primary: '#7c3aed',
         secondary: '#ec4899',
@@ -456,8 +457,8 @@ export class TemplateSelectorComponent {
     },
     {
       id: 'ELEGANT',
-      name: 'Elegant',
-      description: 'Sophisticated serif style',
+      nameKey: 'shared.templateSelector.templates.elegant.name',
+      descriptionKey: 'shared.templateSelector.templates.elegant.description',
       colors: {
         primary: '#2d2d2d',
         secondary: '#d4d0c8',

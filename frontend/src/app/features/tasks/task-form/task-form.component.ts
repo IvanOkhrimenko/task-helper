@@ -2,6 +2,7 @@ import { Component, inject, signal, OnInit, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, ActivatedRoute, RouterLink } from '@angular/router';
 import { FormBuilder, ReactiveFormsModule, Validators, FormsModule } from '@angular/forms';
+import { TranslateModule } from '@ngx-translate/core';
 import { QuillModule } from 'ngx-quill';
 import { TaskService, CreateTaskDto } from '../../../core/services/task.service';
 import { ClientService, Client, InvoiceTemplate } from '../../../core/services/client.service';
@@ -15,7 +16,7 @@ import { TemplateSelectorComponent } from '../../../shared/components/template-s
 @Component({
   selector: 'app-task-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormsModule, RouterLink, ToastComponent, QuillModule, TemplateSelectorComponent],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, RouterLink, ToastComponent, QuillModule, TemplateSelectorComponent, TranslateModule],
   template: `
     <app-toast />
     <div class="task-form-page">
@@ -26,16 +27,16 @@ import { TemplateSelectorComponent } from '../../../shared/components/template-s
               <line x1="19" y1="12" x2="5" y2="12"/>
               <polyline points="12 19 5 12 12 5"/>
             </svg>
-            Back to Tasks
+            {{ 'tasks.form.backToTasks' | translate }}
           </a>
-          <h1 class="page-title">{{ isEditing() ? 'Edit Task' : 'New Task' }}</h1>
-          <p class="page-subtitle">{{ isEditing() ? 'Update task details and invoice defaults' : 'Create a recurring invoice task' }}</p>
+          <h1 class="page-title">{{ isEditing() ? ('tasks.form.editTask' | translate) : ('tasks.form.newTask' | translate) }}</h1>
+          <p class="page-subtitle">{{ isEditing() ? ('tasks.form.editSubtitle' | translate) : ('tasks.form.newSubtitle' | translate) }}</p>
         </header>
 
         @if (isLoadingClients()) {
           <div class="loading-state">
             <div class="loading-spinner"></div>
-            <p>Loading...</p>
+            <p>{{ 'tasks.form.loading' | translate }}</p>
           </div>
         } @else if (clients().length === 0) {
           <div class="empty-state">
@@ -47,14 +48,14 @@ import { TemplateSelectorComponent } from '../../../shared/components/template-s
                 <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
               </svg>
             </div>
-            <h2>No Clients Yet</h2>
-            <p>Create a client first to associate with this task</p>
+            <h2>{{ 'tasks.form.noClients.title' | translate }}</h2>
+            <p>{{ 'tasks.form.noClients.description' | translate }}</p>
             <a routerLink="/clients/new" class="btn btn--primary">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <line x1="12" y1="5" x2="12" y2="19"/>
                 <line x1="5" y1="12" x2="19" y2="12"/>
               </svg>
-              Create Client
+              {{ 'tasks.form.noClients.createClient' | translate }}
             </a>
           </div>
         } @else {
@@ -62,25 +63,25 @@ import { TemplateSelectorComponent } from '../../../shared/components/template-s
             <div class="form-body">
               <!-- Task Name -->
               <div class="form-group form-group--prominent">
-                <label for="name" class="form-label">Task Name</label>
+                <label for="name" class="form-label">{{ 'tasks.form.taskName' | translate }}</label>
                 <input
                   type="text"
                   id="name"
                   formControlName="name"
                   class="form-input form-input--large"
-                  placeholder="e.g., Monthly Invoice"
+                  [placeholder]="'tasks.form.taskNamePlaceholder' | translate"
                   [class.form-input--error]="form.get('name')?.touched && form.get('name')?.invalid"
                 />
                 @if (form.get('name')?.touched && form.get('name')?.errors?.['required']) {
-                  <span class="form-error">Task name is required</span>
+                  <span class="form-error">{{ 'tasks.form.taskNameRequired' | translate }}</span>
                 }
               </div>
 
               <!-- Client Selector -->
               <div class="form-group">
                 <label for="clientId" class="form-label">
-                  Client
-                  <a routerLink="/clients/new" class="label-action">+ Add new</a>
+                  {{ 'tasks.form.client' | translate }}
+                  <a routerLink="/clients/new" class="label-action">+ {{ 'tasks.form.addNew' | translate }}</a>
                 </label>
                 <div class="select-wrapper">
                   <select
@@ -89,7 +90,7 @@ import { TemplateSelectorComponent } from '../../../shared/components/template-s
                     class="form-input form-select"
                     [class.form-input--error]="form.get('clientId')?.touched && form.get('clientId')?.invalid"
                   >
-                    <option value="">Select a client...</option>
+                    <option value="">{{ 'tasks.form.selectClient' | translate }}</option>
                     @for (client of clients(); track client.id) {
                       <option [value]="client.id">
                         {{ client.name }}{{ client.email ? ' (' + client.email + ')' : '' }}
@@ -101,7 +102,7 @@ import { TemplateSelectorComponent } from '../../../shared/components/template-s
                   </svg>
                 </div>
                 @if (form.get('clientId')?.touched && form.get('clientId')?.errors?.['required']) {
-                  <span class="form-error">Please select a client</span>
+                  <span class="form-error">{{ 'tasks.form.clientRequired' | translate }}</span>
                 }
                 @if (selectedClient()) {
                   <div class="client-preview">
@@ -129,7 +130,7 @@ import { TemplateSelectorComponent } from '../../../shared/components/template-s
                       <line x1="12" y1="9" x2="12" y2="13"/>
                       <line x1="12" y1="17" x2="12.01" y2="17"/>
                     </svg>
-                    Warning Day
+                    {{ 'tasks.form.warningDay' | translate }}
                   </label>
                   <div class="number-input-wrapper">
                     <input
@@ -142,9 +143,9 @@ import { TemplateSelectorComponent } from '../../../shared/components/template-s
                       max="31"
                       [class.form-input--error]="form.get('warningDate')?.touched && form.get('warningDate')?.invalid"
                     />
-                    <span class="number-suffix">of each month</span>
+                    <span class="number-suffix">{{ 'tasks.form.ofEachMonth' | translate }}</span>
                   </div>
-                  <span class="form-hint">Day to start showing reminders</span>
+                  <span class="form-hint">{{ 'tasks.form.warningDayHint' | translate }}</span>
                 </div>
 
                 <div class="form-group">
@@ -153,7 +154,7 @@ import { TemplateSelectorComponent } from '../../../shared/components/template-s
                       <circle cx="12" cy="12" r="10"/>
                       <polyline points="12 6 12 12 16 14"/>
                     </svg>
-                    Deadline Day
+                    {{ 'tasks.form.deadlineDay' | translate }}
                   </label>
                   <div class="number-input-wrapper">
                     <input
@@ -166,32 +167,33 @@ import { TemplateSelectorComponent } from '../../../shared/components/template-s
                       max="31"
                       [class.form-input--error]="form.get('deadlineDate')?.touched && form.get('deadlineDate')?.invalid"
                     />
-                    <span class="number-suffix">of each month</span>
+                    <span class="number-suffix">{{ 'tasks.form.ofEachMonth' | translate }}</span>
                   </div>
-                  <span class="form-hint">Invoice due date each month</span>
+                  <span class="form-hint">{{ 'tasks.form.deadlineDayHint' | translate }}</span>
                 </div>
               </div>
             </div>
 
             <!-- Invoice Defaults Section -->
             <section class="form-section">
-              <h2 class="section-title">Invoice Defaults</h2>
-              <p class="section-description">Default values used when generating invoices from this task</p>
+              <h2 class="section-title">{{ 'tasks.form.invoiceDefaults.title' | translate }}</h2>
+              <p class="section-description">{{ 'tasks.form.invoiceDefaults.description' | translate }}</p>
 
               <!-- Currency & Language -->
               <div class="form-row">
                 <div class="form-group">
-                  <label for="currency" class="form-label">Currency</label>
+                  <label for="currency" class="form-label">{{ 'tasks.form.invoiceDefaults.currency' | translate }}</label>
                   <select id="currency" formControlName="currency" class="form-input">
                     <option value="USD">USD ($)</option>
                     <option value="EUR">EUR (€)</option>
                     <option value="PLN">PLN (zł)</option>
                     <option value="GBP">GBP (£)</option>
+                    <option value="UAH">UAH (₴)</option>
                   </select>
                 </div>
 
                 <div class="form-group">
-                  <label for="defaultLanguage" class="form-label">Invoice Language</label>
+                  <label for="defaultLanguage" class="form-label">{{ 'tasks.form.invoiceDefaults.language' | translate }}</label>
                   <select id="defaultLanguage" formControlName="defaultLanguage" class="form-input">
                     <option value="PL">Polski (PL/EN)</option>
                     <option value="EN">English</option>
@@ -201,7 +203,7 @@ import { TemplateSelectorComponent } from '../../../shared/components/template-s
 
               <!-- Template Selection -->
               <div class="form-group">
-                <label class="form-label">Invoice Template</label>
+                <label class="form-label">{{ 'tasks.form.invoiceDefaults.template' | translate }}</label>
                 <app-template-selector
                   [value]="form.get('invoiceTemplate')?.value || 'STANDARD'"
                   (valueChange)="form.get('invoiceTemplate')?.setValue($event)"
@@ -220,7 +222,7 @@ import { TemplateSelectorComponent } from '../../../shared/components/template-s
                     <circle cx="12" cy="12" r="10"/>
                     <polyline points="12 6 12 12 16 14"/>
                   </svg>
-                  Hourly Rate
+                  {{ 'tasks.form.invoiceDefaults.hourlyRate' | translate }}
                 </button>
                 <button
                   type="button"
@@ -232,7 +234,7 @@ import { TemplateSelectorComponent } from '../../../shared/components/template-s
                     <rect x="2" y="4" width="20" height="16" rx="2"/>
                     <line x1="6" y1="12" x2="18" y2="12"/>
                   </svg>
-                  Fixed Amount
+                  {{ 'tasks.form.invoiceDefaults.fixedAmount' | translate }}
                 </button>
               </div>
 
@@ -240,30 +242,30 @@ import { TemplateSelectorComponent } from '../../../shared/components/template-s
               @if (!useFixedAmount()) {
                 <div class="form-row">
                   <div class="form-group">
-                    <label for="hourlyRate" class="form-label">Hourly Rate</label>
+                    <label for="hourlyRate" class="form-label">{{ 'tasks.form.invoiceDefaults.hourlyRate' | translate }}</label>
                     <input
                       type="number"
                       id="hourlyRate"
                       formControlName="hourlyRate"
                       class="form-input"
-                      placeholder="e.g., 75.00"
+                      [placeholder]="'tasks.form.invoiceDefaults.hourlyRatePlaceholder' | translate"
                       min="0"
                       step="0.01"
                     />
                   </div>
 
                   <div class="form-group">
-                    <label for="hoursWorked" class="form-label">Default Hours</label>
+                    <label for="hoursWorked" class="form-label">{{ 'tasks.form.invoiceDefaults.defaultHours' | translate }}</label>
                     <input
                       type="number"
                       id="hoursWorked"
                       formControlName="hoursWorked"
                       class="form-input"
-                      placeholder="e.g., 160"
+                      [placeholder]="'tasks.form.invoiceDefaults.hoursPlaceholder' | translate"
                       min="0"
                       step="0.5"
                     />
-                    <span class="form-hint">Typical hours per invoice</span>
+                    <span class="form-hint">{{ 'tasks.form.invoiceDefaults.hoursHint' | translate }}</span>
                   </div>
                 </div>
               }
@@ -271,7 +273,7 @@ import { TemplateSelectorComponent } from '../../../shared/components/template-s
               <!-- Fixed Monthly Amount -->
               @if (useFixedAmount()) {
                 <div class="form-group">
-                  <label for="fixedMonthlyAmount" class="form-label">Monthly Amount</label>
+                  <label for="fixedMonthlyAmount" class="form-label">{{ 'tasks.form.invoiceDefaults.monthlyAmount' | translate }}</label>
                   <div class="input-with-prefix">
                     <span class="input-prefix">{{ getCurrencySymbol() }}</span>
                     <input
@@ -279,45 +281,45 @@ import { TemplateSelectorComponent } from '../../../shared/components/template-s
                       id="fixedMonthlyAmount"
                       formControlName="fixedMonthlyAmount"
                       class="form-input form-input--prefixed"
-                      placeholder="e.g., 5000.00"
+                      [placeholder]="'tasks.form.invoiceDefaults.monthlyAmountPlaceholder' | translate"
                       min="0"
                       step="0.01"
                     />
                   </div>
-                  <span class="form-hint">Fixed amount for each invoice</span>
+                  <span class="form-hint">{{ 'tasks.form.invoiceDefaults.monthlyAmountHint' | translate }}</span>
                 </div>
               }
 
               <!-- Bank Account -->
               <div class="form-group">
-                <label for="bankAccountId" class="form-label">Bank Account</label>
+                <label for="bankAccountId" class="form-label">{{ 'tasks.form.invoiceDefaults.bankAccount' | translate }}</label>
                 <select id="bankAccountId" formControlName="bankAccountId" class="form-input">
-                  <option value="">Select bank account...</option>
+                  <option value="">{{ 'tasks.form.invoiceDefaults.selectBankAccount' | translate }}</option>
                   @for (account of bankAccounts(); track account.id) {
                     <option [value]="account.id">{{ account.name }} ({{ account.currency }})</option>
                   }
                 </select>
-                <span class="form-hint">Your bank details on invoice</span>
+                <span class="form-hint">{{ 'tasks.form.invoiceDefaults.bankAccountHint' | translate }}</span>
               </div>
 
               <!-- Google Account -->
               @if (googleAccounts().length > 0) {
                 <div class="form-group">
-                  <label for="googleAccountId" class="form-label">Gmail Account</label>
+                  <label for="googleAccountId" class="form-label">{{ 'tasks.form.invoiceDefaults.gmailAccount' | translate }}</label>
                   <select id="googleAccountId" formControlName="googleAccountId" class="form-input">
-                    <option value="">Select Gmail account...</option>
+                    <option value="">{{ 'tasks.form.invoiceDefaults.selectGmailAccount' | translate }}</option>
                     @for (account of googleAccounts(); track account.id) {
                       <option [value]="account.id">{{ account.email }}</option>
                     }
                   </select>
-                  <span class="form-hint">Create email drafts in this account</span>
+                  <span class="form-hint">{{ 'tasks.form.invoiceDefaults.gmailAccountHint' | translate }}</span>
                 </div>
               }
             </section>
 
             <!-- Email Template Section -->
             <section class="form-section">
-              <h2 class="section-title">Email Template</h2>
+              <h2 class="section-title">{{ 'tasks.form.emailTemplate.title' | translate }}</h2>
 
               <!-- Always show preview -->
               <div class="email-preview email-preview--prominent">
@@ -327,14 +329,14 @@ import { TemplateSelectorComponent } from '../../../shared/components/template-s
                     <polyline points="22,6 12,13 2,6"/>
                   </svg>
                   @if (form.get('useCustomEmailTemplate')?.value) {
-                    Custom Template
+                    {{ 'tasks.form.emailTemplate.customTemplate' | translate }}
                   } @else {
-                    Default Template
+                    {{ 'tasks.form.emailTemplate.defaultTemplate' | translate }}
                   }
                 </div>
                 <div class="email-preview__content">
                   <div class="email-preview__subject">
-                    <strong>Subject:</strong> {{ getSubjectPreview() }}
+                    <strong>{{ 'tasks.form.emailTemplate.subject' | translate }}:</strong> {{ getSubjectPreview() }}
                   </div>
                   <div class="email-preview__body" [innerHTML]="getEmailPreviewHtml()"></div>
                 </div>
@@ -343,8 +345,8 @@ import { TemplateSelectorComponent } from '../../../shared/components/template-s
               <!-- Toggle to enable customization -->
               <div class="toggle-row">
                 <label class="toggle-label">
-                  <span>Customize Email Template</span>
-                  <span class="toggle-hint">Edit the default email template above</span>
+                  <span>{{ 'tasks.form.emailTemplate.customizeTemplate' | translate }}</span>
+                  <span class="toggle-hint">{{ 'tasks.form.emailTemplate.customizeHint' | translate }}</span>
                 </label>
                 <label class="toggle-switch">
                   <input type="checkbox" formControlName="useCustomEmailTemplate" />
@@ -357,14 +359,14 @@ import { TemplateSelectorComponent } from '../../../shared/components/template-s
                   <!-- AI Generation -->
                   <div class="ai-generate-section">
                     <div class="form-group">
-                      <label for="aiPrompt" class="form-label">AI Prompt (optional)</label>
+                      <label for="aiPrompt" class="form-label">{{ 'tasks.form.emailTemplate.aiPrompt' | translate }}</label>
                       <textarea
                         id="aiPrompt"
                         [(ngModel)]="aiPrompt"
                         [ngModelOptions]="{standalone: true}"
                         class="form-input"
                         rows="2"
-                        placeholder="Describe what kind of email you want, e.g., 'formal tone, mention payment terms of 14 days'"
+                        [placeholder]="'tasks.form.emailTemplate.aiPromptPlaceholder' | translate"
                       ></textarea>
                     </div>
                     <button
@@ -375,21 +377,21 @@ import { TemplateSelectorComponent } from '../../../shared/components/template-s
                     >
                       @if (isGeneratingEmail()) {
                         <span class="btn-spinner"></span>
-                        Generating...
+                        {{ 'tasks.form.emailTemplate.generating' | translate }}
                       } @else {
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                           <path d="M12 2L2 7l10 5 10-5-10-5z"/>
                           <path d="M2 17l10 5 10-5"/>
                           <path d="M2 12l10 5 10-5"/>
                         </svg>
-                        Generate with AI
+                        {{ 'tasks.form.emailTemplate.generateWithAI' | translate }}
                       }
                     </button>
                   </div>
 
                   <div class="email-editor">
                     <div class="form-group">
-                      <label for="emailSubjectTemplate" class="form-label">Subject</label>
+                      <label for="emailSubjectTemplate" class="form-label">{{ 'tasks.form.emailTemplate.subject' | translate }}</label>
                       <input
                         type="text"
                         id="emailSubjectTemplate"
@@ -400,17 +402,17 @@ import { TemplateSelectorComponent } from '../../../shared/components/template-s
                     </div>
 
                     <div class="form-group">
-                      <label for="emailBodyTemplate" class="form-label">Body</label>
+                      <label for="emailBodyTemplate" class="form-label">{{ 'tasks.form.emailTemplate.body' | translate }}</label>
                       <quill-editor
                         formControlName="emailBodyTemplate"
                         format="html"
                         [modules]="quillModules"
                         [styles]="{ height: '200px' }"
-                        placeholder="Write your email template here..."
+                        [placeholder]="'tasks.form.emailTemplate.bodyPlaceholder' | translate"
                         class="email-quill-editor"
                       ></quill-editor>
                       <div class="template-vars">
-                        <span class="template-vars__label">Variables:</span>
+                        <span class="template-vars__label">{{ 'tasks.form.emailTemplate.variables' | translate }}:</span>
                         <code>{{ '{' }}clientName{{ '}' }}</code>
                         <code>{{ '{' }}month{{ '}' }}</code>
                         <code>{{ '{' }}year{{ '}' }}</code>
@@ -425,7 +427,7 @@ import { TemplateSelectorComponent } from '../../../shared/components/template-s
 
             <!-- Form Actions -->
             <div class="form-actions">
-              <a routerLink="/tasks/invoices" class="btn btn--ghost">Cancel</a>
+              <a routerLink="/tasks/invoices" class="btn btn--ghost">{{ 'tasks.form.cancel' | translate }}</a>
               <button
                 type="submit"
                 class="btn btn--primary"
@@ -433,9 +435,9 @@ import { TemplateSelectorComponent } from '../../../shared/components/template-s
               >
                 @if (isLoading()) {
                   <span class="btn-spinner"></span>
-                  {{ isEditing() ? 'Saving...' : 'Creating...' }}
+                  {{ isEditing() ? ('tasks.form.saving' | translate) : ('tasks.form.creating' | translate) }}
                 } @else {
-                  {{ isEditing() ? 'Save Changes' : 'Create Task' }}
+                  {{ isEditing() ? ('tasks.form.saveChanges' | translate) : ('tasks.form.createTask' | translate) }}
                 }
               </button>
             </div>
@@ -450,7 +452,7 @@ import { TemplateSelectorComponent } from '../../../shared/components/template-s
                   <line x1="12" y1="8" x2="12" y2="12"/>
                   <line x1="12" y1="16" x2="12.01" y2="16"/>
                 </svg>
-                Danger Zone
+                {{ 'tasks.form.dangerZone.title' | translate }}
               </h3>
 
               @if (isArchived()) {
@@ -459,7 +461,7 @@ import { TemplateSelectorComponent } from '../../../shared/components/template-s
                     <polyline points="21 8 21 21 3 21 3 8"/>
                     <rect x="1" y="3" width="22" height="5"/>
                   </svg>
-                  This task is archived
+                  {{ 'tasks.form.dangerZone.taskArchived' | translate }}
                 </div>
               }
 
@@ -479,7 +481,7 @@ import { TemplateSelectorComponent } from '../../../shared/components/template-s
                         <rect x="1" y="3" width="22" height="5"/>
                       </svg>
                     }
-                    Archive Task
+                    {{ 'tasks.form.dangerZone.archiveTask' | translate }}
                   </button>
                 } @else {
                   <button
@@ -496,7 +498,7 @@ import { TemplateSelectorComponent } from '../../../shared/components/template-s
                         <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/>
                       </svg>
                     }
-                    Restore Task
+                    {{ 'tasks.form.dangerZone.restoreTask' | translate }}
                   </button>
                 }
 
@@ -516,7 +518,7 @@ import { TemplateSelectorComponent } from '../../../shared/components/template-s
                       <line x1="14" y1="11" x2="14" y2="17"/>
                     </svg>
                   }
-                  Delete Forever
+                  {{ 'tasks.form.dangerZone.deleteForever' | translate }}
                 </button>
               </div>
             </section>

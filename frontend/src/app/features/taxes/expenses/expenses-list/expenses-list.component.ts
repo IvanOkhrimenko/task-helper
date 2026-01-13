@@ -1,13 +1,14 @@
 import { Component, inject, signal, computed, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
+import { TranslateModule } from '@ngx-translate/core';
 import { ExpenseService, Expense, ExpenseCategory, ExpenseType, ExpenseFilters, ExpensesSummary } from '../../../../core/services/expense.service';
 import { NotificationService } from '../../../../core/services/notification.service';
 
 @Component({
   selector: 'app-expenses-list',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, TranslateModule],
   template: `
     <div class="expenses-page">
       <!-- Header -->
@@ -19,8 +20,8 @@ import { NotificationService } from '../../../../core/services/notification.serv
             </svg>
           </a>
           <div>
-            <h1 class="header__title">Expenses</h1>
-            <p class="header__subtitle">Track your business and personal expenses</p>
+            <h1 class="header__title">{{ 'taxes.expenses.title' | translate }}</h1>
+            <p class="header__subtitle">{{ 'taxes.expenses.subtitle' | translate }}</p>
           </div>
         </div>
         <div class="header__right">
@@ -42,7 +43,7 @@ import { NotificationService } from '../../../../core/services/notification.serv
               <line x1="12" y1="5" x2="12" y2="19"/>
               <line x1="5" y1="12" x2="19" y2="12"/>
             </svg>
-            Add expense
+            {{ 'taxes.expenses.addExpense' | translate }}
           </button>
         </div>
       </header>
@@ -50,7 +51,7 @@ import { NotificationService } from '../../../../core/services/notification.serv
       @if (isLoading()) {
         <div class="loading-state">
           <div class="loading-spinner"></div>
-          <p>Loading expenses...</p>
+          <p>{{ 'taxes.expenses.loading' | translate }}</p>
         </div>
       } @else {
         <!-- Summary Cards -->
@@ -64,7 +65,7 @@ import { NotificationService } from '../../../../core/services/notification.serv
               </svg>
             </div>
             <div class="summary-card__content">
-              <span class="summary-card__label">Total expenses</span>
+              <span class="summary-card__label">{{ 'taxes.expenses.summary.total' | translate }}</span>
               <span class="summary-card__value">{{ formatPLN(summary()?.total || 0) }}</span>
             </div>
           </div>
@@ -77,7 +78,7 @@ import { NotificationService } from '../../../../core/services/notification.serv
               </svg>
             </div>
             <div class="summary-card__content">
-              <span class="summary-card__label">Deductible</span>
+              <span class="summary-card__label">{{ 'taxes.expenses.summary.deductible' | translate }}</span>
               <span class="summary-card__value">{{ formatPLN(summary()?.totalDeductible || 0) }}</span>
             </div>
           </div>
@@ -92,7 +93,7 @@ import { NotificationService } from '../../../../core/services/notification.serv
               </svg>
             </div>
             <div class="summary-card__content">
-              <span class="summary-card__label">Expense count</span>
+              <span class="summary-card__label">{{ 'taxes.expenses.summary.count' | translate }}</span>
               <span class="summary-card__value summary-card__value--count">{{ summary()?.count || 0 }}</span>
             </div>
           </div>
@@ -105,7 +106,7 @@ import { NotificationService } from '../../../../core/services/notification.serv
             [class.type-tab--active]="selectedExpenseType() === 'ALL'"
             (click)="selectExpenseType('ALL')"
           >
-            All
+            {{ 'taxes.expenses.tabs.all' | translate }}
             <span class="type-tab__count">{{ summary()?.count || 0 }}</span>
           </button>
           <button
@@ -117,7 +118,7 @@ import { NotificationService } from '../../../../core/services/notification.serv
               <rect x="2" y="7" width="20" height="14" rx="2"/>
               <path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/>
             </svg>
-            Business
+            {{ 'taxes.expenses.tabs.business' | translate }}
             <span class="type-tab__count">{{ summary()?.businessCount || 0 }}</span>
           </button>
           <button
@@ -129,7 +130,7 @@ import { NotificationService } from '../../../../core/services/notification.serv
               <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/>
               <circle cx="12" cy="7" r="4"/>
             </svg>
-            Personal
+            {{ 'taxes.expenses.tabs.personal' | translate }}
             <span class="type-tab__count">{{ summary()?.personalCount || 0 }}</span>
           </button>
         </div>
@@ -143,7 +144,7 @@ import { NotificationService } from '../../../../core/services/notification.serv
                 [class.month-chip--active]="selectedMonth() === null"
                 (click)="selectMonth(null)"
               >
-                All
+                {{ 'taxes.expenses.filters.all' | translate }}
               </button>
               @for (month of months; track month.value) {
                 <button
@@ -164,7 +165,7 @@ import { NotificationService } from '../../../../core/services/notification.serv
                 (change)="selectCategory($any($event.target).value)"
                 class="category-select"
               >
-                <option value="ALL">All categories</option>
+                <option value="ALL">{{ 'taxes.expenses.filters.allCategories' | translate }}</option>
                 @for (cat of categories; track cat) {
                   <option [value]="cat">{{ getCategoryLabel(cat) }}</option>
                 }
@@ -186,24 +187,24 @@ import { NotificationService } from '../../../../core/services/notification.serv
                 <line x1="9" y1="21" x2="9" y2="9"/>
               </svg>
             </div>
-            <h3>Brak wydatków</h3>
+            <h3>{{ 'taxes.expenses.empty.title' | translate }}</h3>
             <p>{{ getEmptyMessage() }}</p>
             <button class="empty-state__btn" (click)="openAddModal()">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <line x1="12" y1="5" x2="12" y2="19"/>
                 <line x1="5" y1="12" x2="19" y2="12"/>
               </svg>
-              Dodaj pierwszy wydatek
+              {{ 'taxes.expenses.empty.addFirst' | translate }}
             </button>
           </div>
         } @else {
           <div class="expenses-table">
             <div class="table-header">
-              <div class="table-cell table-cell--date">Data</div>
-              <div class="table-cell table-cell--name">Nazwa</div>
-              <div class="table-cell table-cell--category">Kategoria</div>
-              <div class="table-cell table-cell--amount">Kwota</div>
-              <div class="table-cell table-cell--deductible">KUP</div>
+              <div class="table-cell table-cell--date">{{ 'taxes.expenses.table.date' | translate }}</div>
+              <div class="table-cell table-cell--name">{{ 'taxes.expenses.table.name' | translate }}</div>
+              <div class="table-cell table-cell--category">{{ 'taxes.expenses.table.category' | translate }}</div>
+              <div class="table-cell table-cell--amount">{{ 'taxes.expenses.table.amount' | translate }}</div>
+              <div class="table-cell table-cell--deductible">{{ 'taxes.expenses.table.deductible' | translate }}</div>
               <div class="table-cell table-cell--actions"></div>
             </div>
 
@@ -249,17 +250,17 @@ import { NotificationService } from '../../../../core/services/notification.serv
                         {{ expense.deductiblePercent }}%
                       </span>
                     } @else {
-                      <span class="deductible-badge deductible-badge--no">Nie</span>
+                      <span class="deductible-badge deductible-badge--no">{{ 'taxes.expenses.table.no' | translate }}</span>
                     }
                   </div>
                   <div class="table-cell table-cell--actions" (click)="$event.stopPropagation()">
-                    <button class="action-btn" title="Edytuj" (click)="editExpense(expense)">
+                    <button class="action-btn" [title]="'taxes.expenses.actions.edit' | translate" (click)="editExpense(expense)">
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/>
                         <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
                       </svg>
                     </button>
-                    <button class="action-btn action-btn--danger" title="Usuń" (click)="deleteExpense(expense)">
+                    <button class="action-btn action-btn--danger" [title]="'taxes.expenses.actions.delete' | translate" (click)="deleteExpense(expense)">
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <polyline points="3 6 5 6 21 6"/>
                         <path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
@@ -273,28 +274,28 @@ import { NotificationService } from '../../../../core/services/notification.serv
                       <div class="details-grid">
                         @if (expense.description) {
                           <div class="detail-item detail-item--full">
-                            <span class="detail-label">Opis</span>
+                            <span class="detail-label">{{ 'taxes.expenses.details.description' | translate }}</span>
                             <span class="detail-value">{{ expense.description }}</span>
                           </div>
                         }
                         <div class="detail-item">
-                          <span class="detail-label">Kwota netto</span>
+                          <span class="detail-label">{{ 'taxes.expenses.details.netAmount' | translate }}</span>
                           <span class="detail-value">{{ formatPLN(expense.netAmount) }}</span>
                         </div>
                         @if (expense.vatRate) {
                           <div class="detail-item">
-                            <span class="detail-label">VAT ({{ expense.vatRate }}%)</span>
+                            <span class="detail-label">{{ 'taxes.expenses.details.vat' | translate }} ({{ expense.vatRate }}%)</span>
                             <span class="detail-value">{{ formatPLN(expense.vatAmount || 0) }}</span>
                           </div>
                         }
                         @if (expense.currency !== 'PLN' && expense.exchangeRate) {
                           <div class="detail-item">
-                            <span class="detail-label">Kurs wymiany</span>
+                            <span class="detail-label">{{ 'taxes.expenses.details.exchangeRate' | translate }}</span>
                             <span class="detail-value">1 {{ expense.originalCurrency }} = {{ expense.exchangeRate?.toFixed(4) }} PLN</span>
                           </div>
                         }
                         <div class="detail-item">
-                          <span class="detail-label">Data dodania</span>
+                          <span class="detail-label">{{ 'taxes.expenses.details.dateAdded' | translate }}</span>
                           <span class="detail-value">{{ formatFullDate(expense.createdAt) }}</span>
                         </div>
                       </div>

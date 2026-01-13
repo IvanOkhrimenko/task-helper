@@ -8,18 +8,18 @@ datasource db {
 }
 
 model User {
-  id            String    @id @default(uuid())
-  email         String    @unique
-  password      String
-  name          String
-  role          UserRole  @default(USER)
+  id       String   @id @default(uuid())
+  email    String   @unique
+  password String
+  name     String
+  role     UserRole @default(USER)
 
   // Seller info for invoices (split address for CRM integration)
-  nip             String?   // Tax ID (NIP in Poland)
-  streetAddress   String?   // Street and building number
-  postcode        String?   // Postal code
-  city            String?   // City
-  country         String?   @default("Polska")  // Country
+  nip           String? // Tax ID (NIP in Poland)
+  streetAddress String? // Street and building number
+  postcode      String? // Postal code
+  city          String? // City
+  country       String? @default("Polska") // Country
 
   // Legacy single bank fields - @deprecated, use bankAccounts relation
   bankName        String?
@@ -28,12 +28,12 @@ model User {
   crmRequisitesId String?
 
   // Legacy field - keep for backwards compatibility
-  address         String?   // @deprecated - use streetAddress, postcode, city, country
+  address String? // @deprecated - use streetAddress, postcode, city, country
 
   // Notification preferences
-  emailNotifications  Boolean @default(true)
-  pushNotifications   Boolean @default(true)
-  pushSubscription    Json?   // Web Push subscription data
+  emailNotifications Boolean @default(true)
+  pushNotifications  Boolean @default(true)
+  pushSubscription   Json? // Web Push subscription data
 
   clients           Client[]
   tasks             Task[]
@@ -46,75 +46,89 @@ model User {
   activityLogs      ActivityLog[]
   taxSettings       TaxSettings?
   expenses          Expense[]
-  createdAt         DateTime  @default(now())
+
+  // Business Finance Module relations
+  businessMemberships     BusinessMembership[]
+  invitedMemberships      BusinessMembership[] @relation("InvitedMemberships")
+  businessExpensesCreated BusinessExpense[]    @relation("ExpensesCreatedBy")
+  businessExpensesUpdated BusinessExpense[]    @relation("ExpensesUpdatedBy")
+  businessIncomesCreated  BusinessIncome[]     @relation("IncomesCreatedBy")
+  businessIncomesUpdated  BusinessIncome[]     @relation("IncomesUpdatedBy")
+  businessAttachments     BusinessAttachment[]
+  businessSettlements     BusinessSettlement[]
+  businessInvitesCreated  BusinessInvite[]     @relation("CreatedInvites")
+  businessInvitesAccepted BusinessInvite[]     @relation("AcceptedInvites")
+  businessAuditLogs       BusinessAuditLog[]
+
+  createdAt DateTime @default(now())
 }
 
 model BankAccount {
-  id              String   @id @default(uuid())
-  name            String   // Display name, e.g., "PKO PLN", "Wise EUR"
-  currency        String   // EUR, USD, PLN, etc.
-  bankName        String   // Bank name
-  iban            String   // IBAN
-  swift           String?  // SWIFT/BIC code
+  id       String  @id @default(uuid())
+  name     String // Display name, e.g., "PKO PLN", "Wise EUR"
+  currency String // EUR, USD, PLN, etc.
+  bankName String // Bank name
+  iban     String // IBAN
+  swift    String? // SWIFT/BIC code
 
   // CRM integration
-  crmRequisitesId String?  // ID in CRM system (crm.mcgroup.pl)
+  crmRequisitesId String? // ID in CRM system (crm.mcgroup.pl)
 
-  isDefault       Boolean  @default(false)  // Default bank account for user
+  isDefault Boolean @default(false) // Default bank account for user
 
-  userId          String
-  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  clients         Client[]
-  tasks           Task[]
+  clients Client[]
+  tasks   Task[]
 
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([userId])
   @@index([userId, currency])
 }
 
 model CRMIntegration {
-  id                  String    @id @default(uuid())
-  name                String    // Display name, e.g., "MCGroup CRM", "Custom CRM"
-  isActive            Boolean   @default(true)
+  id       String  @id @default(uuid())
+  name     String // Display name, e.g., "MCGroup CRM", "Custom CRM"
+  isActive Boolean @default(true)
 
   // Login Configuration
-  loginUrl            String    // e.g., "https://crm.example.com/login"
-  loginMethod         String    @default("POST")
-  email               String    // CRM login email
-  password            String    // CRM login password (TODO: encrypt in production)
-  csrfSelector        String?   // Regex to extract CSRF token from login page
-  csrfHeader          String?   // Header name for CSRF (e.g., "X-XSRF-TOKEN")
+  loginUrl     String // e.g., "https://crm.example.com/login"
+  loginMethod  String  @default("POST")
+  email        String // CRM login email
+  password     String // CRM login password (TODO: encrypt in production)
+  csrfSelector String? // Regex to extract CSRF token from login page
+  csrfHeader   String? // Header name for CSRF (e.g., "X-XSRF-TOKEN")
 
   // Invoice Creation Configuration
-  createInvoiceUrl    String    // e.g., "https://crm.example.com/saveFakturyClients"
-  createInvoiceMethod String    @default("POST")
-  headers             Json      @default("{}") // {"Content-Type": "application/x-www-form-urlencoded"}
+  createInvoiceUrl    String // e.g., "https://crm.example.com/saveFakturyClients"
+  createInvoiceMethod String @default("POST")
+  headers             Json   @default("{}") // {"Content-Type": "application/x-www-form-urlencoded"}
 
   // Invoice List/Download Configuration
-  listInvoicesUrl     String?   // e.g., "https://crm.example.com/show-faktury-client"
-  invoiceNumberPrefix String?   // e.g., "FS/" - prefix CRM adds to invoice numbers
-  invoiceNumberSuffix String?   // e.g., "/MCG" - suffix CRM adds to invoice numbers
+  listInvoicesUrl     String? // e.g., "https://crm.example.com/show-faktury-client"
+  invoiceNumberPrefix String? // e.g., "FS/" - prefix CRM adds to invoice numbers
+  invoiceNumberSuffix String? // e.g., "/MCG" - suffix CRM adds to invoice numbers
 
   // Field Mapping (CRM field name -> placeholder template)
-  fieldMapping        Json      @default("{}") // {"company": "{{user.name}}", "nip": "{{user.nip}}"}
-  staticFields        Json?     // Static fields that don't use placeholders {"selectLang": "PL"}
+  fieldMapping Json  @default("{}") // {"company": "{{user.name}}", "nip": "{{user.nip}}"}
+  staticFields Json? // Static fields that don't use placeholders {"selectLang": "PL"}
 
   // Session State (cached)
-  sessionCookies      String?   @db.Text  // Serialized cookies
-  csrfToken           String?   // Current CSRF token
-  sessionExpiresAt    DateTime? // When session expires
+  sessionCookies   String?   @db.Text // Serialized cookies
+  csrfToken        String? // Current CSRF token
+  sessionExpiresAt DateTime? // When session expires
 
   // Relations
-  userId              String
-  user                User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  clients             Client[]
-  tasks               Task[]
+  userId  String
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  clients Client[]
+  tasks   Task[]
 
-  createdAt           DateTime  @default(now())
-  updatedAt           DateTime  @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([userId])
   @@index([userId, isActive])
@@ -122,56 +136,56 @@ model CRMIntegration {
 
 // Client/Company entity - stores all client/buyer information for invoices
 model Client {
-  id                  String    @id @default(uuid())
-  name                String    // Client/company name
-  isActive            Boolean   @default(true)
-  isArchived          Boolean   @default(false)
+  id         String  @id @default(uuid())
+  name       String // Client/company name
+  isActive   Boolean @default(true)
+  isArchived Boolean @default(false)
 
   // Client/Buyer contact info
-  nip                 String?   // Tax ID (NIP in Poland)
-  streetAddress       String?   // Street and building number
-  postcode            String?   // Postal code
-  city                String?   // City
-  country             String?   // Country
-  email               String?   // Primary email
-  billingEmail        String?   // Email for sending invoices (if different)
-  bankAccount         String?   // Client's bank account number
+  nip           String? // Tax ID (NIP in Poland)
+  streetAddress String? // Street and building number
+  postcode      String? // Postal code
+  city          String? // City
+  country       String? // Country
+  email         String? // Primary email
+  billingEmail  String? // Email for sending invoices (if different)
+  bankAccount   String? // Client's bank account number
 
   // CRM integration
-  crmClientId         String?   // Client ID in CRM system
-  crmIntegrationId    String?   // Which CRM integration to use
-  crmIntegration      CRMIntegration? @relation(fields: [crmIntegrationId], references: [id], onDelete: SetNull)
+  crmClientId      String? // Client ID in CRM system
+  crmIntegrationId String? // Which CRM integration to use
+  crmIntegration   CRMIntegration? @relation(fields: [crmIntegrationId], references: [id], onDelete: SetNull)
 
   // Invoice defaults
-  hourlyRate          Decimal?  @db.Decimal(10, 2)
-  hoursWorked         Decimal?  @db.Decimal(10, 2)  // Default hours per invoice
-  fixedMonthlyAmount  Decimal?  @db.Decimal(10, 2)  // Fixed amount instead of rate*hours
-  description         String?   // General description for invoices
-  defaultServiceName  String?   // Default service name for CRM invoices
-  currency            String    @default("USD")
-  defaultLanguage     String    @default("PL")  // PL, EN
-  invoiceTemplate     InvoiceTemplate @default(STANDARD)
+  hourlyRate         Decimal?        @db.Decimal(10, 2)
+  hoursWorked        Decimal?        @db.Decimal(10, 2) // Default hours per invoice
+  fixedMonthlyAmount Decimal?        @db.Decimal(10, 2) // Fixed amount instead of rate*hours
+  description        String? // General description for invoices
+  defaultServiceName String? // Default service name for CRM invoices
+  currency           String          @default("USD")
+  defaultLanguage    String          @default("PL") // PL, EN
+  invoiceTemplate    InvoiceTemplate @default(STANDARD)
 
   // Email template fields
-  emailSubjectTemplate   String?  @db.Text
-  emailBodyTemplate      String?  @db.Text
-  useCustomEmailTemplate Boolean  @default(false)
+  emailSubjectTemplate   String? @db.Text
+  emailBodyTemplate      String? @db.Text
+  useCustomEmailTemplate Boolean @default(false)
 
   // Integrations
-  googleAccountId     String?
-  googleAccount       GoogleAccount? @relation(fields: [googleAccountId], references: [id], onDelete: SetNull)
-  bankAccountId       String?   // Bank account for invoices
-  bankAccountRef      BankAccount? @relation(fields: [bankAccountId], references: [id], onDelete: SetNull)
+  googleAccountId String?
+  googleAccount   GoogleAccount? @relation(fields: [googleAccountId], references: [id], onDelete: SetNull)
+  bankAccountId   String? // Bank account for invoices
+  bankAccountRef  BankAccount?   @relation(fields: [bankAccountId], references: [id], onDelete: SetNull)
 
   // Relations
-  userId              String
-  user                User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  tasks               Task[]
-  invoices            Invoice[]
-  activityLogs        ActivityLog[]
+  userId       String
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tasks        Task[]
+  invoices     Invoice[]
+  activityLogs ActivityLog[]
 
-  createdAt           DateTime  @default(now())
-  updatedAt           DateTime  @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([userId])
   @@index([userId, isActive])
@@ -182,19 +196,19 @@ model Client {
 }
 
 model Task {
-  id            String    @id @default(uuid())
-  type          TaskType  @default(INVOICE)
-  name          String
-  isActive      Boolean   @default(true)
-  isArchived    Boolean   @default(false)
+  id         String   @id @default(uuid())
+  type       TaskType @default(INVOICE)
+  name       String
+  isActive   Boolean  @default(true)
+  isArchived Boolean  @default(false)
 
   // Date fields (for INVOICE type - day of month)
-  warningDate   Int?      // day of month for warning (1-31)
-  deadlineDate  Int?      // day of month for deadline (1-31)
+  warningDate  Int? // day of month for warning (1-31)
+  deadlineDate Int? // day of month for deadline (1-31)
 
   // Client relation (nullable for migration, will be required after data migration)
-  clientId      String?
-  client        Client?   @relation(fields: [clientId], references: [id], onDelete: SetNull)
+  clientId String?
+  client   Client? @relation(fields: [clientId], references: [id], onDelete: SetNull)
 
   // @deprecated - Legacy client fields (moved to Client entity)
   // These will be removed after data migration
@@ -211,47 +225,47 @@ model Task {
   crmIntegrationId    String?
   crmIntegration      CRMIntegration? @relation(fields: [crmIntegrationId], references: [id], onDelete: SetNull)
   clientAddress       String?
-  hourlyRate          Decimal?  @db.Decimal(10, 2)
-  hoursWorked         Decimal?  @db.Decimal(10, 2)
-  fixedMonthlyAmount  Decimal?  @db.Decimal(10, 2)  // Fixed amount instead of rate*hours
+  hourlyRate          Decimal?        @db.Decimal(10, 2)
+  hoursWorked         Decimal?        @db.Decimal(10, 2)
+  fixedMonthlyAmount  Decimal?        @db.Decimal(10, 2) // Fixed amount instead of rate*hours
   description         String?
   defaultServiceName  String?
-  currency            String    @default("USD")
-  defaultLanguage     String    @default("PL")
+  currency            String          @default("USD")
+  defaultLanguage     String          @default("PL")
   invoiceTemplate     InvoiceTemplate @default(STANDARD)
 
   // Reminder-specific data
   scheduleType      ScheduleType?
-  scheduleConfig    Json?         // {"time": "09:00", "daysOfWeek": [1,3,5]} etc.
-  reminderDateTime  DateTime?     // For ONE_TIME reminders
-  reminderWarning   Int?          // Minutes before to warn
-  reminderDeadline  Int?          // Minutes after which it's overdue
-  nextOccurrence    DateTime?     // Calculated next trigger time
-  lastTriggered     DateTime?     // Last time reminder was triggered
-  reminderTitle     String?       // Title for the reminder notification
+  scheduleConfig    Json? // {"time": "09:00", "daysOfWeek": [1,3,5]} etc.
+  reminderDateTime  DateTime? // For ONE_TIME reminders
+  reminderWarning   Int? // Minutes before to warn
+  reminderDeadline  Int? // Minutes after which it's overdue
+  nextOccurrence    DateTime? // Calculated next trigger time
+  lastTriggered     DateTime? // Last time reminder was triggered
+  reminderTitle     String? // Title for the reminder notification
   reminderMessage   String?       @db.Text // Message/description for reminder
-  notificationEmail String?       // Custom email for notifications (if different from user's email)
+  notificationEmail String? // Custom email for notifications (if different from user's email)
 
   // Google account for Gmail drafts
-  googleAccountId   String?
-  googleAccount     GoogleAccount? @relation(fields: [googleAccountId], references: [id], onDelete: SetNull)
+  googleAccountId String?
+  googleAccount   GoogleAccount? @relation(fields: [googleAccountId], references: [id], onDelete: SetNull)
 
   // Bank account for invoices (determines currency and CRM requisites)
-  bankAccountId     String?
-  bankAccount       BankAccount? @relation(fields: [bankAccountId], references: [id], onDelete: SetNull)
+  bankAccountId String?
+  bankAccount   BankAccount? @relation(fields: [bankAccountId], references: [id], onDelete: SetNull)
 
   // Email template fields for custom invoice emails
-  emailSubjectTemplate   String?  @db.Text  // Custom subject template with placeholders
-  emailBodyTemplate      String?  @db.Text  // Custom body template with placeholders
-  useCustomEmailTemplate Boolean  @default(false)
+  emailSubjectTemplate   String? @db.Text // Custom subject template with placeholders
+  emailBodyTemplate      String? @db.Text // Custom body template with placeholders
+  useCustomEmailTemplate Boolean @default(false)
 
   userId        String
-  user          User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
   invoices      Invoice[]
   notifications Notification[]
   activityLogs  ActivityLog[]
-  createdAt     DateTime          @default(now())
-  updatedAt     DateTime          @updatedAt
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
 
   @@index([userId, type])
   @@index([clientId])
@@ -274,28 +288,28 @@ model Invoice {
   emailSubject String?
   emailBody    String?       @db.Text
   comments     String?       @db.Text
-  invoiceMonth Int?          // 0-11 (JavaScript month)
+  invoiceMonth Int? // 0-11 (JavaScript month)
   invoiceYear  Int?
   hoursWorked  Decimal?      @db.Decimal(10, 2)
   hourlyRate   Decimal?      @db.Decimal(10, 2)
-  language     String        @default("PL")  // PL, EN
+  language     String        @default("PL") // PL, EN
   createdByAI  Boolean       @default(false) // True if created via AI assistant
 
   // CRM integration
-  crmInvoiceId String?       // ID of invoice in external CRM system
-  crmSyncedAt  DateTime?     // When invoice was last synced to CRM
-  crmPdfUrl    String?       // URL to PDF in external CRM system
-  crmPdfPath   String?       // Local path to downloaded CRM PDF
+  crmInvoiceId String? // ID of invoice in external CRM system
+  crmSyncedAt  DateTime? // When invoice was last synced to CRM
+  crmPdfUrl    String? // URL to PDF in external CRM system
+  crmPdfPath   String? // Local path to downloaded CRM PDF
 
   taskId       String
-  task         Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
-  clientId     String?  // Direct link to client (nullable for migration)
-  client       Client?  @relation(fields: [clientId], references: [id], onDelete: SetNull)
+  task         Task          @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  clientId     String? // Direct link to client (nullable for migration)
+  client       Client?       @relation(fields: [clientId], references: [id], onDelete: SetNull)
   userId       String
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   activityLogs ActivityLog[]
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @default(now()) @updatedAt
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @default(now()) @updatedAt
 
   @@index([userId])
   @@index([taskId])
@@ -305,23 +319,23 @@ model Invoice {
 }
 
 model Notification {
-  id            String             @id @default(uuid())
-  type          NotificationType
-  status        NotificationStatus @default(PENDING)
-  title         String
-  message       String             @db.Text
-  scheduledFor  DateTime
-  sentAt        DateTime?
-  readAt        DateTime?
-  metadata      Json?              // Additional data for templates etc.
+  id           String             @id @default(uuid())
+  type         NotificationType
+  status       NotificationStatus @default(PENDING)
+  title        String
+  message      String             @db.Text
+  scheduledFor DateTime
+  sentAt       DateTime?
+  readAt       DateTime?
+  metadata     Json? // Additional data for templates etc.
 
-  taskId        String?
-  task          Task?              @relation(fields: [taskId], references: [id], onDelete: Cascade)
-  userId        String
-  user          User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  taskId String?
+  task   Task?   @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  userId String
+  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  createdAt     DateTime           @default(now())
-  updatedAt     DateTime           @default(now()) @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
 
   @@index([userId, status])
   @@index([scheduledFor, status])
@@ -329,20 +343,20 @@ model Notification {
 }
 
 model GoogleAccount {
-  id            String   @id @default(uuid())
-  email         String
-  accessToken   String   @db.Text
-  refreshToken  String   @db.Text
-  expiresAt     DateTime
+  id           String   @id @default(uuid())
+  email        String
+  accessToken  String   @db.Text
+  refreshToken String   @db.Text
+  expiresAt    DateTime
 
-  userId        String
-  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  clients       Client[]
-  tasks         Task[]
+  clients Client[]
+  tasks   Task[]
 
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@unique([userId, email])
   @@index([userId])
@@ -354,12 +368,12 @@ enum TaskType {
 }
 
 enum InvoiceTemplate {
-  STANDARD    // Default professional template
-  MINIMAL     // Clean, simple design
-  MODERN      // Contemporary with accent colors
-  CORPORATE   // Formal business style
-  CREATIVE    // Bold, artistic design
-  ELEGANT     // Sophisticated serif typography
+  STANDARD // Default professional template
+  MINIMAL // Clean, simple design
+  MODERN // Contemporary with accent colors
+  CORPORATE // Formal business style
+  CREATIVE // Bold, artistic design
+  ELEGANT // Sophisticated serif typography
 }
 
 enum ScheduleType {
@@ -420,18 +434,18 @@ enum ActionStatus {
 
 // Integration Settings (global, app-level - Google, etc.)
 model IntegrationSettings {
-  id                  String   @id @default(uuid())
+  id String @id @default(uuid())
 
   // Google OAuth credentials
-  googleClientId      String?  @db.Text
-  googleClientSecret  String?  @db.Text
-  googleRedirectUri   String?  @db.Text
+  googleClientId     String? @db.Text
+  googleClientSecret String? @db.Text
+  googleRedirectUri  String? @db.Text
 
   // Status
-  googleEnabled       Boolean  @default(false)
+  googleEnabled Boolean @default(false)
 
-  createdAt           DateTime @default(now())
-  updatedAt           DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 // AI Chat Settings (global, app-level)
@@ -443,29 +457,29 @@ model AIChatSettings {
   temperature Float      @default(0.7)
 
   // API Keys (stored encrypted or plain - admin responsible for security)
-  claudeApiKey  String?    @db.Text  // Anthropic API key
-  openaiApiKey  String?    @db.Text  // OpenAI API key (for future use)
+  claudeApiKey String? @db.Text // Anthropic API key
+  openaiApiKey String? @db.Text // OpenAI API key (for future use)
 
   // Status
-  isActive      Boolean    @default(true)
+  isActive Boolean @default(true)
 
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 // Chat conversation session
 model ChatConversation {
-  id       String        @id @default(uuid())
-  userId   String
-  user     User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id     String @id @default(uuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   title    String?
-  isActive Boolean       @default(true)
+  isActive Boolean @default(true)
 
   messages ChatMessage[]
 
-  createdAt DateTime     @default(now())
-  updatedAt DateTime     @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([userId, isActive])
   @@index([userId, updatedAt])
@@ -477,60 +491,60 @@ model ChatMessage {
   conversationId String
   conversation   ChatConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
 
-  role           ChatRole
-  content        String           @db.Text
+  role    ChatRole
+  content String   @db.Text
 
-  toolCalls      Json?            // Array of tool calls made by assistant
-  toolCallId     String?          // If this is a tool result message
+  toolCalls  Json? // Array of tool calls made by assistant
+  toolCallId String? // If this is a tool result message
 
-  tokenCount     Int?
-  processingMs   Int?             // Response time in milliseconds
+  tokenCount   Int?
+  processingMs Int? // Response time in milliseconds
 
-  createdAt      DateTime         @default(now())
+  createdAt DateTime @default(now())
 
   @@index([conversationId, createdAt])
 }
 
 // Pending action awaiting user confirmation
 model ChatPendingAction {
-  id             String       @id @default(uuid())
+  id             String @id @default(uuid())
   conversationId String
   messageId      String
 
-  toolName       String
-  toolArgs       Json
-  toolCallId     String?      // Original Claude API tool_use_id for proper message pairing
-  status         ActionStatus @default(PENDING)
+  toolName   String
+  toolArgs   Json
+  toolCallId String? // Original Claude API tool_use_id for proper message pairing
+  status     ActionStatus @default(PENDING)
 
-  expiresAt      DateTime
-  resolvedAt     DateTime?
+  expiresAt  DateTime
+  resolvedAt DateTime?
 
-  createdAt      DateTime     @default(now())
+  createdAt DateTime @default(now())
 
   @@index([conversationId, status])
 }
 
 // Activity Log for tracking all entity changes
 model ActivityLog {
-  id           String       @id @default(uuid())
-  entityType   EntityType
-  entityId     String
-  action       ActionType
+  id         String     @id @default(uuid())
+  entityType EntityType
+  entityId   String
+  action     ActionType
 
-  changes      Json?        // { field: { oldValue, newValue } }
-  metadata     Json?        // { triggerSource, crmInvoiceId, etc }
+  changes  Json? // { field: { oldValue, newValue } }
+  metadata Json? // { triggerSource, crmInvoiceId, etc }
 
-  userId       String
-  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  clientId     String?
-  client       Client?      @relation(fields: [clientId], references: [id], onDelete: SetNull)
-  taskId       String?
-  task         Task?        @relation(fields: [taskId], references: [id], onDelete: SetNull)
-  invoiceId    String?
-  invoice      Invoice?     @relation(fields: [invoiceId], references: [id], onDelete: SetNull)
+  clientId  String?
+  client    Client?  @relation(fields: [clientId], references: [id], onDelete: SetNull)
+  taskId    String?
+  task      Task?    @relation(fields: [taskId], references: [id], onDelete: SetNull)
+  invoiceId String?
+  invoice   Invoice? @relation(fields: [invoiceId], references: [id], onDelete: SetNull)
 
-  createdAt    DateTime     @default(now())
+  createdAt DateTime @default(now())
 
   @@index([entityType, entityId])
   @@index([clientId])
@@ -569,16 +583,16 @@ enum ActionType {
 // ============================================
 
 enum TaxForm {
-  LINIOWY       // 19% flat tax
-  SKALA         // Progressive 12%/32%
-  RYCZALT       // Lump sum (12% for IT)
+  LINIOWY // 19% flat tax
+  SKALA // Progressive 12%/32%
+  RYCZALT // Lump sum (12% for IT)
 }
 
 enum ZUSType {
-  STANDARD      // Full ZUS (~1600 PLN/month)
+  STANDARD // Full ZUS (~1600 PLN/month)
   MALY_ZUS_PLUS // First 2 years (~400 PLN/month)
   PREFERENCYJNY // First 6 months (~300 PLN/month)
-  CUSTOM        // Custom amount
+  CUSTOM // Custom amount
 }
 
 enum ExpenseCategory {
@@ -599,80 +613,80 @@ enum ExpenseCategory {
 }
 
 enum ExpenseType {
-  BUSINESS    // Business expenses (tax deductible)
-  PERSONAL    // Personal expenses (not tax deductible)
+  BUSINESS // Business expenses (tax deductible)
+  PERSONAL // Personal expenses (not tax deductible)
 }
 
 // User's B2B tax configuration
 model TaxSettings {
-  id                String   @id @default(uuid())
+  id String @id @default(uuid())
 
   // Tax form selection
-  taxForm           TaxForm  @default(LINIOWY)
+  taxForm TaxForm @default(LINIOWY)
 
   // ZUS configuration
-  zusType           ZUSType  @default(STANDARD)
-  zusStartDate      DateTime?  // When ZUS preference started (for tracking eligibility)
-  customZusAmount   Decimal?   @db.Decimal(10, 2)  // For custom ZUS amount
+  zusType         ZUSType   @default(STANDARD)
+  zusStartDate    DateTime? // When ZUS preference started (for tracking eligibility)
+  customZusAmount Decimal?  @db.Decimal(10, 2) // For custom ZUS amount
 
   // Health insurance configuration
-  healthInsuranceBase Decimal? @db.Decimal(10, 2)  // Custom base for health insurance
+  healthInsuranceBase Decimal? @db.Decimal(10, 2) // Custom base for health insurance
 
   // Ryczalt-specific settings
-  ryczaltRate       Decimal    @default(12) @db.Decimal(5, 2)  // Default 12% for IT
+  ryczaltRate Decimal @default(12) @db.Decimal(5, 2) // Default 12% for IT
 
   // Fiscal year settings
-  fiscalYearStart   Int        @default(1)  // Month (1-12)
+  fiscalYearStart Int @default(1) // Month (1-12)
 
-  userId            String     @unique
-  user              User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  createdAt         DateTime   @default(now())
-  updatedAt         DateTime   @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 // Expense tracking for tax deductions
 model Expense {
-  id                String          @id @default(uuid())
+  id String @id @default(uuid())
 
   // Core expense data
-  name              String
-  description       String?         @db.Text
-  category          ExpenseCategory
-  expenseType       ExpenseType     @default(BUSINESS)  // Business or Personal
-  amount            Decimal         @db.Decimal(10, 2)
-  currency          String          @default("PLN")
-  amountPLN         Decimal         @db.Decimal(10, 2)  // Converted amount in PLN
+  name        String
+  description String?         @db.Text
+  category    ExpenseCategory
+  expenseType ExpenseType     @default(BUSINESS) // Business or Personal
+  amount      Decimal         @db.Decimal(10, 2)
+  currency    String          @default("PLN")
+  amountPLN   Decimal         @db.Decimal(10, 2) // Converted amount in PLN
 
   // Date tracking
-  expenseDate       DateTime
-  expenseMonth      Int             // 1-12
-  expenseYear       Int
+  expenseDate  DateTime
+  expenseMonth Int // 1-12
+  expenseYear  Int
 
   // VAT handling
-  vatRate           Decimal?        @db.Decimal(5, 2)   // 0, 5, 8, 23
-  vatAmount         Decimal?        @db.Decimal(10, 2)
-  netAmount         Decimal         @db.Decimal(10, 2)  // Amount without VAT
+  vatRate   Decimal? @db.Decimal(5, 2) // 0, 5, 8, 23
+  vatAmount Decimal? @db.Decimal(10, 2)
+  netAmount Decimal  @db.Decimal(10, 2) // Amount without VAT
 
   // Document reference
-  documentNumber    String?
-  documentPath      String?         // Receipt/invoice PDF
+  documentNumber String?
+  documentPath   String? // Receipt/invoice PDF
 
   // Tax deductibility
-  isDeductible      Boolean         @default(true)
-  deductiblePercent Decimal         @default(100) @db.Decimal(5, 2)  // Some expenses partially deductible
+  isDeductible      Boolean @default(true)
+  deductiblePercent Decimal @default(100) @db.Decimal(5, 2) // Some expenses partially deductible
 
   // Foreign currency conversion
-  originalCurrency  String?
-  originalAmount    Decimal?        @db.Decimal(10, 2)
-  exchangeRate      Decimal?        @db.Decimal(10, 6)
-  exchangeRateDate  DateTime?
+  originalCurrency String?
+  originalAmount   Decimal?  @db.Decimal(10, 2)
+  exchangeRate     Decimal?  @db.Decimal(10, 6)
+  exchangeRateDate DateTime?
 
-  userId            String
-  user              User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  createdAt         DateTime        @default(now())
-  updatedAt         DateTime        @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([userId, expenseMonth, expenseYear])
   @@index([userId, category])
@@ -682,12 +696,432 @@ model Expense {
 
 // Cached exchange rates from NBP
 model ExchangeRateCache {
-  id          String   @id @default(uuid())
-  currency    String   // USD, EUR, GBP, etc.
-  rate        Decimal  @db.Decimal(10, 6)
-  rateDate    DateTime // The date for which the rate applies
-  fetchedAt   DateTime @default(now())
+  id        String   @id @default(uuid())
+  currency  String // USD, EUR, GBP, etc.
+  rate      Decimal  @db.Decimal(10, 6)
+  rateDate  DateTime // The date for which the rate applies
+  fetchedAt DateTime @default(now())
 
   @@unique([currency, rateDate])
   @@index([currency, rateDate])
+}
+
+// ============================================
+// Business Finance Tracking Module
+// Multi-tenant workspace with RBAC, expenses, income, and analytics
+// ============================================
+
+// Business/Workspace - the multi-tenant boundary
+model Business {
+  id          String  @id @default(uuid())
+  name        String
+  description String? @db.Text
+
+  // Settings
+  currency String @default("USD") // Fixed currency for v1
+  timezone String @default("UTC") // Business timezone for display
+
+  // Status
+  isArchived Boolean @default(false)
+
+  // Relations
+  memberships BusinessMembership[]
+  categories  BusinessCategory[]
+  expenses    BusinessExpense[]
+  incomes     BusinessIncome[]
+  settlements BusinessSettlement[]
+  invites     BusinessInvite[]
+  auditLogs   BusinessAuditLog[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([isArchived])
+}
+
+// Business membership - links users to businesses with roles
+model BusinessMembership {
+  id String @id @default(uuid())
+
+  // Relations
+  businessId String
+  business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Role and permissions
+  role BusinessRole @default(EMPLOYEE)
+
+  // Granular permission overrides (null = use role defaults)
+  permissions Json? // { "canViewAllTransactions": true, "canExportData": false, etc. }
+
+  // Status
+  isActive Boolean @default(true)
+
+  // For tracking who added/invited this member
+  invitedById String?
+  invitedBy   User?   @relation("InvitedMemberships", fields: [invitedById], references: [id], onDelete: SetNull)
+
+  // Relations to expenses/income where this member is attributed
+  expensesPaid    BusinessExpense[]    @relation("ExpensesPaidBy")
+  incomesReceived BusinessIncome[]     @relation("IncomesReceivedBy")
+  settlements     BusinessSettlement[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([businessId, userId])
+  @@index([businessId])
+  @@index([userId])
+  @@index([businessId, role])
+}
+
+// Business roles enum
+enum BusinessRole {
+  OWNER // Full access, can delete business
+  CO_OWNER // Almost full access, cannot delete business
+  ADMIN // Manage finance + view analytics; limited member/role ops
+  ACCOUNTANT // View finance + export; no member/role ops
+  EMPLOYEE // Very limited - only sees own data and salary info
+}
+
+// Business categories for expenses/income
+model BusinessCategory {
+  id String @id @default(uuid())
+
+  businessId String
+  business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  name  String
+  type  CategoryType // EXPENSE or INCOME
+  color String? // Hex color for UI
+  icon  String? // Icon identifier
+
+  // Special flags
+  isSalary  Boolean @default(false) // Salary is a first-class category
+  isDefault Boolean @default(false) // Show as default suggestion
+
+  // Status
+  isArchived Boolean @default(false)
+
+  expenses BusinessExpense[]
+  incomes  BusinessIncome[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([businessId, name, type])
+  @@index([businessId, type])
+  @@index([businessId, isArchived])
+}
+
+enum CategoryType {
+  EXPENSE
+  INCOME
+}
+
+// Business Expense record
+model BusinessExpense {
+  id String @id @default(uuid())
+
+  businessId String
+  business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  // Category
+  categoryId String
+  category   BusinessCategory @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+
+  // Core expense data
+  amount      Decimal @db.Decimal(15, 2) // Decimal-safe monetary value
+  description String? @db.Text
+  note        String? @db.Text
+
+  // Date/time
+  transactionDate DateTime
+
+  // Attribution: Who covered this expense?
+  // If paidByMemberId is set -> out-of-pocket by that member (business owes member)
+  // If null -> paid from business budget
+  paidByMemberId String?
+  paidByMember   BusinessMembership? @relation("ExpensesPaidBy", fields: [paidByMemberId], references: [id], onDelete: SetNull)
+
+  // Optional metadata
+  counterparty String? // Vendor/employee name
+  tags         String[] // Array of tags
+
+  // Attachments (stored in separate model for multiple files)
+  attachments BusinessAttachment[]
+
+  // Soft delete
+  isDeleted Boolean   @default(false)
+  deletedAt DateTime?
+
+  // Who created/modified
+  createdById String
+  createdBy   User    @relation("ExpensesCreatedBy", fields: [createdById], references: [id], onDelete: Restrict)
+  updatedById String?
+  updatedBy   User?   @relation("ExpensesUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([businessId, transactionDate])
+  @@index([businessId, categoryId])
+  @@index([businessId, paidByMemberId])
+  @@index([businessId, isDeleted])
+  @@index([createdById])
+}
+
+// Business Income record
+model BusinessIncome {
+  id String @id @default(uuid())
+
+  businessId String
+  business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  // Category
+  categoryId String
+  category   BusinessCategory @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+
+  // Core income data
+  amount      Decimal @db.Decimal(15, 2) // Decimal-safe monetary value
+  description String? @db.Text
+  note        String? @db.Text
+
+  // Date/time
+  transactionDate DateTime
+
+  // Attribution: Who received this income?
+  // If receivedByMemberId is set -> received personally by that member (member owes business)
+  // If null -> received by business directly
+  receivedByMemberId String?
+  receivedByMember   BusinessMembership? @relation("IncomesReceivedBy", fields: [receivedByMemberId], references: [id], onDelete: SetNull)
+
+  // Optional metadata
+  counterparty String? // Client/payer name
+  tags         String[] // Array of tags
+
+  // Attachments
+  attachments BusinessAttachment[]
+
+  // Soft delete
+  isDeleted Boolean   @default(false)
+  deletedAt DateTime?
+
+  // Who created/modified
+  createdById String
+  createdBy   User    @relation("IncomesCreatedBy", fields: [createdById], references: [id], onDelete: Restrict)
+  updatedById String?
+  updatedBy   User?   @relation("IncomesUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([businessId, transactionDate])
+  @@index([businessId, categoryId])
+  @@index([businessId, receivedByMemberId])
+  @@index([businessId, isDeleted])
+  @@index([createdById])
+}
+
+// Attachments for expenses/income
+model BusinessAttachment {
+  id String @id @default(uuid())
+
+  // Can be attached to expense or income (one of these must be set)
+  expenseId    String?
+  expense      BusinessExpense?    @relation(fields: [expenseId], references: [id], onDelete: Cascade)
+  incomeId     String?
+  income       BusinessIncome?     @relation(fields: [incomeId], references: [id], onDelete: Cascade)
+  settlementId String?
+  settlement   BusinessSettlement? @relation(fields: [settlementId], references: [id], onDelete: Cascade)
+
+  // File info
+  filename     String
+  originalName String
+  mimeType     String
+  size         Int // File size in bytes
+  storagePath  String // Path in storage (S3/R2)
+
+  // Who uploaded
+  uploadedById String
+  uploadedBy   User   @relation(fields: [uploadedById], references: [id], onDelete: Restrict)
+
+  createdAt DateTime @default(now())
+
+  @@index([expenseId])
+  @@index([incomeId])
+  @@index([settlementId])
+}
+
+// Settlement/Reimbursement transaction
+model BusinessSettlement {
+  id String @id @default(uuid())
+
+  businessId String
+  business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  // Settlement amount (positive = transfer in this direction)
+  amount Decimal @db.Decimal(15, 2)
+
+  // Direction
+  settlementType SettlementType
+
+  // Parties involved
+  memberId String
+  member   BusinessMembership @relation(fields: [memberId], references: [id], onDelete: Restrict)
+
+  // Details
+  note String? @db.Text
+
+  // Settlement date
+  settlementDate DateTime
+
+  // Attachments (e.g., receipt of transfer)
+  attachments BusinessAttachment[]
+
+  // Who created
+  createdById String
+  createdBy   User   @relation(fields: [createdById], references: [id], onDelete: Restrict)
+
+  createdAt DateTime @default(now())
+
+  @@index([businessId, settlementDate])
+  @@index([businessId, memberId])
+}
+
+enum SettlementType {
+  BUSINESS_TO_MEMBER // Reimbursement: business pays member
+  MEMBER_TO_BUSINESS // Repayment: member pays business
+}
+
+// Business invites
+model BusinessInvite {
+  id String @id @default(uuid())
+
+  businessId String
+  business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  // Invite details
+  email String? // For email invites
+  token String  @unique // Secure random token for link invites
+
+  // Role to assign on acceptance
+  assignedRole BusinessRole @default(EMPLOYEE)
+
+  // Security settings
+  expiresAt   DateTime
+  isRevoked   Boolean  @default(false)
+  isSingleUse Boolean  @default(true)
+  usedCount   Int      @default(0)
+
+  // Status
+  status           InviteStatus @default(PENDING)
+  acceptedAt       DateTime?
+  acceptedByUserId String?
+  acceptedByUser   User?        @relation("AcceptedInvites", fields: [acceptedByUserId], references: [id], onDelete: SetNull)
+
+  // Who created
+  createdById String
+  createdBy   User   @relation("CreatedInvites", fields: [createdById], references: [id], onDelete: Restrict)
+
+  createdAt DateTime @default(now())
+
+  @@index([businessId])
+  @@index([token])
+  @@index([email])
+  @@index([status])
+}
+
+enum InviteStatus {
+  PENDING
+  ACCEPTED
+  REVOKED
+  EXPIRED
+}
+
+// Business Audit Log - immutable history
+model BusinessAuditLog {
+  id String @id @default(uuid())
+
+  businessId String
+  business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  // What happened
+  action     BusinessAuditAction
+  entityType BusinessEntityType
+  entityId   String?
+
+  // Changes (for updates)
+  changes Json? // { field: { oldValue, newValue } }
+
+  // Additional context
+  metadata Json? // { ipAddress, userAgent, etc. }
+
+  // Who performed the action
+  performedById String
+  performedBy   User   @relation(fields: [performedById], references: [id], onDelete: Restrict)
+
+  createdAt DateTime @default(now())
+
+  // Immutable - no updatedAt
+
+  @@index([businessId, createdAt])
+  @@index([businessId, action])
+  @@index([businessId, entityType, entityId])
+  @@index([performedById])
+}
+
+enum BusinessAuditAction {
+  // Business
+  BUSINESS_CREATED
+  BUSINESS_UPDATED
+  BUSINESS_ARCHIVED
+  BUSINESS_UNARCHIVED
+
+  // Members
+  MEMBER_INVITED
+  MEMBER_ACCEPTED
+  MEMBER_ROLE_CHANGED
+  MEMBER_PERMISSIONS_CHANGED
+  MEMBER_REMOVED
+  MEMBER_DEACTIVATED
+  MEMBER_REACTIVATED
+
+  // Categories
+  CATEGORY_CREATED
+  CATEGORY_UPDATED
+  CATEGORY_ARCHIVED
+
+  // Expenses
+  EXPENSE_CREATED
+  EXPENSE_UPDATED
+  EXPENSE_DELETED
+
+  // Income
+  INCOME_CREATED
+  INCOME_UPDATED
+  INCOME_DELETED
+
+  // Attachments
+  ATTACHMENT_ADDED
+  ATTACHMENT_REMOVED
+
+  // Settlements
+  SETTLEMENT_CREATED
+
+  // Invites
+  INVITE_CREATED
+  INVITE_REVOKED
+}
+
+enum BusinessEntityType {
+  BUSINESS
+  MEMBERSHIP
+  CATEGORY
+  EXPENSE
+  INCOME
+  ATTACHMENT
+  SETTLEMENT
+  INVITE
 }

@@ -1,27 +1,28 @@
 import { Component, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { TranslateModule } from '@ngx-translate/core';
 import { CRMIntegrationService, CRMIntegration, ParsedCurlField, PlaceholderInfo } from '../../../core/services/crm-integration.service';
 import { NotificationService } from '../../../core/services/notification.service';
 
 @Component({
   selector: 'app-crm-settings',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, TranslateModule],
   template: `
     <div class="crm-settings">
       <!-- Page Header -->
       <div class="page-header">
         <div class="page-header__content">
-          <h1 class="page-title">CRM Integrations</h1>
-          <p class="page-description">Connect external CRM systems to automatically sync invoices</p>
+          <h1 class="page-title">{{ 'settings.crm.title' | translate }}</h1>
+          <p class="page-description">{{ 'settings.crm.subtitle' | translate }}</p>
         </div>
         <button class="btn btn--primary" (click)="openAddModal()">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <line x1="12" y1="5" x2="12" y2="19"/>
             <line x1="5" y1="12" x2="19" y2="12"/>
           </svg>
-          Add Integration
+          {{ 'settings.crm.addIntegration' | translate }}
         </button>
       </div>
 
@@ -30,7 +31,7 @@ import { NotificationService } from '../../../core/services/notification.service
         @if (isLoading()) {
           <div class="loading-state">
             <div class="loading-spinner"></div>
-            <span>Loading integrations...</span>
+            <span>{{ 'settings.crm.loading' | translate }}</span>
           </div>
         } @else if (integrations().length === 0) {
           <div class="empty-state">
@@ -41,16 +42,16 @@ import { NotificationService } from '../../../core/services/notification.service
                 <path d="M2 12l10 5 10-5"/>
               </svg>
             </div>
-            <h3 class="empty-state__title">No CRM integrations yet</h3>
+            <h3 class="empty-state__title">{{ 'settings.crm.empty.title' | translate }}</h3>
             <p class="empty-state__description">
-              Add your first CRM integration to automatically sync invoices to your accounting system.
+              {{ 'settings.crm.empty.description' | translate }}
             </p>
             <button class="btn btn--primary btn--lg" (click)="openAddModal()">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <line x1="12" y1="5" x2="12" y2="19"/>
                 <line x1="5" y1="12" x2="19" y2="12"/>
               </svg>
-              Add Your First Integration
+              {{ 'settings.crm.empty.addFirst' | translate }}
             </button>
           </div>
         } @else {
@@ -71,7 +72,7 @@ import { NotificationService } from '../../../core/services/notification.service
                   </div>
                   <div class="integration-card__status" [class.integration-card__status--active]="integration.isActive">
                     <span class="status-dot"></span>
-                    {{ integration.isActive ? 'Active' : 'Inactive' }}
+                    {{ integration.isActive ? ('common.active' | translate) : ('common.inactive' | translate) }}
                   </div>
                 </div>
 
@@ -182,7 +183,7 @@ import { NotificationService } from '../../../core/services/notification.service
         <div class="modal-overlay" (click)="closeModal()">
           <div class="modal" (click)="$event.stopPropagation()">
             <div class="modal__header">
-              <h2 class="modal__title">{{ editingIntegration() ? 'Edit Integration' : 'Add Integration' }}</h2>
+              <h2 class="modal__title">{{ editingIntegration() ? ('settings.crm.modal.editTitle' | translate) : ('settings.crm.modal.addTitle' | translate) }}</h2>
               <button class="modal__close" (click)="closeModal()">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <line x1="18" y1="6" x2="6" y2="18"/>
@@ -194,9 +195,9 @@ import { NotificationService } from '../../../core/services/notification.service
             <form [formGroup]="form" (ngSubmit)="saveIntegration()" class="modal__body">
               <!-- Basic Info -->
               <section class="form-section">
-                <h3 class="form-section__title">Basic Information</h3>
+                <h3 class="form-section__title">{{ 'settings.crm.form.basicInfo' | translate }}</h3>
                 <div class="form-group">
-                  <label class="form-label">Integration Name *</label>
+                  <label class="form-label">{{ 'settings.crm.form.integrationName' | translate }} *</label>
                   <input
                     type="text"
                     formControlName="name"
@@ -208,16 +209,16 @@ import { NotificationService } from '../../../core/services/notification.service
                   <label class="checkbox-label">
                     <input type="checkbox" formControlName="isActive" class="checkbox-input" />
                     <span class="checkbox-custom"></span>
-                    Integration is active
+                    {{ 'settings.crm.form.isActive' | translate }}
                   </label>
                 </div>
               </section>
 
               <!-- Login Configuration -->
               <section class="form-section">
-                <h3 class="form-section__title">Login Configuration</h3>
+                <h3 class="form-section__title">{{ 'settings.crm.form.loginConfig' | translate }}</h3>
                 <div class="form-group">
-                  <label class="form-label">Login URL *</label>
+                  <label class="form-label">{{ 'settings.crm.form.loginUrl' | translate }} *</label>
                   <input
                     type="text"
                     formControlName="loginUrl"
@@ -227,44 +228,44 @@ import { NotificationService } from '../../../core/services/notification.service
                 </div>
                 <div class="form-row">
                   <div class="form-group">
-                    <label class="form-label">Email *</label>
+                    <label class="form-label">{{ 'settings.crm.form.email' | translate }} *</label>
                     <input
                       type="email"
                       formControlName="email"
                       class="form-input"
-                      placeholder="CRM login email"
+                      [placeholder]="'settings.crm.form.emailPlaceholder' | translate"
                     />
                   </div>
                   <div class="form-group">
-                    <label class="form-label">Password {{ editingIntegration() ? '' : '*' }}</label>
+                    <label class="form-label">{{ 'settings.crm.form.password' | translate }} {{ editingIntegration() ? '' : '*' }}</label>
                     <input
                       type="password"
                       formControlName="password"
                       class="form-input"
-                      [placeholder]="editingIntegration() ? 'Leave empty to keep current' : 'CRM password'"
+                      [placeholder]="editingIntegration() ? ('settings.crm.form.passwordKeep' | translate) : ('settings.crm.form.passwordPlaceholder' | translate)"
                     />
                   </div>
                 </div>
                 <div class="form-row">
                   <div class="form-group">
-                    <label class="form-label">CSRF Selector</label>
+                    <label class="form-label">{{ 'settings.crm.form.csrfSelector' | translate }}</label>
                     <input
                       type="text"
                       formControlName="csrfSelector"
                       class="form-input"
                       placeholder="meta[name='csrf-token']"
                     />
-                    <span class="form-hint">CSS selector to extract CSRF token</span>
+                    <span class="form-hint">{{ 'settings.crm.form.csrfSelectorHint' | translate }}</span>
                   </div>
                   <div class="form-group">
-                    <label class="form-label">CSRF Header</label>
+                    <label class="form-label">{{ 'settings.crm.form.csrfHeader' | translate }}</label>
                     <input
                       type="text"
                       formControlName="csrfHeader"
                       class="form-input"
                       placeholder="X-XSRF-TOKEN"
                     />
-                    <span class="form-hint">Header name for CSRF token</span>
+                    <span class="form-hint">{{ 'settings.crm.form.csrfHeaderHint' | translate }}</span>
                   </div>
                 </div>
               </section>
@@ -276,9 +277,9 @@ import { NotificationService } from '../../../core/services/notification.service
                     <polyline points="4 17 10 11 4 5"/>
                     <line x1="12" y1="19" x2="20" y2="19"/>
                   </svg>
-                  Quick Setup from cURL
+                  {{ 'settings.crm.form.curlSetup' | translate }}
                 </h3>
-                <p class="form-section__hint">Paste a cURL command from your CRM's invoice creation request</p>
+                <p class="form-section__hint">{{ 'settings.crm.form.curlSetupHint' | translate }}</p>
                 <div class="form-group">
                   <textarea
                     formControlName="curlCommand"
@@ -295,22 +296,22 @@ import { NotificationService } from '../../../core/services/notification.service
                 >
                   @if (isParsing()) {
                     <span class="btn-spinner"></span>
-                    Parsing...
+                    {{ 'settings.crm.form.parsing' | translate }}
                   } @else {
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                       <polyline points="4 17 10 11 4 5"/>
                       <line x1="12" y1="19" x2="20" y2="19"/>
                     </svg>
-                    Parse cURL
+                    {{ 'settings.crm.form.parseCurl' | translate }}
                   }
                 </button>
               </section>
 
               <!-- Invoice Creation -->
               <section class="form-section">
-                <h3 class="form-section__title">Invoice Creation</h3>
+                <h3 class="form-section__title">{{ 'settings.crm.form.invoiceCreation' | translate }}</h3>
                 <div class="form-group">
-                  <label class="form-label">Create Invoice URL *</label>
+                  <label class="form-label">{{ 'settings.crm.form.createInvoiceUrl' | translate }} *</label>
                   <input
                     type="text"
                     formControlName="createInvoiceUrl"
@@ -330,39 +331,39 @@ import { NotificationService } from '../../../core/services/notification.service
                     <line x1="16" y1="17" x2="8" y2="17"/>
                     <polyline points="10 9 9 9 8 9"/>
                   </svg>
-                  Invoice List & PDF Download
+                  {{ 'settings.crm.form.invoiceListPdf' | translate }}
                 </h3>
-                <p class="form-section__hint">Configure to download invoice PDFs from CRM after creation</p>
+                <p class="form-section__hint">{{ 'settings.crm.form.invoiceListPdfHint' | translate }}</p>
                 <div class="form-group">
-                  <label class="form-label">List Invoices URL</label>
+                  <label class="form-label">{{ 'settings.crm.form.listInvoicesUrl' | translate }}</label>
                   <input
                     type="text"
                     formControlName="listInvoicesUrl"
                     class="form-input"
                     placeholder="https://crm.example.com/show-faktury-client"
                   />
-                  <span class="form-hint">DataTables API endpoint that returns invoice list with PDF links</span>
+                  <span class="form-hint">{{ 'settings.crm.form.listInvoicesUrlHint' | translate }}</span>
                 </div>
                 <div class="form-row">
                   <div class="form-group">
-                    <label class="form-label">Invoice Number Prefix</label>
+                    <label class="form-label">{{ 'settings.crm.form.invoiceNumberPrefix' | translate }}</label>
                     <input
                       type="text"
                       formControlName="invoiceNumberPrefix"
                       class="form-input"
                       placeholder="FS/"
                     />
-                    <span class="form-hint">Prefix CRM adds to invoice numbers</span>
+                    <span class="form-hint">{{ 'settings.crm.form.invoiceNumberPrefixHint' | translate }}</span>
                   </div>
                   <div class="form-group">
-                    <label class="form-label">Invoice Number Suffix</label>
+                    <label class="form-label">{{ 'settings.crm.form.invoiceNumberSuffix' | translate }}</label>
                     <input
                       type="text"
                       formControlName="invoiceNumberSuffix"
                       class="form-input"
                       placeholder="/MCG"
                     />
-                    <span class="form-hint">Suffix CRM adds to invoice numbers</span>
+                    <span class="form-hint">{{ 'settings.crm.form.invoiceNumberSuffixHint' | translate }}</span>
                   </div>
                 </div>
               </section>
@@ -376,14 +377,14 @@ import { NotificationService } from '../../../core/services/notification.service
                       <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
                       <line x1="12" y1="22.08" x2="12" y2="12"/>
                     </svg>
-                    Parsed Fields
+                    {{ 'settings.crm.form.parsedFields' | translate }}
                   </h3>
-                  <p class="form-section__hint">Map CRM fields to invoice data using placeholders</p>
+                  <p class="form-section__hint">{{ 'settings.crm.form.parsedFieldsHint' | translate }}</p>
                   <div class="parsed-fields-table">
                     <div class="parsed-fields-header">
-                      <span>Field Name</span>
-                      <span>Value</span>
-                      <span>Placeholder</span>
+                      <span>{{ 'settings.crm.form.fieldName' | translate }}</span>
+                      <span>{{ 'settings.crm.form.fieldValue' | translate }}</span>
+                      <span>{{ 'settings.crm.form.placeholder' | translate }}</span>
                     </div>
                     @for (field of parsedFields(); track field.name) {
                       <div class="parsed-field-row">
@@ -393,7 +394,7 @@ import { NotificationService } from '../../../core/services/notification.service
                           class="form-input form-input--small"
                           (change)="updateFieldPlaceholder(field.name, $any($event.target).value)"
                         >
-                          <option value="" [selected]="!getFieldPlaceholder(field.name)">Static value</option>
+                          <option value="" [selected]="!getFieldPlaceholder(field.name)">{{ 'settings.crm.form.staticValue' | translate }}</option>
                           @for (ph of getPlaceholderKeys(); track ph) {
                             <option [value]="ph" [selected]="getFieldPlaceholder(field.name) === ph">{{ formatPlaceholderLabel(ph) }}</option>
                           }
@@ -406,8 +407,8 @@ import { NotificationService } from '../../../core/services/notification.service
 
               <!-- Field Mapping JSON -->
               <section class="form-section">
-                <h3 class="form-section__title">Field Mapping (JSON)</h3>
-                <p class="form-section__hint">Advanced: Edit field mapping directly</p>
+                <h3 class="form-section__title">{{ 'settings.crm.form.fieldMapping' | translate }}</h3>
+                <p class="form-section__hint">{{ 'settings.crm.form.fieldMappingHint' | translate }}</p>
                 <div class="form-group">
                   <textarea
                     formControlName="fieldMapping"
@@ -420,8 +421,8 @@ import { NotificationService } from '../../../core/services/notification.service
 
               <!-- Static Fields -->
               <section class="form-section">
-                <h3 class="form-section__title">Static Fields (JSON)</h3>
-                <p class="form-section__hint">Fields with constant values for every invoice</p>
+                <h3 class="form-section__title">{{ 'settings.crm.form.staticFields' | translate }}</h3>
+                <p class="form-section__hint">{{ 'settings.crm.form.staticFieldsHint' | translate }}</p>
                 <div class="form-group">
                   <textarea
                     formControlName="staticFields"
@@ -433,7 +434,7 @@ import { NotificationService } from '../../../core/services/notification.service
               </section>
 
               <div class="modal__actions">
-                <button type="button" class="btn btn--ghost" (click)="closeModal()">Cancel</button>
+                <button type="button" class="btn btn--ghost" (click)="closeModal()">{{ 'common.cancel' | translate }}</button>
                 <button
                   type="submit"
                   class="btn btn--primary"
@@ -441,9 +442,9 @@ import { NotificationService } from '../../../core/services/notification.service
                 >
                   @if (isSaving()) {
                     <span class="btn-spinner"></span>
-                    Saving...
+                    {{ 'common.saving' | translate }}
                   } @else {
-                    {{ editingIntegration() ? 'Update' : 'Add' }} Integration
+                    {{ editingIntegration() ? ('settings.crm.modal.update' | translate) : ('settings.crm.modal.add' | translate) }}
                   }
                 </button>
               </div>
@@ -464,16 +465,16 @@ import { NotificationService } from '../../../core/services/notification.service
                   <line x1="12" y1="17" x2="12.01" y2="17"/>
                 </svg>
               </div>
-              <h2 class="modal__title">Delete Integration</h2>
+              <h2 class="modal__title">{{ 'settings.crm.delete.title' | translate }}</h2>
             </div>
             <div class="modal__body">
               <p class="delete-text">
-                Are you sure you want to delete <strong>{{ deletingIntegration()?.name }}</strong>?
+                {{ 'settings.crm.delete.confirm' | translate }} <strong>{{ deletingIntegration()?.name }}</strong>?
               </p>
-              <p class="delete-hint">This will remove the integration. Tasks using it will need to be updated.</p>
+              <p class="delete-hint">{{ 'settings.crm.delete.hint' | translate }}</p>
             </div>
             <div class="modal__actions">
-              <button type="button" class="btn btn--ghost" (click)="cancelDelete()">Cancel</button>
+              <button type="button" class="btn btn--ghost" (click)="cancelDelete()">{{ 'common.cancel' | translate }}</button>
               <button
                 type="button"
                 class="btn btn--danger"
@@ -482,9 +483,9 @@ import { NotificationService } from '../../../core/services/notification.service
               >
                 @if (isDeleting()) {
                   <span class="btn-spinner btn-spinner--white"></span>
-                  Deleting...
+                  {{ 'common.deleting' | translate }}
                 } @else {
-                  Delete Integration
+                  {{ 'settings.crm.delete.button' | translate }}
                 }
               </button>
             </div>

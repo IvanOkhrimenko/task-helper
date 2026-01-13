@@ -1,19 +1,20 @@
 import { Component, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { TranslateModule } from '@ngx-translate/core';
 import { ClientService, Client } from '../../../core/services/client.service';
 import { NotificationService } from '../../../core/services/notification.service';
 
 @Component({
   selector: 'app-client-detail',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, TranslateModule],
   template: `
     <div class="client-detail-page">
       @if (isLoading()) {
         <div class="loading-state">
           <div class="spinner"></div>
-          <p>Loading client...</p>
+          <p>{{ 'clients.detail.loading' | translate }}</p>
         </div>
       } @else if (client()) {
         <!-- Header -->
@@ -23,7 +24,7 @@ import { NotificationService } from '../../../core/services/notification.service
               <line x1="19" y1="12" x2="5" y2="12"/>
               <polyline points="12 19 5 12 12 5"/>
             </svg>
-            Back to Clients
+            {{ 'clients.detail.backToClients' | translate }}
           </a>
 
           <div class="header-main">
@@ -35,10 +36,10 @@ import { NotificationService } from '../../../core/services/notification.service
                 <h1 class="client-name">{{ client()!.name }}</h1>
                 <div class="client-badges">
                   @if (client()!.isArchived) {
-                    <span class="badge badge-archived">Archived</span>
+                    <span class="badge badge-archived">{{ 'clients.archived' | translate }}</span>
                   }
                   @if (!client()!.isActive) {
-                    <span class="badge badge-inactive">Inactive</span>
+                    <span class="badge badge-inactive">{{ 'clients.inactive' | translate }}</span>
                   }
                   @if (client()!.crmIntegration) {
                     <span class="badge badge-crm">CRM: {{ client()!.crmIntegration!.name }}</span>
@@ -53,7 +54,7 @@ import { NotificationService } from '../../../core/services/notification.service
                   <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
                   <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
                 </svg>
-                Edit Client
+                {{ 'clients.detail.editClient' | translate }}
               </a>
               <button class="btn-secondary" (click)="toggleArchive()">
                 @if (client()!.isArchived) {
@@ -61,13 +62,13 @@ import { NotificationService } from '../../../core/services/notification.service
                     <polyline points="1 4 1 10 7 10"/>
                     <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/>
                   </svg>
-                  Unarchive
+                  {{ 'clients.actions.unarchive' | translate }}
                 } @else {
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <polyline points="21 8 21 21 3 21 3 8"/>
                     <rect x="1" y="3" width="22" height="5"/>
                   </svg>
-                  Archive
+                  {{ 'clients.actions.archive' | translate }}
                 }
               </button>
             </div>
@@ -80,35 +81,35 @@ import { NotificationService } from '../../../core/services/notification.service
           <div class="main-column">
             <!-- Contact Info -->
             <section class="detail-card">
-              <h2 class="card-title">Contact Information</h2>
+              <h2 class="card-title">{{ 'clients.detail.contactInfo' | translate }}</h2>
               <div class="info-grid">
                 @if (client()!.email) {
                   <div class="info-item">
-                    <span class="info-label">Email</span>
+                    <span class="info-label">{{ 'clients.form.email' | translate }}</span>
                     <span class="info-value">{{ client()!.email }}</span>
                   </div>
                 }
                 @if (client()!.billingEmail) {
                   <div class="info-item">
-                    <span class="info-label">Billing Email</span>
+                    <span class="info-label">{{ 'clients.form.billingEmail' | translate }}</span>
                     <span class="info-value">{{ client()!.billingEmail }}</span>
                   </div>
                 }
                 @if (client()!.nip) {
                   <div class="info-item">
-                    <span class="info-label">Tax ID (NIP)</span>
+                    <span class="info-label">{{ 'clients.form.taxId' | translate }}</span>
                     <span class="info-value">{{ client()!.nip }}</span>
                   </div>
                 }
                 @if (getFullAddress()) {
                   <div class="info-item full-width">
-                    <span class="info-label">Address</span>
+                    <span class="info-label">{{ 'clients.form.address' | translate }}</span>
                     <span class="info-value">{{ getFullAddress() }}</span>
                   </div>
                 }
                 @if (client()!.bankAccount) {
                   <div class="info-item full-width">
-                    <span class="info-label">Bank Account</span>
+                    <span class="info-label">{{ 'clients.form.bankAccount' | translate }}</span>
                     <span class="info-value monospace">{{ client()!.bankAccount }}</span>
                   </div>
                 }
@@ -117,41 +118,41 @@ import { NotificationService } from '../../../core/services/notification.service
 
             <!-- Invoice Defaults -->
             <section class="detail-card">
-              <h2 class="card-title">Invoice Defaults</h2>
+              <h2 class="card-title">{{ 'clients.detail.invoiceDefaults' | translate }}</h2>
               <div class="info-grid">
                 <div class="info-item">
-                  <span class="info-label">Currency</span>
+                  <span class="info-label">{{ 'clients.detail.currency' | translate }}</span>
                   <span class="info-value">{{ client()!.currency }}</span>
                 </div>
                 <div class="info-item">
-                  <span class="info-label">Language</span>
+                  <span class="info-label">{{ 'clients.detail.language' | translate }}</span>
                   <span class="info-value">{{ client()!.defaultLanguage }}</span>
                 </div>
                 @if (client()!.hourlyRate) {
                   <div class="info-item">
-                    <span class="info-label">Hourly Rate</span>
+                    <span class="info-label">{{ 'clients.detail.hourlyRate' | translate }}</span>
                     <span class="info-value">{{ client()!.currency }} {{ client()!.hourlyRate }}</span>
                   </div>
                 }
                 @if (client()!.hoursWorked) {
                   <div class="info-item">
-                    <span class="info-label">Default Hours</span>
+                    <span class="info-label">{{ 'clients.detail.defaultHours' | translate }}</span>
                     <span class="info-value">{{ client()!.hoursWorked }}</span>
                   </div>
                 }
                 <div class="info-item">
-                  <span class="info-label">Invoice Template</span>
+                  <span class="info-label">{{ 'clients.detail.invoiceTemplate' | translate }}</span>
                   <span class="info-value">{{ client()!.invoiceTemplate }}</span>
                 </div>
                 @if (client()!.defaultServiceName) {
                   <div class="info-item full-width">
-                    <span class="info-label">Default Service</span>
+                    <span class="info-label">{{ 'clients.detail.defaultService' | translate }}</span>
                     <span class="info-value">{{ client()!.defaultServiceName }}</span>
                   </div>
                 }
                 @if (client()!.description) {
                   <div class="info-item full-width">
-                    <span class="info-label">Description</span>
+                    <span class="info-label">{{ 'clients.detail.description' | translate }}</span>
                     <span class="info-value">{{ client()!.description }}</span>
                   </div>
                 }
@@ -161,7 +162,7 @@ import { NotificationService } from '../../../core/services/notification.service
             <!-- Integrations -->
             @if (client()!.crmIntegration || client()!.googleAccount || client()!.bankAccountRef) {
               <section class="detail-card">
-                <h2 class="card-title">Integrations</h2>
+                <h2 class="card-title">{{ 'clients.detail.integrations' | translate }}</h2>
                 <div class="integrations-list">
                   @if (client()!.crmIntegration) {
                     <div class="integration-item">
@@ -174,10 +175,10 @@ import { NotificationService } from '../../../core/services/notification.service
                       </div>
                       <div class="integration-info">
                         <span class="integration-name">{{ client()!.crmIntegration!.name }}</span>
-                        <span class="integration-detail">CRM Client ID: {{ client()!.crmClientId }}</span>
+                        <span class="integration-detail">{{ 'clients.detail.crmClientId' | translate }}: {{ client()!.crmClientId }}</span>
                       </div>
                       <span class="integration-status" [class.active]="client()!.crmIntegration!.isActive">
-                        {{ client()!.crmIntegration!.isActive ? 'Active' : 'Inactive' }}
+                        {{ client()!.crmIntegration!.isActive ? ('clients.active' | translate) : ('clients.inactive' | translate) }}
                       </span>
                     </div>
                   }
@@ -219,9 +220,9 @@ import { NotificationService } from '../../../core/services/notification.service
             <!-- Tasks -->
             <section class="detail-card">
               <div class="card-header-row">
-                <h2 class="card-title">Tasks</h2>
+                <h2 class="card-title">{{ 'clients.detail.tasks' | translate }}</h2>
                 <a [routerLink]="['/tasks/new']" [queryParams]="{clientId: client()!.id}" class="card-action">
-                  + Add Task
+                  + {{ 'clients.detail.addTask' | translate }}
                 </a>
               </div>
               @if (client()!.tasks && client()!.tasks!.length > 0) {
@@ -235,21 +236,21 @@ import { NotificationService } from '../../../core/services/notification.service
                         </span>
                       </a>
                       <span class="task-status" [class.active]="task.isActive">
-                        {{ task.isActive ? 'Active' : 'Inactive' }}
+                        {{ task.isActive ? ('clients.active' | translate) : ('clients.inactive' | translate) }}
                       </span>
                     </li>
                   }
                 </ul>
               } @else {
-                <p class="empty-message">No tasks for this client</p>
+                <p class="empty-message">{{ 'clients.detail.noTasks' | translate }}</p>
               }
             </section>
 
             <!-- Recent Invoices -->
             <section class="detail-card">
               <div class="card-header-row">
-                <h2 class="card-title">Recent Invoices</h2>
-                <a routerLink="/invoices" class="card-action">View All</a>
+                <h2 class="card-title">{{ 'clients.detail.recentInvoices' | translate }}</h2>
+                <a routerLink="/invoices" class="card-action">{{ 'clients.detail.viewAll' | translate }}</a>
               </div>
               @if (client()!.invoices && client()!.invoices!.length > 0) {
                 <ul class="invoices-list">
@@ -266,7 +267,7 @@ import { NotificationService } from '../../../core/services/notification.service
                   }
                 </ul>
               } @else {
-                <p class="empty-message">No invoices yet</p>
+                <p class="empty-message">{{ 'clients.detail.noInvoices' | translate }}</p>
               }
             </section>
 
@@ -274,19 +275,19 @@ import { NotificationService } from '../../../core/services/notification.service
             <section class="detail-card stats-card">
               <div class="quick-stat">
                 <span class="stat-number">{{ client()!._count?.tasks || 0 }}</span>
-                <span class="stat-text">Total Tasks</span>
+                <span class="stat-text">{{ 'clients.detail.totalTasks' | translate }}</span>
               </div>
               <div class="quick-stat">
                 <span class="stat-number">{{ client()!._count?.invoices || 0 }}</span>
-                <span class="stat-text">Total Invoices</span>
+                <span class="stat-text">{{ 'clients.detail.totalInvoices' | translate }}</span>
               </div>
             </section>
           </div>
         </div>
       } @else {
         <div class="error-state">
-          <h2>Client not found</h2>
-          <a routerLink="/clients" class="btn-primary">Back to Clients</a>
+          <h2>{{ 'clients.detail.notFound' | translate }}</h2>
+          <a routerLink="/clients" class="btn-primary">{{ 'clients.detail.backToClients' | translate }}</a>
         </div>
       }
     </div>

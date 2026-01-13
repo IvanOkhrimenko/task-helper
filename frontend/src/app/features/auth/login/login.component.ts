@@ -2,15 +2,20 @@ import { Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink, Router } from '@angular/router';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { AuthService } from '../../../core/services/auth.service';
 import { NotificationService } from '../../../core/services/notification.service';
+import { LanguageSwitcherComponent } from '../../../shared/components/language-switcher/language-switcher.component';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule, RouterLink, ReactiveFormsModule],
+  imports: [CommonModule, RouterLink, ReactiveFormsModule, TranslateModule, LanguageSwitcherComponent],
   template: `
     <div class="auth-page">
+      <div class="language-switcher-wrapper">
+        <app-language-switcher />
+      </div>
       <div class="auth-container">
         <div class="auth-header">
           <div class="auth-logo">
@@ -19,38 +24,38 @@ import { NotificationService } from '../../../core/services/notification.service
               <path d="M12 20L18 26L28 14" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
             </svg>
           </div>
-          <h1 class="auth-title">Welcome back</h1>
-          <p class="auth-subtitle">Sign in to manage your tasks</p>
+          <h1 class="auth-title">{{ 'auth.login.title' | translate }}</h1>
+          <p class="auth-subtitle">{{ 'auth.login.subtitle' | translate }}</p>
         </div>
 
         <form [formGroup]="form" (ngSubmit)="onSubmit()" class="auth-form">
           <div class="form-group">
-            <label for="email" class="form-label">Email</label>
+            <label for="email" class="form-label">{{ 'auth.login.email' | translate }}</label>
             <input
               type="email"
               id="email"
               formControlName="email"
               class="form-input"
-              placeholder="you@example.com"
+              [placeholder]="'auth.login.emailPlaceholder' | translate"
               [class.form-input--error]="form.get('email')?.touched && form.get('email')?.invalid"
             />
             @if (form.get('email')?.touched && form.get('email')?.errors?.['required']) {
-              <span class="form-error">Email is required</span>
+              <span class="form-error">{{ 'auth.validation.emailRequired' | translate }}</span>
             }
             @if (form.get('email')?.touched && form.get('email')?.errors?.['email']) {
-              <span class="form-error">Please enter a valid email</span>
+              <span class="form-error">{{ 'auth.validation.emailInvalid' | translate }}</span>
             }
           </div>
 
           <div class="form-group">
-            <label for="password" class="form-label">Password</label>
+            <label for="password" class="form-label">{{ 'auth.login.password' | translate }}</label>
             <div class="password-wrapper">
               <input
                 [type]="showPassword() ? 'text' : 'password'"
                 id="password"
                 formControlName="password"
                 class="form-input"
-                placeholder="Enter your password"
+                [placeholder]="'auth.login.passwordPlaceholder' | translate"
                 [class.form-input--error]="form.get('password')?.touched && form.get('password')?.invalid"
               />
               <button
@@ -72,7 +77,7 @@ import { NotificationService } from '../../../core/services/notification.service
               </button>
             </div>
             @if (form.get('password')?.touched && form.get('password')?.errors?.['required']) {
-              <span class="form-error">Password is required</span>
+              <span class="form-error">{{ 'auth.validation.passwordRequired' | translate }}</span>
             }
           </div>
 
@@ -83,15 +88,15 @@ import { NotificationService } from '../../../core/services/notification.service
           >
             @if (isLoading()) {
               <span class="btn__spinner"></span>
-              Signing in...
+              {{ 'auth.login.submitting' | translate }}
             } @else {
-              Sign in
+              {{ 'auth.login.submit' | translate }}
             }
           </button>
         </form>
 
         <p class="auth-footer">
-          Don't have an account? <a routerLink="/register">Create one</a>
+          {{ 'auth.login.noAccount' | translate }} <a routerLink="/register">{{ 'auth.login.createOne' | translate }}</a>
         </p>
       </div>
 
@@ -115,6 +120,13 @@ import { NotificationService } from '../../../core/services/notification.service
         radial-gradient(ellipse at 20% 0%, rgba(16, 185, 129, 0.06) 0%, transparent 50%),
         radial-gradient(ellipse at 80% 100%, rgba(16, 185, 129, 0.04) 0%, transparent 50%),
         var(--color-bg);
+    }
+
+    .language-switcher-wrapper {
+      position: absolute;
+      top: var(--space-lg);
+      right: var(--space-lg);
+      z-index: 10;
     }
 
     .auth-container {
@@ -344,6 +356,7 @@ export class LoginComponent {
   private authService = inject(AuthService);
   private router = inject(Router);
   private notificationService = inject(NotificationService);
+  private translateService = inject(TranslateService);
 
   showPassword = signal(false);
   isLoading = signal(false);
@@ -361,7 +374,7 @@ export class LoginComponent {
 
     this.authService.login(email, password).subscribe({
       next: () => {
-        this.notificationService.success('Welcome back!');
+        this.notificationService.success(this.translateService.instant('auth.login.welcomeBack'));
         this.router.navigate(['/dashboard']);
       },
       error: (error) => {

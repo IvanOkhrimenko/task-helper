@@ -1,19 +1,20 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterOutlet, RouterLink, RouterLinkActive, NavigationEnd } from '@angular/router';
+import { TranslateModule } from '@ngx-translate/core';
 import { filter } from 'rxjs';
 
 interface SettingsNavItem {
-  label: string;
+  labelKey: string;
   route: string;
   icon: string;
-  description: string;
+  descriptionKey: string;
 }
 
 @Component({
   selector: 'app-settings-layout',
   standalone: true,
-  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive],
+  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive, TranslateModule],
   template: `
     <div class="settings-layout">
       <!-- Ambient background effects -->
@@ -30,8 +31,8 @@ interface SettingsNavItem {
             </svg>
           </div>
           <div class="sidebar-header__text">
-            <h1 class="sidebar-header__title">Settings</h1>
-            <p class="sidebar-header__subtitle">Manage your preferences</p>
+            <h1 class="sidebar-header__title">{{ 'settings.layout.title' | translate }}</h1>
+            <p class="sidebar-header__subtitle">{{ 'settings.layout.subtitle' | translate }}</p>
           </div>
         </div>
 
@@ -45,8 +46,8 @@ interface SettingsNavItem {
             >
               <span class="nav-item__icon" [innerHTML]="item.icon"></span>
               <div class="nav-item__content">
-                <span class="nav-item__label">{{ item.label }}</span>
-                <span class="nav-item__description">{{ item.description }}</span>
+                <span class="nav-item__label">{{ item.labelKey | translate }}</span>
+                <span class="nav-item__description">{{ item.descriptionKey | translate }}</span>
               </div>
               <span class="nav-item__indicator"></span>
             </a>
@@ -59,7 +60,7 @@ interface SettingsNavItem {
               <line x1="19" y1="12" x2="5" y2="12"/>
               <polyline points="12 19 5 12 12 5"/>
             </svg>
-            Back to Dashboard
+            {{ 'common.backToDashboard' | translate }}
           </a>
         </div>
       </aside>
@@ -68,11 +69,11 @@ interface SettingsNavItem {
       <main class="settings-content">
         <header class="content-header">
           <div class="breadcrumb">
-            <span class="breadcrumb__root">Settings</span>
+            <span class="breadcrumb__root">{{ 'settings.layout.title' | translate }}</span>
             <svg class="breadcrumb__separator" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <polyline points="9 18 15 12 9 6"/>
             </svg>
-            <span class="breadcrumb__current">{{ currentSectionName() }}</span>
+            <span class="breadcrumb__current">{{ currentSectionNameKey() | translate }}</span>
           </div>
         </header>
 
@@ -472,27 +473,27 @@ export class SettingsLayoutComponent {
 
   navItems: SettingsNavItem[] = [
     {
-      label: 'Profile',
+      labelKey: 'settings.nav.profile',
       route: '/settings/profile',
       icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>',
-      description: 'Personal information'
+      descriptionKey: 'settings.nav.profileDescription'
     },
     {
-      label: 'CRM Integrations',
+      labelKey: 'settings.nav.crm',
       route: '/settings/crm',
       icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>',
-      description: 'External CRM systems'
+      descriptionKey: 'settings.nav.crmDescription'
     }
   ];
 
-  sectionNames: Record<string, string> = {
-    '/settings/profile': 'Profile',
-    '/settings/crm': 'CRM Integrations'
+  sectionNameKeys: Record<string, string> = {
+    '/settings/profile': 'settings.nav.profile',
+    '/settings/crm': 'settings.nav.crm'
   };
 
-  currentSectionName = computed(() => {
+  currentSectionNameKey = computed(() => {
     const route = this.currentRoute();
-    return this.sectionNames[route] || 'Settings';
+    return this.sectionNameKeys[route] || 'settings.layout.title';
   });
 
   constructor() {

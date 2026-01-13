@@ -1,17 +1,18 @@
-import { Component, Input, signal, computed } from '@angular/core';
+import { Component, Input, signal, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { ActivityLog, ActionType } from '../../../core/services/activity-log.service';
 
 interface ActionConfig {
   icon: string;
-  label: string;
+  labelKey: string;
   colorClass: string;
 }
 
 @Component({
   selector: 'app-activity-timeline',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, TranslateModule],
   template: `
     <div class="activity-timeline" [class.activity-timeline--empty]="activities().length === 0">
       @if (activities().length === 0) {
@@ -22,8 +23,8 @@ interface ActionConfig {
               <polyline points="12,6 12,12 16,14"/>
             </svg>
           </div>
-          <p class="empty-state__text">No activity yet</p>
-          <p class="empty-state__subtext">All changes will appear here</p>
+          <p class="empty-state__text">{{ 'shared.activityTimeline.noActivity' | translate }}</p>
+          <p class="empty-state__subtext">{{ 'shared.activityTimeline.changesWillAppear' | translate }}</p>
         </div>
       } @else {
         <div class="timeline">
@@ -42,7 +43,7 @@ interface ActionConfig {
                 <div class="timeline-item__header">
                   <div class="timeline-item__action">
                     <span class="timeline-item__icon" [innerHTML]="getActionConfig(activity.action).icon"></span>
-                    <span class="timeline-item__label">{{ getActionConfig(activity.action).label }}</span>
+                    <span class="timeline-item__label">{{ getActionConfig(activity.action).labelKey | translate }}</span>
                   </div>
                   <time class="timeline-item__time" [title]="activity.createdAt">
                     {{ formatRelativeTime(activity.createdAt) }}
@@ -65,7 +66,7 @@ interface ActionConfig {
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                       <polyline points="6,9 12,15 18,9"/>
                     </svg>
-                    <span>{{ expandedItems()[activity.id] ? 'Hide' : 'Show' }} changes ({{ Object.keys(activity.changes).length }})</span>
+                    <span>{{ (expandedItems()[activity.id] ? 'shared.activityTimeline.hideChanges' : 'shared.activityTimeline.showChanges') | translate: { count: Object.keys(activity.changes).length } }}</span>
                   </button>
 
                   @if (expandedItems()[activity.id]) {
@@ -103,7 +104,7 @@ interface ActionConfig {
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                           <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
                         </svg>
-                        CRM: {{ activity.metadata['crmInvoiceId'] }}
+                        {{ 'shared.activityTimeline.crm' | translate }}: {{ activity.metadata['crmInvoiceId'] }}
                       </span>
                     }
                     @if (activity.metadata['clientName']) {
@@ -502,77 +503,77 @@ export class ActivityTimelineComponent {
   private actionConfigs: Record<ActionType, ActionConfig> = {
     CREATED: {
       icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>',
-      label: 'Created',
+      labelKey: 'shared.activityTimeline.actions.created',
       colorClass: 'success'
     },
     UPDATED: {
       icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>',
-      label: 'Updated',
+      labelKey: 'shared.activityTimeline.actions.updated',
       colorClass: 'info'
     },
     DELETED: {
       icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3,6 5,6 21,6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>',
-      label: 'Deleted',
+      labelKey: 'shared.activityTimeline.actions.deleted',
       colorClass: 'danger'
     },
     STATUS_CHANGED: {
       icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/><path d="M12 6v6l4 2"/></svg>',
-      label: 'Status changed',
+      labelKey: 'shared.activityTimeline.actions.statusChanged',
       colorClass: 'info'
     },
     ARCHIVED: {
       icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="21,8 21,21 3,21 3,8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg>',
-      label: 'Archived',
+      labelKey: 'shared.activityTimeline.actions.archived',
       colorClass: 'danger'
     },
     UNARCHIVED: {
       icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="21,8 21,21 3,21 3,8"/><rect x="1" y="3" width="22" height="5"/><polyline points="12,11 12,17"/><polyline points="9,14 12,11 15,14"/></svg>',
-      label: 'Restored',
+      labelKey: 'shared.activityTimeline.actions.restored',
       colorClass: 'success'
     },
     ACTIVATED: {
       icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>',
-      label: 'Activated',
+      labelKey: 'shared.activityTimeline.actions.activated',
       colorClass: 'success'
     },
     DEACTIVATED: {
       icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>',
-      label: 'Deactivated',
+      labelKey: 'shared.activityTimeline.actions.deactivated',
       colorClass: 'danger'
     },
     INVOICE_GENERATED: {
       icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>',
-      label: 'Invoice generated',
+      labelKey: 'shared.activityTimeline.actions.invoiceGenerated',
       colorClass: 'info'
     },
     PDF_GENERATED: {
       icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/><path d="M9 15h6"/></svg>',
-      label: 'PDF created',
+      labelKey: 'shared.activityTimeline.actions.pdfCreated',
       colorClass: 'info'
     },
     EMAIL_SENT: {
       icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22,2 15,22 11,13 2,9 22,2"/></svg>',
-      label: 'Email sent',
+      labelKey: 'shared.activityTimeline.actions.emailSent',
       colorClass: 'success'
     },
     EMAIL_DRAFT_CREATED: {
       icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>',
-      label: 'Draft created',
+      labelKey: 'shared.activityTimeline.actions.draftCreated',
       colorClass: 'info'
     },
     CRM_SYNCED: {
       icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23,4 23,10 17,10"/><polyline points="1,20 1,14 7,14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>',
-      label: 'Synced to CRM',
+      labelKey: 'shared.activityTimeline.actions.crmSynced',
       colorClass: 'success'
     },
     CRM_PDF_FETCHED: {
       icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7,10 12,15 17,10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>',
-      label: 'PDF fetched from CRM',
+      labelKey: 'shared.activityTimeline.actions.crmPdfFetched',
       colorClass: 'info'
     },
     COMMENTS_UPDATED: {
       icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>',
-      label: 'Comments updated',
+      labelKey: 'shared.activityTimeline.actions.commentsUpdated',
       colorClass: 'info'
     }
   };
@@ -602,7 +603,7 @@ export class ActivityTimelineComponent {
   getActionConfig(action: ActionType): ActionConfig {
     return this.actionConfigs[action] || {
       icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/></svg>',
-      label: action,
+      labelKey: 'shared.activityTimeline.actions.unknown',
       colorClass: 'neutral'
     };
   }

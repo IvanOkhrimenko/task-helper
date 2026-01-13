@@ -2,6 +2,7 @@ import { Component, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { TranslateModule } from '@ngx-translate/core';
 import { IntegrationsService, UpdateIntegrationSettings } from '../../../core/services/integrations.service';
 import { NotificationService } from '../../../core/services/notification.service';
 import { ToastComponent } from '../../../shared/components/toast/toast.component';
@@ -9,7 +10,7 @@ import { ToastComponent } from '../../../shared/components/toast/toast.component
 @Component({
   selector: 'app-google-settings',
   standalone: true,
-  imports: [CommonModule, RouterLink, FormsModule, ToastComponent],
+  imports: [CommonModule, RouterLink, FormsModule, ToastComponent, TranslateModule],
   template: `
     <app-toast />
     <div class="google-settings-page">
@@ -29,7 +30,7 @@ import { ToastComponent } from '../../../shared/components/toast/toast.component
               <line x1="19" y1="12" x2="5" y2="12"/>
               <polyline points="12 19 5 12 12 5"/>
             </svg>
-            Back to Dashboard
+            {{ 'common.backToDashboard' | translate }}
           </a>
           <div class="header-content">
             <div class="header-icon">
@@ -41,12 +42,12 @@ import { ToastComponent } from '../../../shared/components/toast/toast.component
               </svg>
             </div>
             <div>
-              <h1 class="page-title">Google Integration</h1>
-              <p class="page-subtitle">Connect Gmail for sending invoices and notifications</p>
+              <h1 class="page-title">{{ 'settings.google.title' | translate }}</h1>
+              <p class="page-subtitle">{{ 'settings.google.subtitle' | translate }}</p>
             </div>
             <div class="status-badge" [class.active]="formData.googleEnabled" [class.inactive]="!formData.googleEnabled">
               <span class="status-dot"></span>
-              {{ formData.googleEnabled ? 'Enabled' : 'Disabled' }}
+              {{ formData.googleEnabled ? ('common.enabled' | translate) : ('common.disabled' | translate) }}
             </div>
           </div>
         </header>
@@ -65,7 +66,7 @@ import { ToastComponent } from '../../../shared/components/toast/toast.component
         @if (integrations.isLoading() && !integrations.settings()) {
           <div class="loading-state">
             <div class="loading-spinner"></div>
-            <p>Loading settings...</p>
+            <p>{{ 'common.loadingSettings' | translate }}</p>
           </div>
         } @else {
           <!-- Setup Guide (Collapsible) -->
@@ -80,8 +81,8 @@ import { ToastComponent } from '../../../shared/components/toast/toast.component
                   </svg>
                 </div>
                 <div>
-                  <span class="guide-title">Setup Guide</span>
-                  <span class="guide-subtitle">Step-by-step instructions for Google Cloud Console</span>
+                  <span class="guide-title">{{ 'settings.google.guide.title' | translate }}</span>
+                  <span class="guide-subtitle">{{ 'settings.google.guide.subtitle' | translate }}</span>
                 </div>
               </div>
               <svg class="guide-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -99,17 +100,16 @@ import { ToastComponent } from '../../../shared/components/toast/toast.component
                       <div class="step-line"></div>
                     </div>
                     <div class="step-content">
-                      <h4 class="step-title">Create a Google Cloud Project</h4>
+                      <h4 class="step-title">{{ 'settings.google.guide.step1.title' | translate }}</h4>
                       <p class="step-description">
-                        Go to <a href="https://console.cloud.google.com" target="_blank" rel="noopener">console.cloud.google.com</a>
-                        and create a new project or select an existing one.
+                        {{ 'settings.google.guide.step1.description' | translate }} <a href="https://console.cloud.google.com" target="_blank" rel="noopener">console.cloud.google.com</a>
                       </p>
                       <div class="step-tip">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                           <path d="M12 2L2 7l10 5 10-5-10-5z"/>
                           <path d="M2 17l10 5 10-5M2 12l10 5 10-5"/>
                         </svg>
-                        Use a descriptive name like "Task Helper App"
+                        {{ 'settings.google.guide.step1.tip' | translate }}
                       </div>
                     </div>
                   </div>
@@ -121,9 +121,8 @@ import { ToastComponent } from '../../../shared/components/toast/toast.component
                       <div class="step-line"></div>
                     </div>
                     <div class="step-content">
-                      <h4 class="step-title">Enable the Gmail API</h4>
-                      <p class="step-description">
-                        Navigate to <strong>APIs & Services → Library</strong>, search for "Gmail API" and click <strong>Enable</strong>.
+                      <h4 class="step-title">{{ 'settings.google.guide.step2.title' | translate }}</h4>
+                      <p class="step-description" [innerHTML]="'settings.google.guide.step2.description' | translate">
                       </p>
                     </div>
                   </div>
@@ -135,10 +134,8 @@ import { ToastComponent } from '../../../shared/components/toast/toast.component
                       <div class="step-line"></div>
                     </div>
                     <div class="step-content">
-                      <h4 class="step-title">Configure OAuth Consent Screen</h4>
-                      <p class="step-description">
-                        Go to <strong>APIs & Services → OAuth consent screen</strong>. Choose "External" user type, fill in the app name,
-                        support email, and add scopes:
+                      <h4 class="step-title">{{ 'settings.google.guide.step3.title' | translate }}</h4>
+                      <p class="step-description" [innerHTML]="'settings.google.guide.step3.description' | translate">
                       </p>
                       <div class="code-block">
                         <code>https://www.googleapis.com/auth/gmail.compose</code>
@@ -150,7 +147,7 @@ import { ToastComponent } from '../../../shared/components/toast/toast.component
                           <line x1="12" y1="9" x2="12" y2="13"/>
                           <line x1="12" y1="17" x2="12.01" y2="17"/>
                         </svg>
-                        Add your email as a test user while in testing mode
+                        {{ 'settings.google.guide.step3.warning' | translate }}
                       </div>
                     </div>
                   </div>
@@ -162,10 +159,8 @@ import { ToastComponent } from '../../../shared/components/toast/toast.component
                       <div class="step-line"></div>
                     </div>
                     <div class="step-content">
-                      <h4 class="step-title">Create OAuth 2.0 Credentials</h4>
-                      <p class="step-description">
-                        Go to <strong>APIs & Services → Credentials</strong>, click <strong>Create Credentials → OAuth client ID</strong>.
-                        Select "Web application" as the application type.
+                      <h4 class="step-title">{{ 'settings.google.guide.step4.title' | translate }}</h4>
+                      <p class="step-description" [innerHTML]="'settings.google.guide.step4.description' | translate">
                       </p>
                     </div>
                   </div>
@@ -177,9 +172,9 @@ import { ToastComponent } from '../../../shared/components/toast/toast.component
                       <div class="step-line"></div>
                     </div>
                     <div class="step-content">
-                      <h4 class="step-title">Add Authorized Redirect URI</h4>
+                      <h4 class="step-title">{{ 'settings.google.guide.step5.title' | translate }}</h4>
                       <p class="step-description">
-                        Under "Authorized redirect URIs", add the following URL:
+                        {{ 'settings.google.guide.step5.description' | translate }}
                       </p>
                       <div class="uri-display">
                         <code>{{ formData.googleRedirectUri }}</code>
@@ -199,17 +194,15 @@ import { ToastComponent } from '../../../shared/components/toast/toast.component
                       <span class="step-number">6</span>
                     </div>
                     <div class="step-content">
-                      <h4 class="step-title">Copy Your Credentials</h4>
-                      <p class="step-description">
-                        After creating the credentials, copy the <strong>Client ID</strong> and <strong>Client Secret</strong>
-                        and paste them in the form below.
+                      <h4 class="step-title">{{ 'settings.google.guide.step6.title' | translate }}</h4>
+                      <p class="step-description" [innerHTML]="'settings.google.guide.step6.description' | translate">
                       </p>
                       <div class="step-tip success">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                           <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
                           <polyline points="22 4 12 14.01 9 11.01"/>
                         </svg>
-                        You're all set! Fill in the credentials below.
+                        {{ 'settings.google.guide.step6.success' | translate }}
                       </div>
                     </div>
                   </div>
@@ -228,8 +221,8 @@ import { ToastComponent } from '../../../shared/components/toast/toast.component
                   </svg>
                 </div>
                 <div>
-                  <h2 class="section-title">OAuth Credentials</h2>
-                  <p class="section-description">Enter your Google Cloud OAuth 2.0 credentials</p>
+                  <h2 class="section-title">{{ 'settings.google.credentials.title' | translate }}</h2>
+                  <p class="section-description">{{ 'settings.google.credentials.description' | translate }}</p>
                 </div>
               </div>
 
@@ -237,9 +230,9 @@ import { ToastComponent } from '../../../shared/components/toast/toast.component
                 <!-- Client ID -->
                 <div class="form-group form-group--full">
                   <label class="form-label" for="clientId">
-                    Client ID
+                    {{ 'settings.google.credentials.clientId' | translate }}
                     @if (integrations.settings()?.hasGoogleCredentials) {
-                      <span class="label-badge configured">Configured</span>
+                      <span class="label-badge configured">{{ 'settings.google.credentials.configured' | translate }}</span>
                     }
                   </label>
                   <input
@@ -250,12 +243,12 @@ import { ToastComponent } from '../../../shared/components/toast/toast.component
                     name="googleClientId"
                     placeholder="123456789-abc123.apps.googleusercontent.com"
                   />
-                  <span class="form-hint">Your OAuth 2.0 Client ID from Google Cloud Console</span>
+                  <span class="form-hint">{{ 'settings.google.credentials.clientIdHint' | translate }}</span>
                 </div>
 
                 <!-- Client Secret -->
                 <div class="form-group form-group--full">
-                  <label class="form-label" for="clientSecret">Client Secret</label>
+                  <label class="form-label" for="clientSecret">{{ 'settings.google.credentials.clientSecret' | translate }}</label>
                   <div class="secret-input-wrapper">
                     <input
                       [type]="showSecret() ? 'text' : 'password'"
@@ -283,12 +276,12 @@ import { ToastComponent } from '../../../shared/components/toast/toast.component
                       }
                     </button>
                   </div>
-                  <span class="form-hint">Keep this secret! Never share it publicly.</span>
+                  <span class="form-hint">{{ 'settings.google.credentials.clientSecretHint' | translate }}</span>
                 </div>
 
                 <!-- Redirect URI -->
                 <div class="form-group form-group--full">
-                  <label class="form-label" for="redirectUri">Redirect URI</label>
+                  <label class="form-label" for="redirectUri">{{ 'settings.google.credentials.redirectUri' | translate }}</label>
                   <input
                     type="text"
                     id="redirectUri"
@@ -297,7 +290,7 @@ import { ToastComponent } from '../../../shared/components/toast/toast.component
                     name="googleRedirectUri"
                     placeholder="https://your-backend.com/api/google/callback"
                   />
-                  <span class="form-hint">Must match exactly what's configured in Google Cloud Console</span>
+                  <span class="form-hint">{{ 'settings.google.credentials.redirectUriHint' | translate }}</span>
                 </div>
               </div>
             </section>
@@ -312,8 +305,8 @@ import { ToastComponent } from '../../../shared/components/toast/toast.component
                   </svg>
                 </div>
                 <div>
-                  <h2 class="section-title">Integration Status</h2>
-                  <p class="section-description">Enable Google integration and verify your setup</p>
+                  <h2 class="section-title">{{ 'settings.google.status.title' | translate }}</h2>
+                  <p class="section-description">{{ 'settings.google.status.description' | translate }}</p>
                 </div>
               </div>
 
@@ -329,9 +322,9 @@ import { ToastComponent } from '../../../shared/components/toast/toast.component
                     <div class="toggle-thumb"></div>
                   </div>
                   <div class="toggle-label">
-                    <span class="toggle-title">Google Integration</span>
+                    <span class="toggle-title">{{ 'settings.google.status.toggleTitle' | translate }}</span>
                     <span class="toggle-desc">
-                      {{ formData.googleEnabled ? 'Users can connect their Google accounts' : 'Google integration is disabled' }}
+                      {{ formData.googleEnabled ? ('settings.google.status.enabledDesc' | translate) : ('settings.google.status.disabledDesc' | translate) }}
                     </span>
                   </div>
                 </label>
@@ -347,25 +340,25 @@ import { ToastComponent } from '../../../shared/components/toast/toast.component
                 >
                   @if (isTesting()) {
                     <span class="test-spinner"></span>
-                    Testing...
+                    {{ 'common.testing' | translate }}
                   } @else if (testResult()?.success) {
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                       <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
                       <polyline points="22 4 12 14.01 9 11.01"/>
                     </svg>
-                    Connection Valid
+                    {{ 'settings.google.status.connectionValid' | translate }}
                   } @else if (testResult()?.success === false) {
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                       <circle cx="12" cy="12" r="10"/>
                       <line x1="15" y1="9" x2="9" y2="15"/>
                       <line x1="9" y1="9" x2="15" y2="15"/>
                     </svg>
-                    Test Failed
+                    {{ 'settings.google.status.testFailed' | translate }}
                   } @else {
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                       <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
                     </svg>
-                    Test Connection
+                    {{ 'settings.google.status.testConnection' | translate }}
                   }
                 </button>
               </div>
@@ -393,7 +386,7 @@ import { ToastComponent } from '../../../shared/components/toast/toast.component
             <!-- Form Actions -->
             <div class="form-actions" style="animation-delay: 0.3s">
               <a routerLink="/dashboard" class="btn btn--secondary">
-                Cancel
+                {{ 'common.cancel' | translate }}
               </a>
               <button
                 type="submit"
@@ -402,14 +395,14 @@ import { ToastComponent } from '../../../shared/components/toast/toast.component
               >
                 @if (integrations.isLoading()) {
                   <span class="btn__spinner"></span>
-                  Saving...
+                  {{ 'common.saving' | translate }}
                 } @else {
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="btn__icon">
                     <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
                     <polyline points="17 21 17 13 7 13 7 21"/>
                     <polyline points="7 3 7 8 15 8"/>
                   </svg>
-                  Save Changes
+                  {{ 'common.saveChanges' | translate }}
                 }
               </button>
             </div>

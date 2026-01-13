@@ -1,6 +1,7 @@
 import { Component, inject, signal, computed, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
+import { TranslateModule } from '@ngx-translate/core';
 import { TaxService, TaxDashboard, YearlySummary, MonthlyTaxResult, TaxForm, ZUSType } from '../../core/services/tax.service';
 import { ExpenseService, Expense, ExpenseCategory } from '../../core/services/expense.service';
 import { NotificationService } from '../../core/services/notification.service';
@@ -8,7 +9,7 @@ import { NotificationService } from '../../core/services/notification.service';
 @Component({
   selector: 'app-taxes',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, TranslateModule],
   template: `
     <div class="taxes-dashboard">
       <!-- Subtle grid background pattern -->
@@ -17,8 +18,8 @@ import { NotificationService } from '../../core/services/notification.service';
       <!-- Header -->
       <header class="header">
         <div class="header__left">
-          <h1 class="header__title">B2B Taxes</h1>
-          <p class="header__subtitle">Tax calculation {{ selectedYear() }}</p>
+          <h1 class="header__title">{{ 'taxes.title' | translate }}</h1>
+          <p class="header__subtitle">{{ 'taxes.subtitle' | translate }} {{ selectedYear() }}</p>
         </div>
         <div class="header__right">
           <div class="year-selector">
@@ -47,7 +48,7 @@ import { NotificationService } from '../../core/services/notification.service';
               <circle cx="12" cy="12" r="3"/>
               <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/>
             </svg>
-            Settings
+            {{ 'taxes.settings' | translate }}
           </a>
         </div>
       </header>
@@ -55,7 +56,7 @@ import { NotificationService } from '../../core/services/notification.service';
       @if (isLoading()) {
         <div class="loading-state">
           <div class="loading-spinner"></div>
-          <p>Loading tax data...</p>
+          <p>{{ 'taxes.loading' | translate }}</p>
         </div>
       } @else {
         <!-- Tax Form Badge -->
@@ -83,14 +84,14 @@ import { NotificationService } from '../../core/services/notification.service';
               }
             </div>
             <div class="tax-form-badge__content">
-              <span class="tax-form-badge__label">Tax form</span>
+              <span class="tax-form-badge__label">{{ 'taxes.taxForm.label' | translate }}</span>
               <span class="tax-form-badge__value">{{ getTaxFormLabel(dashboard()?.settings?.taxForm) }}</span>
               @if (dashboard()?.settings?.taxForm === 'RYCZALT' && dashboard()?.settings?.ryczaltRate) {
-                <span class="tax-form-badge__rate">Rate: {{ dashboard()?.settings?.ryczaltRate }}%</span>
+                <span class="tax-form-badge__rate">{{ 'taxes.taxForm.rate' | translate }}: {{ dashboard()?.settings?.ryczaltRate }}%</span>
               }
             </div>
             <div class="tax-form-badge__zus">
-              <span class="tax-form-badge__zus-label">ZUS</span>
+              <span class="tax-form-badge__zus-label">{{ 'taxes.zus.label' | translate }}</span>
               <span class="tax-form-badge__zus-value">{{ getZUSLabel(dashboard()?.settings?.zusType) }}</span>
             </div>
           </div>
@@ -100,7 +101,7 @@ import { NotificationService } from '../../core/services/notification.service';
         <div class="summary-grid">
           <div class="summary-card summary-card--income" [style.animation-delay]="'0ms'">
             <div class="summary-card__header">
-              <span class="summary-card__label">YTD Income</span>
+              <span class="summary-card__label">{{ 'taxes.summary.ytdIncome' | translate }}</span>
               <div class="summary-card__icon">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>
@@ -112,13 +113,13 @@ import { NotificationService } from '../../core/services/notification.service';
               <span class="summary-card__amount">{{ formatPLN(dashboard()?.yearToDate?.grossIncomePLN || 0) }}</span>
             </div>
             <div class="summary-card__footer">
-              <span class="summary-card__meta">{{ dashboard()?.yearToDate?.invoiceCount || 0 }} invoices</span>
+              <span class="summary-card__meta">{{ dashboard()?.yearToDate?.invoiceCount || 0 }} {{ 'taxes.summary.invoices' | translate }}</span>
             </div>
           </div>
 
           <div class="summary-card summary-card--tax" [style.animation-delay]="'50ms'">
             <div class="summary-card__header">
-              <span class="summary-card__label">Tax ({{ currentMonthName() }})</span>
+              <span class="summary-card__label">{{ 'taxes.summary.tax' | translate }} ({{ currentMonthName() }})</span>
               <div class="summary-card__icon">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/>
@@ -129,13 +130,13 @@ import { NotificationService } from '../../core/services/notification.service';
               <span class="summary-card__amount">{{ formatPLN(selectedMonthData()?.totalTaxDue || 0) }}</span>
             </div>
             <div class="summary-card__footer">
-              <span class="summary-card__meta">Due by 20th</span>
+              <span class="summary-card__meta">{{ 'taxes.summary.dueBy20th' | translate }}</span>
             </div>
           </div>
 
           <div class="summary-card summary-card--zus" [style.animation-delay]="'100ms'">
             <div class="summary-card__header">
-              <span class="summary-card__label">ZUS ({{ currentMonthName() }})</span>
+              <span class="summary-card__label">{{ 'taxes.zus.label' | translate }} ({{ currentMonthName() }})</span>
               <div class="summary-card__icon">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/>
@@ -148,13 +149,13 @@ import { NotificationService } from '../../core/services/notification.service';
               <span class="summary-card__amount">{{ formatPLN(selectedMonthData()?.zus || 0) }}</span>
             </div>
             <div class="summary-card__footer">
-              <span class="summary-card__meta">+ {{ formatPLN(selectedMonthData()?.healthInsurance || 0) }} health ins.</span>
+              <span class="summary-card__meta">+ {{ formatPLN(selectedMonthData()?.healthInsurance || 0) }} {{ 'taxes.summary.healthIns' | translate }}</span>
             </div>
           </div>
 
           <div class="summary-card summary-card--net" [style.animation-delay]="'150ms'">
             <div class="summary-card__header">
-              <span class="summary-card__label">Net ({{ currentMonthName() }})</span>
+              <span class="summary-card__label">{{ 'taxes.summary.net' | translate }} ({{ currentMonthName() }})</span>
               <div class="summary-card__icon">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <circle cx="12" cy="12" r="10"/>
@@ -168,7 +169,7 @@ import { NotificationService } from '../../core/services/notification.service';
               <span class="summary-card__amount summary-card__amount--positive">{{ formatPLN(selectedMonthData()?.netIncome || 0) }}</span>
             </div>
             <div class="summary-card__footer">
-              <span class="summary-card__meta">Effective rate: {{ (selectedMonthData()?.effectiveTaxRate || 0).toFixed(1) }}%</span>
+              <span class="summary-card__meta">{{ 'taxes.summary.effectiveRate' | translate }}: {{ (selectedMonthData()?.effectiveTaxRate || 0).toFixed(1) }}%</span>
             </div>
           </div>
         </div>
@@ -178,7 +179,7 @@ import { NotificationService } from '../../core/services/notification.service';
           <!-- Monthly Breakdown -->
           <section class="breakdown-section">
             <div class="breakdown-header">
-              <h2 class="section-title">Monthly Breakdown</h2>
+              <h2 class="section-title">{{ 'taxes.breakdown.title' | translate }}</h2>
               <div class="month-tabs">
                 @for (month of months; track month.value) {
                   <button
@@ -204,12 +205,12 @@ import { NotificationService } from '../../core/services/notification.service';
                           <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
                           <polyline points="14 2 14 8 20 8"/>
                         </svg>
-                        Invoice Income
+                        {{ 'taxes.breakdown.invoiceIncome' | translate }}
                       </span>
                       <span class="breakdown-value breakdown-value--income">{{ formatPLN(selectedMonthData()?.grossIncomePLN || 0) }}</span>
                     </div>
                     <div class="breakdown-row breakdown-row--sub">
-                      <span class="breakdown-label">Invoice count</span>
+                      <span class="breakdown-label">{{ 'taxes.breakdown.invoiceCount' | translate }}</span>
                       <span class="breakdown-value">{{ selectedMonthData()?.invoiceCount || 0 }}</span>
                     </div>
                   </div>
@@ -223,12 +224,12 @@ import { NotificationService } from '../../core/services/notification.service';
                           <polyline points="17 8 12 3 7 8"/>
                           <line x1="12" y1="3" x2="12" y2="15"/>
                         </svg>
-                        Total Expenses
+                        {{ 'taxes.breakdown.totalExpenses' | translate }}
                       </span>
                       <span class="breakdown-value breakdown-value--expense">-{{ formatPLN(selectedMonthData()?.totalExpenses || 0) }}</span>
                     </div>
                     <div class="breakdown-row breakdown-row--sub">
-                      <span class="breakdown-label">Deductible expenses</span>
+                      <span class="breakdown-label">{{ 'taxes.breakdown.deductibleExpenses' | translate }}</span>
                       <span class="breakdown-value">{{ formatPLN(selectedMonthData()?.deductibleExpenses || 0) }}</span>
                     </div>
                   </div>
@@ -238,7 +239,7 @@ import { NotificationService } from '../../core/services/notification.service';
                   <!-- Tax Base -->
                   <div class="breakdown-group">
                     <div class="breakdown-row breakdown-row--total">
-                      <span class="breakdown-label">Tax base</span>
+                      <span class="breakdown-label">{{ 'taxes.breakdown.taxBase' | translate }}</span>
                       <span class="breakdown-value">{{ formatPLN(selectedMonthData()?.taxBase || 0) }}</span>
                     </div>
                   </div>
@@ -253,7 +254,7 @@ import { NotificationService } from '../../core/services/notification.service';
                           <rect x="1" y="4" width="22" height="16" rx="2" ry="2"/>
                           <line x1="1" y1="10" x2="23" y2="10"/>
                         </svg>
-                        PIT
+                        {{ 'taxes.breakdown.pit' | translate }}
                       </span>
                       <span class="breakdown-value breakdown-value--tax">{{ formatPLN(selectedMonthData()?.pit || 0) }}</span>
                     </div>
@@ -263,7 +264,7 @@ import { NotificationService } from '../../core/services/notification.service';
                           <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/>
                           <circle cx="9" cy="7" r="4"/>
                         </svg>
-                        ZUS
+                        {{ 'taxes.zus.label' | translate }}
                       </span>
                       <span class="breakdown-value breakdown-value--tax">{{ formatPLN(selectedMonthData()?.zus || 0) }}</span>
                     </div>
@@ -272,7 +273,7 @@ import { NotificationService } from '../../core/services/notification.service';
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                           <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
                         </svg>
-                        Health insurance
+                        {{ 'taxes.breakdown.healthInsurance' | translate }}
                       </span>
                       <span class="breakdown-value breakdown-value--tax">{{ formatPLN(selectedMonthData()?.healthInsurance || 0) }}</span>
                     </div>
@@ -283,11 +284,11 @@ import { NotificationService } from '../../core/services/notification.service';
                   <!-- Totals -->
                   <div class="breakdown-group">
                     <div class="breakdown-row breakdown-row--total">
-                      <span class="breakdown-label">Total tax due</span>
+                      <span class="breakdown-label">{{ 'taxes.breakdown.totalTaxDue' | translate }}</span>
                       <span class="breakdown-value breakdown-value--total-tax">{{ formatPLN(selectedMonthData()?.totalTaxDue || 0) }}</span>
                     </div>
                     <div class="breakdown-row breakdown-row--total breakdown-row--net">
-                      <span class="breakdown-label">Net income</span>
+                      <span class="breakdown-label">{{ 'taxes.breakdown.netIncome' | translate }}</span>
                       <span class="breakdown-value breakdown-value--net">{{ formatPLN(selectedMonthData()?.netIncome || 0) }}</span>
                     </div>
                   </div>
@@ -301,7 +302,7 @@ import { NotificationService } from '../../core/services/notification.service';
                       ></div>
                     </div>
                     <span class="effective-rate__label">
-                      Effective tax rate: {{ (selectedMonthData()?.effectiveTaxRate || 0).toFixed(1) }}%
+                      {{ 'taxes.breakdown.effectiveTaxRate' | translate }}: {{ (selectedMonthData()?.effectiveTaxRate || 0).toFixed(1) }}%
                     </span>
                   </div>
                 </div>
@@ -313,8 +314,8 @@ import { NotificationService } from '../../core/services/notification.service';
                     <line x1="8" y1="2" x2="8" y2="6"/>
                     <line x1="3" y1="10" x2="21" y2="10"/>
                   </svg>
-                  <p>No data for {{ getMonthName(selectedMonth()) }}</p>
-                  <span>Sent invoices will appear automatically</span>
+                  <p>{{ 'taxes.breakdown.noData' | translate }} {{ getMonthName(selectedMonth()) }}</p>
+                  <span>{{ 'taxes.breakdown.invoicesAppearAutomatically' | translate }}</span>
                 </div>
               }
             </div>
@@ -323,9 +324,9 @@ import { NotificationService } from '../../core/services/notification.service';
           <!-- Recent Expenses -->
           <section class="expenses-section">
             <div class="expenses-header">
-              <h2 class="section-title">Recent Expenses</h2>
+              <h2 class="section-title">{{ 'taxes.expenses.recentTitle' | translate }}</h2>
               <a routerLink="/expenses" class="view-all-link">
-                View all
+                {{ 'taxes.expenses.viewAll' | translate }}
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <polyline points="9 18 15 12 9 6"/>
                 </svg>
@@ -340,7 +341,7 @@ import { NotificationService } from '../../core/services/notification.service';
                     <polyline points="7 10 12 15 17 10"/>
                     <line x1="12" y1="15" x2="12" y2="3"/>
                   </svg>
-                  <p>No expenses recorded</p>
+                  <p>{{ 'taxes.expenses.noExpenses' | translate }}</p>
                 </div>
               } @else {
                 @for (expense of recentExpenses(); track expense.id; let i = $index) {
@@ -366,7 +367,7 @@ import { NotificationService } from '../../core/services/notification.service';
                 <line x1="12" y1="5" x2="12" y2="19"/>
                 <line x1="5" y1="12" x2="19" y2="12"/>
               </svg>
-              Add expense
+              {{ 'taxes.expenses.addExpense' | translate }}
             </button>
           </section>
         </div>

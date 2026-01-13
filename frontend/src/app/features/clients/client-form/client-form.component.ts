@@ -2,6 +2,7 @@ import { Component, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, ActivatedRoute, RouterLink } from '@angular/router';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { TranslateModule } from '@ngx-translate/core';
 import { ClientService, CreateClientDto } from '../../../core/services/client.service';
 import { CRMIntegrationService, CRMIntegration } from '../../../core/services/crm-integration.service';
 import { NotificationService } from '../../../core/services/notification.service';
@@ -9,7 +10,7 @@ import { NotificationService } from '../../../core/services/notification.service
 @Component({
   selector: 'app-client-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink, TranslateModule],
   template: `
     <div class="client-form-page">
       <div class="container">
@@ -19,19 +20,19 @@ import { NotificationService } from '../../../core/services/notification.service
               <line x1="19" y1="12" x2="5" y2="12"/>
               <polyline points="12 19 5 12 12 5"/>
             </svg>
-            Back to Clients
+            {{ 'clients.detail.backToClients' | translate }}
           </a>
-          <h1 class="page-title">{{ isEditing() ? 'Edit Client' : 'Add New Client' }}</h1>
-          <p class="page-subtitle">{{ isEditing() ? 'Update client details' : 'Add a new client for invoicing' }}</p>
+          <h1 class="page-title">{{ isEditing() ? ('clients.form.editClient' | translate) : ('clients.form.addNewClient' | translate) }}</h1>
+          <p class="page-subtitle">{{ isEditing() ? ('clients.form.updateDetails' | translate) : ('clients.form.addForInvoicing' | translate) }}</p>
         </header>
 
         <form [formGroup]="form" (ngSubmit)="onSubmit()" class="form-card">
           <!-- Basic Info -->
           <section class="form-section">
-            <h2 class="section-title">Basic Information</h2>
+            <h2 class="section-title">{{ 'clients.form.basicInfo' | translate }}</h2>
 
             <div class="form-group">
-              <label for="name" class="form-label">Client Name *</label>
+              <label for="name" class="form-label">{{ 'clients.form.clientName' | translate }} *</label>
               <input
                 type="text"
                 id="name"
@@ -41,13 +42,13 @@ import { NotificationService } from '../../../core/services/notification.service
                 [class.form-input--error]="form.get('name')?.touched && form.get('name')?.invalid"
               />
               @if (form.get('name')?.touched && form.get('name')?.errors?.['required']) {
-                <span class="form-error">Client name is required</span>
+                <span class="form-error">{{ 'clients.form.nameRequired' | translate }}</span>
               }
             </div>
 
             <div class="form-row">
               <div class="form-group">
-                <label for="nip" class="form-label">Tax ID (NIP)</label>
+                <label for="nip" class="form-label">{{ 'clients.form.taxId' | translate }}</label>
                 <input
                   type="text"
                   id="nip"
@@ -57,7 +58,7 @@ import { NotificationService } from '../../../core/services/notification.service
                 />
               </div>
               <div class="form-group">
-                <label for="country" class="form-label">Country</label>
+                <label for="country" class="form-label">{{ 'clients.form.country' | translate }}</label>
                 <input
                   type="text"
                   id="country"
@@ -69,7 +70,7 @@ import { NotificationService } from '../../../core/services/notification.service
             </div>
 
             <div class="form-group">
-              <label for="streetAddress" class="form-label">Street Address</label>
+              <label for="streetAddress" class="form-label">{{ 'clients.form.streetAddress' | translate }}</label>
               <input
                 type="text"
                 id="streetAddress"
@@ -81,7 +82,7 @@ import { NotificationService } from '../../../core/services/notification.service
 
             <div class="form-row">
               <div class="form-group">
-                <label for="postcode" class="form-label">Postal Code</label>
+                <label for="postcode" class="form-label">{{ 'clients.form.postalCode' | translate }}</label>
                 <input
                   type="text"
                   id="postcode"
@@ -91,7 +92,7 @@ import { NotificationService } from '../../../core/services/notification.service
                 />
               </div>
               <div class="form-group">
-                <label for="city" class="form-label">City</label>
+                <label for="city" class="form-label">{{ 'clients.form.city' | translate }}</label>
                 <input
                   type="text"
                   id="city"
@@ -105,11 +106,11 @@ import { NotificationService } from '../../../core/services/notification.service
 
           <!-- Contact Info -->
           <section class="form-section">
-            <h2 class="section-title">Contact Information</h2>
+            <h2 class="section-title">{{ 'clients.form.contactInfo' | translate }}</h2>
 
             <div class="form-row">
               <div class="form-group">
-                <label for="email" class="form-label">Email</label>
+                <label for="email" class="form-label">{{ 'clients.form.email' | translate }}</label>
                 <input
                   type="email"
                   id="email"
@@ -120,8 +121,8 @@ import { NotificationService } from '../../../core/services/notification.service
               </div>
               <div class="form-group">
                 <label for="billingEmail" class="form-label">
-                  Billing Email
-                  <span class="form-label-hint">(for invoices)</span>
+                  {{ 'clients.form.billingEmail' | translate }}
+                  <span class="form-label-hint">({{ 'clients.form.forInvoices' | translate }})</span>
                 </label>
                 <input
                   type="email"
@@ -130,12 +131,12 @@ import { NotificationService } from '../../../core/services/notification.service
                   class="form-input"
                   [placeholder]="form.get('email')?.value || 'billing@acme.com'"
                 />
-                <span class="form-hint">Leave empty to use main email</span>
+                <span class="form-hint">{{ 'clients.form.leaveEmptyForMainEmail' | translate }}</span>
               </div>
             </div>
 
             <div class="form-group">
-              <label for="bankAccount" class="form-label">Client's Bank Account</label>
+              <label for="bankAccount" class="form-label">{{ 'clients.form.clientBankAccount' | translate }}</label>
               <input
                 type="text"
                 id="bankAccount"
@@ -143,25 +144,25 @@ import { NotificationService } from '../../../core/services/notification.service
                 class="form-input"
                 placeholder="PL00 0000 0000 0000 0000 0000 0000"
               />
-              <span class="form-hint">Client's bank account number (optional)</span>
+              <span class="form-hint">{{ 'clients.form.bankAccountHint' | translate }}</span>
             </div>
           </section>
 
           <!-- CRM Integration -->
           @if (crmIntegrations().length > 0) {
             <section class="form-section">
-              <h2 class="section-title">CRM Integration</h2>
-              <p class="section-description">Link this client to your CRM system for automatic invoice syncing</p>
+              <h2 class="section-title">{{ 'clients.form.crmIntegration' | translate }}</h2>
+              <p class="section-description">{{ 'clients.form.crmDescription' | translate }}</p>
 
               <div class="form-row">
                 <div class="form-group">
-                  <label for="crmIntegrationId" class="form-label">CRM System</label>
+                  <label for="crmIntegrationId" class="form-label">{{ 'clients.form.crmSystem' | translate }}</label>
                   @if (crmIntegrations().length === 1) {
                     <div class="static-value">{{ crmIntegrations()[0].name }}</div>
                     <input type="hidden" formControlName="crmIntegrationId" [value]="crmIntegrations()[0].id" />
                   } @else {
                     <select id="crmIntegrationId" formControlName="crmIntegrationId" class="form-input">
-                      <option value="">Select CRM...</option>
+                      <option value="">{{ 'clients.form.selectCrm' | translate }}</option>
                       @for (crm of crmIntegrations(); track crm.id) {
                         <option [value]="crm.id">{{ crm.name }}</option>
                       }
@@ -169,7 +170,7 @@ import { NotificationService } from '../../../core/services/notification.service
                   }
                 </div>
                 <div class="form-group">
-                  <label for="crmClientId" class="form-label">CRM Client ID</label>
+                  <label for="crmClientId" class="form-label">{{ 'clients.form.crmClientId' | translate }}</label>
                   <input
                     type="text"
                     id="crmClientId"
@@ -177,7 +178,7 @@ import { NotificationService } from '../../../core/services/notification.service
                     class="form-input"
                     placeholder="e.g., 8769"
                   />
-                  <span class="form-hint">Client ID from your CRM system</span>
+                  <span class="form-hint">{{ 'clients.form.crmClientIdHint' | translate }}</span>
                 </div>
               </div>
             </section>
@@ -185,13 +186,13 @@ import { NotificationService } from '../../../core/services/notification.service
 
           <!-- Actions -->
           <div class="form-actions">
-            <a routerLink="/clients" class="btn-secondary">Cancel</a>
+            <a routerLink="/clients" class="btn-secondary">{{ 'common.cancel' | translate }}</a>
             <button type="submit" class="btn-primary" [disabled]="isSubmitting()">
               @if (isSubmitting()) {
                 <span class="spinner-small"></span>
-                Saving...
+                {{ 'common.saving' | translate }}
               } @else {
-                {{ isEditing() ? 'Save Changes' : 'Create Client' }}
+                {{ isEditing() ? ('clients.form.saveChanges' | translate) : ('clients.form.createClient' | translate) }}
               }
             </button>
           </div>

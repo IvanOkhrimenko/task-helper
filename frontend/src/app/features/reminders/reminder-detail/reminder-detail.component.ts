@@ -1,18 +1,19 @@
 import { Component, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, ActivatedRoute, RouterLink } from '@angular/router';
+import { TranslateModule } from '@ngx-translate/core';
 import { ReminderService, Reminder, ScheduleType } from '../../../core/services/reminder.service';
 
 @Component({
   selector: 'app-reminder-detail',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, TranslateModule],
   template: `
     <div class="detail-page">
       @if (isLoading()) {
         <div class="loading-state">
           <div class="loading-spinner"></div>
-          <p>Loading reminder...</p>
+          <p>{{ 'reminders.detail.loading' | translate }}</p>
         </div>
       } @else if (reminder()) {
         <header class="page-header">
@@ -20,7 +21,7 @@ import { ReminderService, Reminder, ScheduleType } from '../../../core/services/
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M19 12H5M12 19l-7-7 7-7"/>
             </svg>
-            Back to Reminders
+            {{ 'reminders.detail.backToReminders' | translate }}
           </a>
           <div class="page-header__content">
             <div class="page-header__info">
@@ -46,12 +47,12 @@ import { ReminderService, Reminder, ScheduleType } from '../../../core/services/
                     <rect x="6" y="4" width="4" height="16"/>
                     <rect x="14" y="4" width="4" height="16"/>
                   </svg>
-                  Pause
+                  {{ 'reminders.detail.pause' | translate }}
                 } @else {
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <polygon points="5 3 19 12 5 21 5 3"/>
                   </svg>
-                  Activate
+                  {{ 'reminders.detail.activate' | translate }}
                 }
               </button>
               <a [routerLink]="['/tasks/reminders', reminder()!.id, 'edit']" class="btn btn--primary">
@@ -59,7 +60,7 @@ import { ReminderService, Reminder, ScheduleType } from '../../../core/services/
                   <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/>
                   <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
                 </svg>
-                Edit
+                {{ 'common.edit' | translate }}
               </a>
             </div>
           </div>
@@ -73,28 +74,28 @@ import { ReminderService, Reminder, ScheduleType } from '../../../core/services/
                 <circle cx="12" cy="12" r="10"/>
                 <polyline points="12 6 12 12 16 14"/>
               </svg>
-              Schedule
+              {{ 'reminders.detail.schedule.title' | translate }}
             </h2>
             <div class="info-grid">
               <div class="info-item">
-                <span class="info-label">Type</span>
+                <span class="info-label">{{ 'reminders.detail.schedule.type' | translate }}</span>
                 <span class="info-value">{{ getScheduleLabel(reminder()!.scheduleType) }}</span>
               </div>
               @if (reminder()!.nextOccurrence) {
                 <div class="info-item">
-                  <span class="info-label">Next Occurrence</span>
+                  <span class="info-label">{{ 'reminders.detail.schedule.nextOccurrence' | translate }}</span>
                   <span class="info-value info-value--highlight">{{ formatDate(reminder()!.nextOccurrence!) }}</span>
                 </div>
               }
               @if (reminder()!.lastTriggered) {
                 <div class="info-item">
-                  <span class="info-label">Last Triggered</span>
+                  <span class="info-label">{{ 'reminders.detail.schedule.lastTriggered' | translate }}</span>
                   <span class="info-value">{{ formatDate(reminder()!.lastTriggered!) }}</span>
                 </div>
               }
               @if (reminder()!.scheduleConfig) {
                 <div class="info-item">
-                  <span class="info-label">Configuration</span>
+                  <span class="info-label">{{ 'reminders.detail.schedule.configuration' | translate }}</span>
                   <span class="info-value">{{ formatScheduleConfig(reminder()!) }}</span>
                 </div>
               }
@@ -108,25 +109,25 @@ import { ReminderService, Reminder, ScheduleType } from '../../../core/services/
                 <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/>
                 <path d="M13.73 21a2 2 0 01-3.46 0"/>
               </svg>
-              Notification
+              {{ 'reminders.detail.notification.title' | translate }}
             </h2>
             <div class="info-grid">
               @if (reminder()!.reminderTitle) {
                 <div class="info-item">
-                  <span class="info-label">Title</span>
+                  <span class="info-label">{{ 'reminders.detail.notification.notificationTitle' | translate }}</span>
                   <span class="info-value">{{ reminder()!.reminderTitle }}</span>
                 </div>
               }
               @if (reminder()!.reminderWarning) {
                 <div class="info-item">
-                  <span class="info-label">Warning</span>
-                  <span class="info-value">{{ reminder()!.reminderWarning }} minutes before</span>
+                  <span class="info-label">{{ 'reminders.detail.notification.warning' | translate }}</span>
+                  <span class="info-value">{{ reminder()!.reminderWarning }} {{ 'reminders.detail.notification.minutesBefore' | translate }}</span>
                 </div>
               }
               @if (reminder()!.reminderDeadline) {
                 <div class="info-item">
-                  <span class="info-label">Overdue After</span>
-                  <span class="info-value">{{ reminder()!.reminderDeadline }} minutes</span>
+                  <span class="info-label">{{ 'reminders.detail.notification.overdueAfter' | translate }}</span>
+                  <span class="info-value">{{ reminder()!.reminderDeadline }} {{ 'reminders.detail.notification.minutes' | translate }}</span>
                 </div>
               }
             </div>
@@ -140,7 +141,7 @@ import { ReminderService, Reminder, ScheduleType } from '../../../core/services/
                 <line x1="12" y1="8" x2="12" y2="12"/>
                 <line x1="12" y1="16" x2="12.01" y2="16"/>
               </svg>
-              Quick Actions
+              {{ 'reminders.detail.quickActions.title' | translate }}
             </h2>
             <div class="actions-list">
               <button class="action-btn" (click)="snooze(15)">
@@ -148,21 +149,21 @@ import { ReminderService, Reminder, ScheduleType } from '../../../core/services/
                   <circle cx="12" cy="12" r="10"/>
                   <polyline points="12 6 12 12 16 14"/>
                 </svg>
-                Snooze 15 min
+                {{ 'reminders.detail.quickActions.snooze15' | translate }}
               </button>
               <button class="action-btn" (click)="snooze(60)">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <circle cx="12" cy="12" r="10"/>
                   <polyline points="12 6 12 12 16 14"/>
                 </svg>
-                Snooze 1 hour
+                {{ 'reminders.detail.quickActions.snooze1h' | translate }}
               </button>
               <button class="action-btn action-btn--danger" (click)="deleteReminder()">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <polyline points="3 6 5 6 21 6"/>
                   <path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
                 </svg>
-                Delete Reminder
+                {{ 'reminders.detail.quickActions.deleteReminder' | translate }}
               </button>
             </div>
           </div>
@@ -174,7 +175,7 @@ import { ReminderService, Reminder, ScheduleType } from '../../../core/services/
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <path d="M22 17H2a3 3 0 003-3V9a7 7 0 0114 0v5a3 3 0 003 3zm-8.27 4a2 2 0 01-3.46 0"/>
                 </svg>
-                Recent Notifications
+                {{ 'reminders.detail.recentNotifications' | translate }}
               </h2>
               <div class="notifications-list">
                 @for (notif of reminder()!.notifications!.slice(0, 5); track notif.id) {

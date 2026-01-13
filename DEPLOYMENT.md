@@ -1,5 +1,122 @@
 # Task Helper - Deployment Documentation
 
+## Локальна розробка (Local Development)
+
+### Передумови
+
+1. **Node.js 20+** - встановлений
+2. **PostgreSQL 16** - через Homebrew (НЕ Docker!)
+
+```bash
+# Перевірити що PostgreSQL працює
+brew services list | grep postgresql
+# Має показати: postgresql@16 started
+```
+
+### Налаштування бази даних (один раз)
+
+```bash
+# Створити користувача та базу даних
+/opt/homebrew/opt/postgresql@16/bin/psql -U $(whoami) -d postgres
+
+# В psql консолі:
+CREATE USER taskhelper WITH PASSWORD 'taskhelper123';
+CREATE DATABASE taskhelper OWNER taskhelper;
+GRANT ALL PRIVILEGES ON DATABASE taskhelper TO taskhelper;
+\q
+```
+
+### Запуск додатку
+
+```bash
+# 1. Backend (термінал 1)
+cd task-helper/backend
+npm run dev
+
+# Має показати:
+# Connected to database
+# Server running on http://0.0.0.0:3000
+
+# 2. Frontend (термінал 2)
+cd task-helper/frontend
+npm start
+
+# Має показати:
+# ➜  Local:   http://localhost:4200/
+```
+
+### Швидкий запуск (одною командою)
+
+```bash
+# З кореневої папки task-helper
+cd backend && npm run dev &
+cd ../frontend && npm start
+```
+
+### Часті проблеми та рішення
+
+#### ❌ Backend не стартує / зависає
+
+**Причина:** Пошкоджені node_modules (особливо esbuild)
+
+**Рішення:**
+```bash
+cd task-helper/backend
+rm -rf node_modules
+npm install
+npm run dev
+```
+
+#### ❌ "Connection refused" на порту 3000
+
+**Причина:** Старий процес блокує порт
+
+**Рішення:**
+```bash
+# Знайти та вбити процес
+lsof -i :3000
+kill <PID>
+
+# Або вбити всі tsx процеси
+pkill -f "tsx"
+```
+
+#### ❌ Database connection error
+
+**Причина:** PostgreSQL не запущений
+
+**Рішення:**
+```bash
+brew services start postgresql@16
+```
+
+#### ❌ "User taskhelper does not exist"
+
+**Причина:** Користувач не створений
+
+**Рішення:** Виконати команди з секції "Налаштування бази даних"
+
+### Корисні команди
+
+```bash
+# Перевірити статус PostgreSQL
+brew services list | grep postgres
+
+# Перезапустити PostgreSQL
+brew services restart postgresql@16
+
+# Підключитись до бази даних
+PGPASSWORD=taskhelper123 /opt/homebrew/opt/postgresql@16/bin/psql -U taskhelper -d taskhelper
+
+# Prisma Studio (GUI для бази даних)
+cd task-helper/backend && npx prisma studio
+
+# Оновити схему бази даних
+cd task-helper/backend && npx prisma db push
+```
+
+---
+
 ## Production URLs
 
 | Service | URL | Platform |

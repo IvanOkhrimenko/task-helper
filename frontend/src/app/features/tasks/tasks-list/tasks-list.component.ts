@@ -1,6 +1,7 @@
 import { Component, inject, signal, computed, OnInit, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink, Router } from '@angular/router';
+import { TranslateModule } from '@ngx-translate/core';
 import { TaskService, Task } from '../../../core/services/task.service';
 import { NotificationService } from '../../../core/services/notification.service';
 import { InvoiceModalComponent, InvoiceGenerationData } from '../../../shared/components/invoice-modal/invoice-modal.component';
@@ -8,7 +9,7 @@ import { InvoiceModalComponent, InvoiceGenerationData } from '../../../shared/co
 @Component({
   selector: 'app-tasks-list',
   standalone: true,
-  imports: [CommonModule, RouterLink, InvoiceModalComponent],
+  imports: [CommonModule, RouterLink, InvoiceModalComponent, TranslateModule],
   template: `
     <app-invoice-modal
       #invoiceModal
@@ -21,8 +22,8 @@ import { InvoiceModalComponent, InvoiceGenerationData } from '../../../shared/co
       <!-- Header -->
       <header class="page-header">
         <div class="page-header__info">
-          <h1 class="page-title">Invoice Tasks</h1>
-          <p class="page-subtitle">Manage your client projects and generate invoices</p>
+          <h1 class="page-title">{{ 'tasks.title' | translate }}</h1>
+          <p class="page-subtitle">{{ 'tasks.subtitle' | translate }}</p>
         </div>
         <div class="header-actions">
           <label class="archive-toggle" [class.archive-toggle--active]="showArchived()">
@@ -36,14 +37,14 @@ import { InvoiceModalComponent, InvoiceGenerationData } from '../../../shared/co
               <rect x="1" y="3" width="22" height="5"/>
               <line x1="10" y1="12" x2="14" y2="12"/>
             </svg>
-            Show Archived
+            {{ 'tasks.showArchived' | translate }}
           </label>
           <a routerLink="/tasks/invoices/new" class="btn btn--primary">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <line x1="12" y1="5" x2="12" y2="19"/>
               <line x1="5" y1="12" x2="19" y2="12"/>
             </svg>
-            New Task
+            {{ 'tasks.newTask' | translate }}
           </a>
         </div>
       </header>
@@ -52,19 +53,19 @@ import { InvoiceModalComponent, InvoiceGenerationData } from '../../../shared/co
       <div class="stats-row">
         <div class="stat-card">
           <span class="stat-value">{{ tasks().length }}</span>
-          <span class="stat-label">Total Tasks</span>
+          <span class="stat-label">{{ 'tasks.stats.totalTasks' | translate }}</span>
         </div>
         <div class="stat-card stat-card--active">
           <span class="stat-value">{{ activeCount() }}</span>
-          <span class="stat-label">Active</span>
+          <span class="stat-label">{{ 'tasks.stats.active' | translate }}</span>
         </div>
         <div class="stat-card stat-card--clients">
           <span class="stat-value">{{ uniqueClientsCount() }}</span>
-          <span class="stat-label">Clients</span>
+          <span class="stat-label">{{ 'tasks.stats.clients' | translate }}</span>
         </div>
         <div class="stat-card stat-card--revenue">
           <span class="stat-value">{{ formatCurrency(totalRevenue()) }}</span>
-          <span class="stat-label">This Month</span>
+          <span class="stat-label">{{ 'tasks.stats.thisMonth' | translate }}</span>
         </div>
       </div>
 
@@ -72,7 +73,7 @@ import { InvoiceModalComponent, InvoiceGenerationData } from '../../../shared/co
       @if (isLoading()) {
         <div class="loading-state">
           <div class="loading-spinner"></div>
-          <p>Loading tasks...</p>
+          <p>{{ 'tasks.loading' | translate }}</p>
         </div>
       } @else if (tasks().length === 0) {
         <div class="empty-state">
@@ -84,9 +85,9 @@ import { InvoiceModalComponent, InvoiceGenerationData } from '../../../shared/co
               <line x1="3" y1="10" x2="21" y2="10"/>
             </svg>
           </div>
-          <h3>No invoice tasks yet</h3>
-          <p>Create your first task to start tracking client work and generating invoices</p>
-          <a routerLink="/tasks/invoices/new" class="btn btn--primary">Create Task</a>
+          <h3>{{ 'tasks.empty.title' | translate }}</h3>
+          <p>{{ 'tasks.empty.description' | translate }}</p>
+          <a routerLink="/tasks/invoices/new" class="btn btn--primary">{{ 'tasks.empty.createTask' | translate }}</a>
         </div>
       } @else {
         <div class="tasks-grid">
@@ -105,7 +106,7 @@ import { InvoiceModalComponent, InvoiceGenerationData } from '../../../shared/co
                     @if (task.client) {
                       <a [routerLink]="['/clients', task.client.id]" class="client-name client-name--link">{{ task.client.name }}</a>
                     } @else {
-                      <span class="client-name">No client</span>
+                      <span class="client-name">{{ 'tasks.card.noClient' | translate }}</span>
                     }
                     @if (task.client?.currency && task.client?.hourlyRate) {
                       <span class="client-rate">{{ getCurrencySymbol(task.client!.currency) }}{{ task.client!.hourlyRate }}/hr</span>
@@ -114,7 +115,7 @@ import { InvoiceModalComponent, InvoiceGenerationData } from '../../../shared/co
                 </div>
                 <div class="task-card__status">
                   @if (task.client?.crmIntegration) {
-                    <span class="crm-badge" title="CRM: {{ task.client!.crmIntegration!.name }}">
+                    <span class="crm-badge" [title]="('tasks.card.crm' | translate) + ': ' + task.client!.crmIntegration!.name">
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M12 2L2 7l10 5 10-5-10-5z"/>
                         <path d="M2 17l10 5 10-5"/>
@@ -123,7 +124,7 @@ import { InvoiceModalComponent, InvoiceGenerationData } from '../../../shared/co
                     </span>
                   }
                   @if (task.isArchived) {
-                    <span class="archived-badge" title="Archived">
+                    <span class="archived-badge" [title]="'tasks.card.archived' | translate">
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <polyline points="21 8 21 21 3 21 3 8"/>
                         <rect x="1" y="3" width="22" height="5"/>
@@ -131,7 +132,7 @@ import { InvoiceModalComponent, InvoiceGenerationData } from '../../../shared/co
                     </span>
                   }
                   <span class="status-badge" [class.status-badge--active]="task.isActive" [class.status-badge--inactive]="!task.isActive">
-                    {{ task.isActive ? 'Active' : 'Inactive' }}
+                    {{ task.isActive ? ('tasks.card.active' | translate) : ('tasks.card.inactive' | translate) }}
                   </span>
                 </div>
               </div>
@@ -154,7 +155,7 @@ import { InvoiceModalComponent, InvoiceGenerationData } from '../../../shared/co
                         <line x1="8" y1="2" x2="8" y2="6"/>
                         <line x1="3" y1="10" x2="21" y2="10"/>
                       </svg>
-                      <span>Deadline: {{ task.deadlineDate }}th of month</span>
+                      <span>{{ 'tasks.card.deadline' | translate }}: {{ task.deadlineDate }}{{ 'tasks.card.dayOfMonth' | translate }}</span>
                     </div>
                   }
                   @if (task.warningDate) {
@@ -163,7 +164,7 @@ import { InvoiceModalComponent, InvoiceGenerationData } from '../../../shared/co
                         <circle cx="12" cy="12" r="10"/>
                         <polyline points="12 6 12 12 16 14"/>
                       </svg>
-                      <span>Warning: {{ task.warningDate }}th of month</span>
+                      <span>{{ 'tasks.card.warning' | translate }}: {{ task.warningDate }}{{ 'tasks.card.dayOfMonth' | translate }}</span>
                     </div>
                   }
                 </div>
@@ -177,14 +178,14 @@ import { InvoiceModalComponent, InvoiceGenerationData } from '../../../shared/co
                     <line x1="12" y1="18" x2="12" y2="12"/>
                     <line x1="9" y1="15" x2="15" y2="15"/>
                   </svg>
-                  Generate Invoice
+                  {{ 'tasks.card.generateInvoice' | translate }}
                 </button>
                 <a [routerLink]="['/tasks/invoices', task.id, 'edit']" class="btn btn--ghost btn--sm">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/>
                     <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
                   </svg>
-                  Edit
+                  {{ 'tasks.card.edit' | translate }}
                 </a>
               </div>
             </div>
