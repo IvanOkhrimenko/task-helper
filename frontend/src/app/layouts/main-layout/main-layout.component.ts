@@ -30,8 +30,13 @@ interface NavSection {
   imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive, TranslateModule, ChatComponent, LanguageSwitcherComponent],
   template: `
     <div class="layout">
+      <!-- Mobile Overlay -->
+      @if (mobileMenuOpen()) {
+        <div class="mobile-overlay" (click)="closeMobileMenu()"></div>
+      }
+
       <!-- Sidebar -->
-      <aside class="sidebar" [class.sidebar--collapsed]="sidebarCollapsed()">
+      <aside class="sidebar" [class.sidebar--collapsed]="sidebarCollapsed()" [class.sidebar--mobile-open]="mobileMenuOpen()">
         <div class="sidebar__header">
           <div class="logo">
             <div class="logo__icon">
@@ -75,6 +80,7 @@ interface NavSection {
                     [routerLink]="item.route"
                     routerLinkActive="nav-item--active"
                     [routerLinkActiveOptions]="{ exact: item.exactMatch ?? false }"
+                    (click)="closeMobileMenu()"
                   >
                     <span class="nav-item__icon" [innerHTML]="item.icon"></span>
                     <span class="nav-item__label">{{ item.labelKey | translate }}</span>
@@ -110,6 +116,14 @@ interface NavSection {
         <!-- Header -->
         <header class="header">
           <div class="header__left">
+            <!-- Mobile Menu Button -->
+            <button class="mobile-menu-btn" (click)="toggleMobileMenu()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="3" y1="6" x2="21" y2="6"/>
+                <line x1="3" y1="12" x2="21" y2="12"/>
+                <line x1="3" y1="18" x2="21" y2="18"/>
+              </svg>
+            </button>
             <div class="breadcrumb">
               <span class="breadcrumb__page">{{ currentPageTitleKey() | translate }}</span>
             </div>
@@ -914,24 +928,194 @@ interface NavSection {
     .main-content {
       flex: 1;
       overflow-y: auto;
+      padding: var(--space-lg);
+
+      @media (max-width: 767px) {
+        padding: var(--space-md);
+      }
+    }
+
+    /* ========== MOBILE OVERLAY ========== */
+    .mobile-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(4px);
+      z-index: 90;
+      animation: fadeIn 0.2s ease;
+
+      @media (max-width: 767px) {
+        display: block;
+      }
+    }
+
+    /* ========== MOBILE MENU BUTTON ========== */
+    .mobile-menu-btn {
+      display: none;
+      width: 40px;
+      height: 40px;
+      align-items: center;
+      justify-content: center;
+      border-radius: var(--radius-md);
+      color: var(--color-text);
+      background: transparent;
+      margin-right: var(--space-sm);
+      flex-shrink: 0;
+      transition: background var(--transition-fast);
+
+      svg {
+        width: 22px;
+        height: 22px;
+      }
+
+      &:hover {
+        background: var(--color-fill-tertiary);
+      }
+
+      @media (max-width: 767px) {
+        display: flex;
+      }
     }
 
     /* ========== RESPONSIVE ========== */
-    @media (max-width: 1024px) {
+    @media (max-width: 767px) {
       .sidebar {
+        position: fixed;
         transform: translateX(-100%);
+        width: 280px;
+        z-index: 100;
+        box-shadow: var(--shadow-xl);
+      }
 
-        &:not(.sidebar--collapsed) {
-          transform: translateX(0);
+      .sidebar--mobile-open {
+        transform: translateX(0);
+      }
+
+      .sidebar--collapsed {
+        width: 280px;
+
+        .logo__text,
+        .nav-section__title,
+        .nav-item__label,
+        .user-card__info,
+        .nav-section__chevron {
+          opacity: 1;
+          visibility: visible;
+        }
+
+        .sidebar__toggle svg {
+          transform: rotate(0);
+        }
+
+        .user-card {
+          justify-content: flex-start;
+          padding: var(--space-md);
+        }
+
+        .user-card__logout {
+          display: flex;
+        }
+      }
+
+      .sidebar__toggle {
+        display: none;
+      }
+
+      .content-wrapper {
+        margin-left: 0 !important;
+      }
+
+      .header {
+        padding: 0 var(--space-md);
+      }
+
+      .header__left {
+        flex: 1;
+        min-width: 0;
+      }
+
+      .breadcrumb__page {
+        font-size: 0.9375rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .header__right {
+        gap: var(--space-xs);
+      }
+
+      .theme-toggle,
+      .notification-bell {
+        width: 40px;
+        height: 40px;
+      }
+
+      .header-avatar {
+        display: none;
+      }
+
+      .notification-dropdown {
+        position: fixed;
+        top: auto;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        width: 100%;
+        max-height: 70vh;
+        border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+        animation: slideUpSheet 0.3s ease;
+      }
+
+      .main-content {
+        padding-bottom: calc(var(--space-xl) + env(safe-area-inset-bottom));
+      }
+    }
+
+    @media (min-width: 768px) and (max-width: 1023px) {
+      .sidebar {
+        width: var(--sidebar-collapsed-width);
+
+        .logo__text,
+        .nav-section__title,
+        .nav-item__label,
+        .user-card__info,
+        .nav-section__chevron {
+          opacity: 0;
+          visibility: hidden;
+        }
+
+        .sidebar__toggle svg {
+          transform: rotate(180deg);
+        }
+
+        .user-card {
+          justify-content: center;
+          padding: var(--space-sm);
+        }
+
+        .user-card__logout {
+          display: none;
         }
       }
 
       .content-wrapper {
-        margin-left: 0;
+        margin-left: var(--sidebar-collapsed-width);
       }
+    }
 
-      .sidebar--collapsed ~ .content-wrapper {
-        margin-left: 0;
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    @keyframes slideUpSheet {
+      from {
+        transform: translateY(100%);
+      }
+      to {
+        transform: translateY(0);
       }
     }
   `]
@@ -945,6 +1129,7 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
   private routerSubscription?: Subscription;
 
   sidebarCollapsed = signal(false);
+  mobileMenuOpen = signal(false);
   notificationsOpen = signal(false);
   currentRoute = signal('');
 
@@ -1122,6 +1307,14 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
 
   toggleSidebar(): void {
     this.sidebarCollapsed.update(v => !v);
+  }
+
+  toggleMobileMenu(): void {
+    this.mobileMenuOpen.update(v => !v);
+  }
+
+  closeMobileMenu(): void {
+    this.mobileMenuOpen.set(false);
   }
 
   toggleSection(section: NavSection): void {

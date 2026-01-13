@@ -4,6 +4,16 @@
 // iOS-Style Design System
 // ============================================
 
+// ============================================
+// Breakpoints (Mobile-first)
+// ============================================
+// xs: 0-479px (small phones)
+// sm: 480-639px (large phones)
+// md: 640-767px (small tablets)
+// lg: 768-1023px (tablets)
+// xl: 1024-1279px (small laptops)
+// 2xl: 1280px+ (desktops)
+
 :root {
   // Typography
   --font-display: 'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
@@ -402,4 +412,373 @@ a {
 ::selection {
   background: var(--color-primary-subtle);
   color: var(--color-primary);
+}
+
+// ============================================
+// Mobile-First Responsive Design
+// ============================================
+
+// Mobile breakpoint mixins (use these in components)
+// Usage: @media (min-width: 768px) { ... }
+
+// Safe area insets for notched devices
+html {
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+}
+
+// Touch-friendly minimum sizes
+@media (pointer: coarse) {
+  button, a, input, select, textarea {
+    min-height: 44px;
+  }
+
+  input[type="checkbox"], input[type="radio"] {
+    min-width: 20px;
+    min-height: 20px;
+  }
+}
+
+// ============================================
+// Responsive Typography
+// ============================================
+@media (max-width: 639px) {
+  html {
+    font-size: 14px;
+  }
+
+  h1 { font-size: 1.75rem; }
+  h2 { font-size: 1.375rem; }
+  h3 { font-size: 1.125rem; }
+  h4 { font-size: 1rem; }
+}
+
+// ============================================
+// Responsive Container
+// ============================================
+.container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 var(--space-md);
+
+  @media (min-width: 640px) {
+    padding: 0 var(--space-lg);
+  }
+
+  @media (min-width: 1024px) {
+    padding: 0 var(--space-xl);
+  }
+}
+
+// ============================================
+// Responsive Utilities
+// ============================================
+
+// Hide on mobile (show on lg+)
+.hide-mobile {
+  @media (max-width: 767px) {
+    display: none !important;
+  }
+}
+
+// Hide on desktop (show on mobile only)
+.hide-desktop {
+  @media (min-width: 768px) {
+    display: none !important;
+  }
+}
+
+// Show only on specific breakpoints
+.show-xs { display: none !important; }
+.show-sm { display: none !important; }
+.show-md { display: none !important; }
+.show-lg { display: none !important; }
+
+@media (max-width: 479px) {
+  .show-xs { display: block !important; }
+  .hide-xs { display: none !important; }
+}
+
+@media (min-width: 480px) and (max-width: 639px) {
+  .show-sm { display: block !important; }
+}
+
+@media (min-width: 640px) and (max-width: 767px) {
+  .show-md { display: block !important; }
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+  .show-lg { display: block !important; }
+}
+
+// ============================================
+// Mobile-Friendly Form Elements
+// ============================================
+@media (max-width: 639px) {
+  input, textarea, select {
+    font-size: 16px !important; // Prevents zoom on iOS
+    padding: var(--space-md);
+  }
+}
+
+// ============================================
+// Responsive Grid System
+// ============================================
+.grid {
+  display: grid;
+  gap: var(--space-lg);
+}
+
+.grid-cols-1 { grid-template-columns: repeat(1, 1fr); }
+.grid-cols-2 { grid-template-columns: repeat(2, 1fr); }
+.grid-cols-3 { grid-template-columns: repeat(3, 1fr); }
+.grid-cols-4 { grid-template-columns: repeat(4, 1fr); }
+
+@media (min-width: 640px) {
+  .sm\:grid-cols-2 { grid-template-columns: repeat(2, 1fr); }
+  .sm\:grid-cols-3 { grid-template-columns: repeat(3, 1fr); }
+}
+
+@media (min-width: 768px) {
+  .md\:grid-cols-2 { grid-template-columns: repeat(2, 1fr); }
+  .md\:grid-cols-3 { grid-template-columns: repeat(3, 1fr); }
+  .md\:grid-cols-4 { grid-template-columns: repeat(4, 1fr); }
+}
+
+@media (min-width: 1024px) {
+  .lg\:grid-cols-3 { grid-template-columns: repeat(3, 1fr); }
+  .lg\:grid-cols-4 { grid-template-columns: repeat(4, 1fr); }
+}
+
+// ============================================
+// Responsive Flex Utilities
+// ============================================
+.flex-col-mobile {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+
+  @media (min-width: 768px) {
+    flex-direction: row;
+    align-items: center;
+  }
+}
+
+.flex-wrap-mobile {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+}
+
+// ============================================
+// Mobile Card/Panel Styles
+// ============================================
+.card {
+  background: var(--color-surface);
+  border-radius: var(--radius-lg);
+  padding: var(--space-lg);
+  border: 1px solid var(--color-border);
+
+  @media (max-width: 639px) {
+    border-radius: var(--radius-md);
+    padding: var(--space-md);
+
+    // Full-width cards on mobile (no side margins)
+    margin-left: calc(var(--space-md) * -1);
+    margin-right: calc(var(--space-md) * -1);
+    border-left: none;
+    border-right: none;
+    border-radius: 0;
+  }
+}
+
+// ============================================
+// Responsive Table (Stacked on mobile)
+// ============================================
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+
+  @media (max-width: 767px) {
+    // Optional: Stack table cells on mobile
+    &.table-stack-mobile {
+      thead {
+        display: none;
+      }
+
+      tbody tr {
+        display: block;
+        margin-bottom: var(--space-md);
+        padding: var(--space-md);
+        background: var(--color-surface);
+        border-radius: var(--radius-md);
+        border: 1px solid var(--color-border);
+      }
+
+      tbody td {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: var(--space-sm) 0;
+        border-bottom: 1px solid var(--color-border);
+
+        &:last-child {
+          border-bottom: none;
+        }
+
+        &::before {
+          content: attr(data-label);
+          font-weight: 500;
+          color: var(--color-text-secondary);
+          margin-right: var(--space-md);
+        }
+      }
+    }
+  }
+}
+
+// ============================================
+// Mobile Bottom Sheet / Action Sheet
+// ============================================
+.mobile-sheet {
+  @media (max-width: 639px) {
+    position: fixed !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    top: auto !important;
+    max-height: 90vh;
+    border-radius: var(--radius-xl) var(--radius-xl) 0 0 !important;
+    transform: translateY(0) !important;
+    animation: slideUpSheet 0.3s ease;
+  }
+}
+
+@keyframes slideUpSheet {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+// ============================================
+// Mobile Modal Overlay
+// ============================================
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-lg);
+
+  @media (max-width: 639px) {
+    padding: 0;
+    align-items: flex-end;
+  }
+}
+
+.modal-content {
+  background: var(--color-surface);
+  border-radius: var(--radius-xl);
+  max-width: 500px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+
+  @media (max-width: 639px) {
+    max-width: 100%;
+    max-height: 95vh;
+    border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+  }
+}
+
+// ============================================
+// Mobile Sticky Footer Actions
+// ============================================
+.sticky-actions {
+  @media (max-width: 639px) {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: var(--space-md);
+    padding-bottom: calc(var(--space-md) + env(safe-area-inset-bottom));
+    background: var(--color-surface);
+    border-top: 1px solid var(--color-border);
+    z-index: 100;
+
+    display: flex;
+    gap: var(--space-sm);
+
+    button {
+      flex: 1;
+    }
+  }
+}
+
+// ============================================
+// Responsive Spacing Utilities
+// ============================================
+.p-responsive {
+  padding: var(--space-md);
+
+  @media (min-width: 768px) {
+    padding: var(--space-xl);
+  }
+
+  @media (min-width: 1024px) {
+    padding: var(--space-2xl);
+  }
+}
+
+.px-responsive {
+  padding-left: var(--space-md);
+  padding-right: var(--space-md);
+
+  @media (min-width: 768px) {
+    padding-left: var(--space-xl);
+    padding-right: var(--space-xl);
+  }
+}
+
+.py-responsive {
+  padding-top: var(--space-lg);
+  padding-bottom: var(--space-lg);
+
+  @media (min-width: 768px) {
+    padding-top: var(--space-2xl);
+    padding-bottom: var(--space-2xl);
+  }
+}
+
+// ============================================
+// Prevent horizontal scroll on mobile
+// ============================================
+html, body {
+  overflow-x: hidden;
+  width: 100%;
+}
+
+// ============================================
+// Smooth scrolling with reduced motion support
+// ============================================
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

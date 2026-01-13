@@ -872,49 +872,215 @@ interface GroupedEvents {
       to { transform: rotate(360deg); }
     }
 
+    /* ========== RESPONSIVE ========== */
     @media (max-width: 1024px) {
       .stats {
         grid-template-columns: repeat(2, 1fr);
       }
     }
 
-    @media (max-width: 768px) {
+    @media (max-width: 767px) {
       .dashboard {
-        padding: var(--space-lg);
+        padding: 0;
+      }
+
+      .header {
+        padding: var(--space-lg) var(--space-md);
+        background: var(--color-surface);
+        border-bottom: 1px solid var(--color-border);
+        margin-bottom: 0;
       }
 
       .header__content {
         flex-direction: column;
-        gap: var(--space-lg);
+        gap: var(--space-md);
+      }
+
+      .header__title {
+        font-size: 1.25rem;
+      }
+
+      .header__subtitle {
+        font-size: 0.8125rem;
       }
 
       .header__actions {
         width: 100%;
+        gap: var(--space-sm);
       }
 
       .header__actions .btn {
         flex: 1;
         justify-content: center;
+        padding: var(--space-md);
+        font-size: 0.8125rem;
+
+        svg {
+          width: 16px;
+          height: 16px;
+        }
       }
 
       .stats {
-        grid-template-columns: 1fr;
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: var(--space-sm);
+        padding: var(--space-md);
+        margin-bottom: 0;
+      }
+
+      .stat-card {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: var(--space-sm);
+        padding: var(--space-md);
+
+        &:hover {
+          transform: none;
+          box-shadow: none;
+        }
+      }
+
+      .stat-card__icon {
+        width: 36px;
+        height: 36px;
+
+        svg {
+          width: 18px;
+          height: 18px;
+        }
+      }
+
+      .stat-card__value {
+        font-size: 1.25rem;
+      }
+
+      .stat-card__label {
+        font-size: 0.75rem;
+      }
+
+      .agenda {
+        border-radius: 0;
+        border-left: none;
+        border-right: none;
       }
 
       .agenda__header {
         flex-direction: column;
         align-items: stretch;
-        gap: var(--space-lg);
+        gap: var(--space-md);
+        padding: var(--space-md);
+      }
+
+      .agenda__title {
+        font-size: 1rem;
       }
 
       .period-tabs {
         overflow-x: auto;
         -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+
+        &::-webkit-scrollbar {
+          display: none;
+        }
+      }
+
+      .period-tab {
+        padding: var(--space-sm) var(--space-md);
+        white-space: nowrap;
+        font-size: 0.75rem;
+      }
+
+      .timeline {
+        padding: var(--space-md);
+      }
+
+      .date-group:not(:last-child) {
+        margin-bottom: var(--space-lg);
+      }
+
+      .event-card {
+        flex-direction: column;
+        align-items: stretch;
+        gap: var(--space-md);
+        padding: var(--space-md);
+      }
+
+      .event-card__icon {
+        position: absolute;
+        top: var(--space-md);
+        left: var(--space-md);
+        width: 32px;
+        height: 32px;
+
+        svg {
+          width: 16px;
+          height: 16px;
+        }
+      }
+
+      .event-card__content {
+        padding-left: 44px;
+      }
+
+      .event-card__header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: var(--space-sm);
+      }
+
+      .event-card__title {
+        font-size: 0.875rem;
+      }
+
+      .event-card__meta {
+        flex-wrap: wrap;
+        gap: var(--space-sm) var(--space-md);
+        font-size: 0.75rem;
       }
 
       .event-card__actions {
         opacity: 1;
-        transform: translateX(0);
+        transform: none;
+        padding-left: 44px;
+        justify-content: flex-start;
+        border-top: 1px solid var(--color-border);
+        padding-top: var(--space-md);
+        margin-top: var(--space-sm);
+      }
+
+      .action-btn {
+        width: 36px;
+        height: 36px;
+      }
+
+      .empty-state {
+        padding: 40px var(--space-md);
+      }
+
+      .empty-state__icon {
+        width: 48px;
+        height: 48px;
+      }
+
+      .loading {
+        padding: 40px;
+      }
+    }
+
+    @media (max-width: 374px) {
+      .stats {
+        grid-template-columns: 1fr;
+      }
+
+      .header__actions {
+        flex-direction: column;
+      }
+
+      .header__actions .btn {
+        width: 100%;
       }
     }
   `]

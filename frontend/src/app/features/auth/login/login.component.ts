@@ -349,6 +349,73 @@ import { LanguageSwitcherComponent } from '../../../shared/components/language-s
         left: 10%;
       }
     }
+
+    /* Mobile Responsive */
+    @media (max-width: 480px) {
+      .auth-page {
+        padding: var(--space-md);
+        align-items: flex-start;
+        padding-top: 60px;
+      }
+
+      .language-switcher-wrapper {
+        top: var(--space-md);
+        right: var(--space-md);
+      }
+
+      .auth-container {
+        padding: var(--space-xl);
+        border-radius: var(--radius-lg);
+        max-width: 100%;
+      }
+
+      .auth-header {
+        margin-bottom: var(--space-xl);
+      }
+
+      .auth-logo {
+        width: 48px;
+        height: 48px;
+        margin-bottom: var(--space-md);
+      }
+
+      .auth-title {
+        font-size: 1.5rem;
+      }
+
+      .auth-subtitle {
+        font-size: 0.875rem;
+      }
+
+      .form-input {
+        font-size: 16px; /* Prevent zoom on iOS */
+        padding: var(--space-md);
+      }
+
+      .btn {
+        padding: var(--space-lg);
+        font-size: 1rem;
+      }
+
+      .decoration-shape {
+        display: none;
+      }
+    }
+
+    @media (max-height: 600px) {
+      .auth-page {
+        align-items: flex-start;
+        padding-top: var(--space-lg);
+      }
+
+      .auth-container {
+        padding: var(--space-lg);
+      }
+
+      .auth-header {
+        margin-bottom: var(--space-lg);
+      }
+    }
   `]
 })
 export class LoginComponent {
