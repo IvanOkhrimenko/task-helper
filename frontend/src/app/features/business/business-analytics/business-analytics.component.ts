@@ -2,6 +2,7 @@ import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
+import { forkJoin } from 'rxjs';
 import { BusinessService } from '../business.service';
 import { BusinessContextService } from '../business-context.service';
 import {
@@ -11,6 +12,8 @@ import {
   CategoryBreakdown,
   TimeSeriesDataPoint,
   MemberBalance,
+  BusinessExpense,
+  BusinessIncome,
   formatCurrency,
   parseDecimal,
 } from '../business.models';
@@ -110,6 +113,169 @@ import {
                 <span class="breakdown-item expense">{{ analytics()!.kpis.expenseCount }} {{ 'business.analytics.out' | translate }}</span>
               </div>
             </div>
+          </div>
+        </section>
+
+        <!-- Period Breakdown Table -->
+        <section class="table-section">
+          <div class="table-header">
+            <div>
+              <h2 class="section-title">{{ 'business.analytics.periodBreakdown' | translate }}</h2>
+              <span class="section-subtitle">{{ 'business.analytics.detailedFinancialData' | translate }}</span>
+            </div>
+            <div class="table-controls">
+              <select class="groupby-select" [(ngModel)]="tableGroupBy" (change)="onTableGroupByChange(tableGroupBy())">
+                <option value="week">{{ 'business.analytics.groupBy.week' | translate }}</option>
+                <option value="month">{{ 'business.analytics.groupBy.month' | translate }}</option>
+                <option value="year">{{ 'business.analytics.groupBy.year' | translate }}</option>
+              </select>
+              <button class="export-button" (click)="exportTableData()" [disabled]="tableLoading() || tableData().length === 0">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/>
+                </svg>
+                {{ 'business.analytics.export' | translate }}
+              </button>
+            </div>
+          </div>
+
+          <div class="table-card">
+            @if (tableLoading()) {
+              <div class="table-loading">{{ 'common.loading' | translate }}</div>
+            } @else if (tableData().length === 0) {
+              <div class="table-empty">{{ 'business.analytics.noData' | translate }}</div>
+            } @else {
+              <div class="table-wrapper">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th class="sortable" (click)="sortBy('period')">
+                        <span class="th-content">
+                          {{ 'business.analytics.period' | translate }}
+                          @if (sortColumn() === 'period') {
+                            <span class="sort-indicator">{{ sortDirection() === 'asc' ? '↑' : '↓' }}</span>
+                          }
+                        </span>
+                      </th>
+                      <th class="sortable numeric" (click)="sortBy('revenue')">
+                        <span class="th-content">
+                          {{ 'business.analytics.revenue' | translate }}
+                          @if (sortColumn() === 'revenue') {
+                            <span class="sort-indicator">{{ sortDirection() === 'asc' ? '↑' : '↓' }}</span>
+                          }
+                        </span>
+                      </th>
+                      <th class="sortable numeric" (click)="sortBy('expenses')">
+                        <span class="th-content">
+                          {{ 'business.analytics.expenses' | translate }}
+                          @if (sortColumn() === 'expenses') {
+                            <span class="sort-indicator">{{ sortDirection() === 'asc' ? '↑' : '↓' }}</span>
+                          }
+                        </span>
+                      </th>
+                      <th class="sortable numeric" (click)="sortBy('netProfit')">
+                        <span class="th-content">
+                          {{ 'business.analytics.netProfit' | translate }}
+                          @if (sortColumn() === 'netProfit') {
+                            <span class="sort-indicator">{{ sortDirection() === 'asc' ? '↑' : '↓' }}</span>
+                          }
+                        </span>
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (point of sortedTableData(); track point.date) {
+                      <!-- Main summary row -->
+                      <tr class="summary-row" [class.expanded]="isRowExpanded(point.date)" (click)="toggleRowExpansion(point.date)">
+                        <td class="period-cell">
+                          <div class="period-cell-content">
+                            <span class="expand-icon">{{ isRowExpanded(point.date) ? '▼' : '▶' }}</span>
+                            <span>{{ formatPeriodLabel(point.date, tableGroupBy()) }}</span>
+                          </div>
+                        </td>
+                        <td class="numeric revenue-cell">{{ formatAmount(point.revenue) }}</td>
+                        <td class="numeric expenses-cell">{{ formatAmount(point.expenses) }}</td>
+                        <td class="numeric profit-cell" [class.negative]="isNegative(parseDecimal(point.revenue) - parseDecimal(point.expenses))">
+                          {{ formatAmount((parseDecimal(point.revenue) - parseDecimal(point.expenses)).toFixed(2)) }}
+                        </td>
+                      </tr>
+
+                      <!-- Expanded detail row -->
+                      @if (isRowExpanded(point.date)) {
+                        <tr class="detail-row">
+                          <td colspan="4" class="detail-cell">
+                            @if (expandedLoading()) {
+                              <div class="detail-loading">
+                                <div class="loading-spinner"></div>
+                                <span>{{ 'common.loading' | translate }}</span>
+                              </div>
+                            } @else {
+                              <div class="detail-content">
+                                <!-- Expenses -->
+                                @if (getExpandedData(point.date)?.expenses && getExpandedData(point.date)!.expenses.length > 0) {
+                                  <div class="transactions-section expenses-section">
+                                    <h4>{{ 'business.transactions.expenses' | translate | uppercase }} ({{ getExpandedData(point.date)!.expenses.length }})</h4>
+                                    <div class="transactions-list">
+                                      @for (exp of getExpandedData(point.date)!.expenses; track exp.id) {
+                                        <div class="transaction-item">
+                                          <span class="txn-date">{{ formatTransactionDate(exp.transactionDate) }}</span>
+                                          <span class="category-dot" [style.background]="exp.category.color || '#8b949e'"></span>
+                                          <span class="txn-description">{{ exp.description || ('business.transactions.noDescription' | translate) }}</span>
+                                          <span class="txn-category">{{ exp.category.name }}</span>
+                                          @if (exp.paidByMember) {
+                                            <span class="txn-member">{{ exp.paidByMember.user.name }}</span>
+                                          }
+                                          <span class="txn-amount expense">{{ formatAmount(exp.amount) }}</span>
+                                        </div>
+                                      }
+                                    </div>
+                                  </div>
+                                }
+
+                                <!-- Incomes -->
+                                @if (getExpandedData(point.date)?.incomes && getExpandedData(point.date)!.incomes.length > 0) {
+                                  <div class="transactions-section incomes-section">
+                                    <h4>{{ 'business.transactions.income' | translate | uppercase }} ({{ getExpandedData(point.date)!.incomes.length }})</h4>
+                                    <div class="transactions-list">
+                                      @for (inc of getExpandedData(point.date)!.incomes; track inc.id) {
+                                        <div class="transaction-item">
+                                          <span class="txn-date">{{ formatTransactionDate(inc.transactionDate) }}</span>
+                                          <span class="category-dot" [style.background]="inc.category.color || '#3fb950'"></span>
+                                          <span class="txn-description">{{ inc.description || ('business.transactions.noDescription' | translate) }}</span>
+                                          <span class="txn-category">{{ inc.category.name }}</span>
+                                          @if (inc.receivedByMember) {
+                                            <span class="txn-member">{{ inc.receivedByMember.user.name }}</span>
+                                          }
+                                          <span class="txn-amount income">{{ formatAmount(inc.amount) }}</span>
+                                        </div>
+                                      }
+                                    </div>
+                                  </div>
+                                }
+
+                                @if ((!getExpandedData(point.date)?.expenses || getExpandedData(point.date)!.expenses.length === 0) &&
+                                     (!getExpandedData(point.date)?.incomes || getExpandedData(point.date)!.incomes.length === 0)) {
+                                  <div class="detail-empty">{{ 'business.analytics.noData' | translate }}</div>
+                                }
+                              </div>
+                            }
+                          </td>
+                        </tr>
+                      }
+                    }
+                  </tbody>
+                  <tfoot>
+                    <tr class="totals-row">
+                      <td class="total-label">{{ 'business.analytics.total' | translate }}</td>
+                      <td class="numeric revenue-cell">{{ formatAmount(tableTotals().revenue) }}</td>
+                      <td class="numeric expenses-cell">{{ formatAmount(tableTotals().expenses) }}</td>
+                      <td class="numeric profit-cell" [class.negative]="isNegative(tableTotals().netProfit)">
+                        {{ formatAmount(tableTotals().netProfit) }}
+                      </td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+            }
           </div>
         </section>
 
@@ -317,6 +483,20 @@ import {
     .analytics-container {
       max-width: 1400px;
       margin: 0 auto;
+      padding: 0 1rem;
+    }
+
+    @media (min-width: 1024px) {
+      .analytics-container {
+        padding: 0;
+      }
+    }
+
+    @media (max-width: 1024px) {
+      .kpi-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+      }
     }
 
     /* Toolbar */
@@ -988,42 +1168,629 @@ import {
       background: linear-gradient(180deg, var(--accent-red), var(--accent-amber));
     }
 
-    /* Responsive */
-    @media (max-width: 1200px) {
+    /* Table Section */
+    .table-section {
+      margin-bottom: 2rem;
+    }
+
+    .section-subtitle {
+      display: block;
+      margin-top: 0.25rem;
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      color: var(--text-tertiary);
+    }
+
+    .table-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 1.5rem;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .table-header > div:first-child {
+      flex: 1;
+      min-width: 200px;
+    }
+
+    .table-controls {
+      display: flex;
+      gap: 0.75rem;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    @media (max-width: 640px) {
+      .analytics-container {
+        padding: 0 0.75rem;
+      }
+
+      .page-title {
+        font-size: 1.35rem;
+      }
+
       .kpi-grid {
-        grid-template-columns: repeat(2, 1fr);
+        gap: 0.75rem;
+        margin-bottom: 1.25rem;
       }
 
-      .balances-grid {
-        grid-template-columns: 1fr;
+      .kpi-card {
+        padding: 0.875rem;
       }
 
-      .balance-summary {
-        flex-direction: row;
+      .kpi-label {
+        font-size: 0.7rem;
       }
 
-      .summary-card {
-        flex: 1;
+      .kpi-value {
+        font-size: 1.35rem;
+      }
+
+      .kpi-icon {
+        width: 32px;
+        height: 32px;
+      }
+
+      .chart-card {
+        padding: 1rem;
+      }
+
+      .chart-title {
+        font-size: 0.95rem;
+      }
+
+      .balance-card {
+        padding: 0.875rem;
+      }
+
+      .section-title {
+        font-size: 1rem;
+      }
+
+      .table-section {
+        margin: 0 -0.75rem;
+        padding: 0 0.75rem;
+      }
+
+      .table-controls {
+        width: 100%;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.5rem;
+      }
+
+      .table-controls .groupby-select,
+      .table-controls .export-button {
+        width: 100%;
+        padding: 0.625rem 1rem;
+        font-size: 0.9rem;
+      }
+
+      .data-table {
+        min-width: 600px;
+        font-size: 0.85rem;
+      }
+
+      .data-table thead th,
+      .data-table tbody td,
+      .data-table tfoot td {
+        padding: 0.625rem 0.75rem;
+        font-size: 0.8rem;
+        white-space: nowrap;
+      }
+
+      .expand-icon {
+        font-size: 0.65rem;
+        width: 14px;
+      }
+
+      .period-cell-content {
+        gap: 0.375rem;
+      }
+
+      .detail-content {
+        padding: 0.875rem;
+      }
+
+      .transactions-section h4 {
+        font-size: 0.7rem;
+        margin-bottom: 0.75rem;
+      }
+
+      .transaction-item {
+        grid-template-columns: 55px 10px 1fr 100px 90px;
+        gap: 0.5rem;
+        padding: 0.625rem;
+        font-size: 0.75rem;
+      }
+
+      .txn-member {
+        display: none;
       }
     }
 
+    .groupby-select {
+      padding: 0.625rem 1rem;
+      background: var(--terminal-surface);
+      border: 1px solid var(--terminal-border);
+      border-radius: var(--radius-md);
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      color: var(--text-primary);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .groupby-select:hover {
+      border-color: var(--accent-cyan);
+    }
+
+    .groupby-select:focus {
+      outline: none;
+      border-color: var(--accent-cyan);
+      box-shadow: 0 0 0 3px var(--accent-cyan-dim);
+    }
+
+    .export-button {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.625rem 1rem;
+      background: var(--terminal-surface);
+      border: 1px solid var(--terminal-border);
+      border-radius: var(--radius-md);
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      color: var(--text-primary);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .export-button:hover:not(:disabled) {
+      background: var(--terminal-surface-hover);
+      border-color: var(--accent-cyan);
+      color: var(--accent-cyan);
+    }
+
+    .export-button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .export-button svg {
+      width: 16px;
+      height: 16px;
+    }
+
+    .table-card {
+      background: var(--terminal-surface);
+      border: 1px solid var(--terminal-border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+    }
+
+    .table-loading,
+    .table-empty {
+      padding: 3rem;
+      text-align: center;
+      color: var(--text-tertiary);
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+    }
+
+    .table-wrapper {
+      max-height: 600px;
+      overflow-y: auto;
+      position: relative;
+    }
+
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+    }
+
+    .data-table thead {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      background: var(--terminal-surface);
+    }
+
+    .data-table thead th {
+      padding: 1rem 1.25rem;
+      text-align: left;
+      font-weight: 600;
+      font-size: 0.75rem;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: var(--text-tertiary);
+      border-bottom: 2px solid var(--terminal-border);
+      background: var(--terminal-surface);
+    }
+
+    .data-table thead th.numeric {
+      text-align: right;
+    }
+
+    .data-table thead th.sortable {
+      cursor: pointer;
+      user-select: none;
+      transition: color 0.2s;
+    }
+
+    .data-table thead th.sortable:hover {
+      color: var(--accent-cyan);
+    }
+
+    .th-content {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      justify-content: flex-start;
+    }
+
+    th.numeric .th-content {
+      justify-content: flex-end;
+    }
+
+    .sort-indicator {
+      font-size: 0.9rem;
+      color: var(--accent-cyan);
+    }
+
+    .data-table tbody tr {
+      border-bottom: 1px solid var(--terminal-border);
+      transition: background 0.2s;
+    }
+
+    .data-table tbody tr.summary-row {
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .data-table tbody tr.summary-row:hover {
+      background: var(--terminal-surface-hover);
+    }
+
+    .data-table tbody tr.summary-row.expanded {
+      background: var(--terminal-surface-hover);
+    }
+
+    .data-table tbody tr:last-child {
+      border-bottom: none;
+    }
+
+    .data-table tbody tr.detail-row {
+      background: var(--terminal-bg);
+      border-bottom: 1px solid var(--terminal-border);
+    }
+
+    .data-table tbody tr.detail-row:hover {
+      background: var(--terminal-bg);
+    }
+
+    .data-table tbody td {
+      padding: 1rem 1.25rem;
+      color: var(--text-secondary);
+    }
+
+    .data-table tbody td.numeric {
+      text-align: right;
+      font-weight: 500;
+    }
+
+    .data-table tbody td.period-cell {
+      color: var(--text-primary);
+      font-weight: 500;
+    }
+
+    .period-cell-content {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .expand-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 16px;
+      flex-shrink: 0;
+      color: var(--accent-cyan);
+      font-size: 0.7rem;
+      transition: transform 0.2s ease;
+    }
+
+    tr.summary-row:hover .expand-icon {
+      color: var(--accent-cyan);
+      transform: scale(1.1);
+    }
+
+    .data-table tfoot td.period-cell {
+      font-weight: 700;
+    }
+
+    .data-table tbody td.revenue-cell {
+      color: var(--accent-green);
+    }
+
+    .data-table tbody td.expenses-cell {
+      color: var(--accent-red);
+    }
+
+    .data-table tbody td.profit-cell {
+      color: var(--accent-cyan);
+      font-weight: 600;
+    }
+
+    .data-table tbody td.profit-cell.negative {
+      color: var(--accent-red);
+    }
+
+    .data-table tfoot {
+      position: sticky;
+      bottom: 0;
+      z-index: 10;
+      background: var(--terminal-surface);
+    }
+
+    .data-table tfoot .totals-row {
+      border-top: 2px solid var(--terminal-border);
+      background: var(--terminal-surface);
+    }
+
+    .data-table tfoot td {
+      background: var(--terminal-surface);
+    }
+
+    .data-table tfoot td {
+      padding: 1rem 1.25rem;
+      font-weight: 700;
+      font-size: 0.9rem;
+    }
+
+    .data-table tfoot td.numeric {
+      text-align: right;
+    }
+
+    .data-table tfoot .total-label {
+      color: var(--text-primary);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      font-size: 0.75rem;
+    }
+
+    .data-table tfoot .revenue-cell {
+      color: var(--accent-green);
+    }
+
+    .data-table tfoot .expenses-cell {
+      color: var(--accent-red);
+    }
+
+    .data-table tfoot .profit-cell {
+      color: var(--accent-cyan);
+    }
+
+    .data-table tfoot .profit-cell.negative {
+      color: var(--accent-red);
+    }
+
+    /* Expandable Detail Styles */
+    .detail-cell {
+      padding: 0 !important;
+    }
+
+    .detail-loading {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.75rem;
+      padding: 2rem;
+      color: var(--text-secondary);
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+    }
+
+    .detail-loading .loading-spinner {
+      width: 20px;
+      height: 20px;
+      border: 2px solid var(--terminal-border);
+      border-top-color: var(--accent-cyan);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    .detail-content {
+      padding: 1.5rem;
+      background: var(--terminal-surface);
+      border-top: 1px solid var(--terminal-border-light);
+    }
+
+    .detail-empty {
+      text-align: center;
+      padding: 2rem;
+      color: var(--text-tertiary);
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+    }
+
+    .transactions-section {
+      margin-bottom: 1.5rem;
+    }
+
+    .transactions-section:last-child {
+      margin-bottom: 0;
+    }
+
+    .transactions-section h4 {
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      color: var(--text-tertiary);
+      margin: 0 0 1rem 0;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid var(--terminal-border-light);
+    }
+
+    .transactions-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .transaction-item {
+      display: grid;
+      grid-template-columns: 70px 12px 1fr 120px 100px 100px;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.75rem;
+      background: var(--terminal-bg);
+      border: 1px solid var(--terminal-border);
+      border-radius: var(--radius-md);
+      transition: all 0.2s;
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+    }
+
+    .transaction-item:hover {
+      border-color: var(--accent-cyan);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .txn-date {
+      color: var(--text-tertiary);
+      font-size: 0.75rem;
+      white-space: nowrap;
+    }
+
+    .category-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .txn-description {
+      color: var(--text-primary);
+      font-weight: 500;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .txn-category {
+      color: var(--text-secondary);
+      font-size: 0.75rem;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .txn-member {
+      color: var(--text-tertiary);
+      font-size: 0.75rem;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .txn-amount {
+      text-align: right;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .txn-amount.expense {
+      color: var(--accent-red);
+    }
+
+    .txn-amount.income {
+      color: var(--accent-green);
+    }
+
+    /* Responsive */
     @media (max-width: 768px) {
       .analytics-container {
-        padding: 1rem;
+        padding: 0 0.875rem;
       }
 
       .header-content {
         flex-direction: column;
         align-items: flex-start;
         gap: 1rem;
+        padding-bottom: 1rem;
+      }
+
+      .page-title {
+        font-size: 1.5rem;
       }
 
       .kpi-grid {
         grid-template-columns: 1fr;
+        gap: 0.875rem;
+        margin-bottom: 1.5rem;
+      }
+
+      .kpi-card {
+        padding: 1rem;
+      }
+
+      .kpi-value {
+        font-size: 1.5rem;
       }
 
       .charts-grid {
         grid-template-columns: 1fr;
+        gap: 1.25rem;
+      }
+
+      .chart-card {
+        padding: 1.25rem;
+      }
+
+      .balances-grid {
+        grid-template-columns: 1fr;
+        gap: 0.875rem;
+      }
+
+      .balance-card {
+        padding: 1rem;
+      }
+
+      .table-header {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 1rem;
+        margin-bottom: 1rem;
+      }
+
+      .table-header > div:first-child {
+        min-width: unset;
+      }
+
+      .table-section .section-title {
+        font-size: 1.1rem;
+      }
+
+      .table-section .section-subtitle {
+        font-size: 0.75rem;
+        margin-top: 0.125rem;
+      }
+
+      .table-card {
+        border-radius: var(--radius-lg);
+        overflow: hidden;
+      }
+
+      .table-wrapper {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
       }
 
       .balance-summary {
@@ -1033,6 +1800,247 @@ import {
       .category-row {
         grid-template-columns: 80px 1fr 80px;
         gap: 0.5rem;
+      }
+
+      .table-header {
+        flex-direction: column;
+        gap: 1rem;
+      }
+
+      .table-controls {
+        width: 100%;
+        flex-direction: column;
+      }
+
+      .groupby-select,
+      .export-button {
+        width: 100%;
+        justify-content: center;
+      }
+
+      .table-wrapper {
+        overflow-x: auto;
+      }
+
+      .data-table {
+        min-width: 600px;
+      }
+
+      .data-table thead th,
+      .data-table tbody td,
+      .data-table tfoot td {
+        padding: 0.75rem 1rem;
+        font-size: 0.8rem;
+      }
+
+      .transaction-item {
+        grid-template-columns: 60px 10px 1fr 80px;
+        gap: 0.5rem;
+        padding: 0.625rem;
+        font-size: 0.75rem;
+      }
+
+      .txn-member {
+        display: none;
+      }
+
+      .txn-category {
+        display: none;
+      }
+
+      .detail-content {
+        padding: 1rem;
+      }
+
+      .transactions-section h4 {
+        font-size: 0.65rem;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .data-table {
+        min-width: 600px;
+        font-size: 0.85rem;
+      }
+
+      .data-table thead th,
+      .data-table tbody td,
+      .data-table tfoot td {
+        padding: 0.625rem 0.75rem;
+        font-size: 0.8rem;
+        white-space: nowrap;
+      }
+
+      .expand-icon {
+        font-size: 0.65rem;
+        width: 14px;
+      }
+
+      .period-cell-content {
+        gap: 0.375rem;
+      }
+
+      .detail-content {
+        padding: 0.875rem;
+      }
+
+      .transactions-section h4 {
+        font-size: 0.7rem;
+        margin-bottom: 0.75rem;
+      }
+
+      .transaction-item {
+        grid-template-columns: 55px 10px 1fr 100px 90px;
+        gap: 0.5rem;
+        padding: 0.625rem;
+        font-size: 0.75rem;
+      }
+
+      .txn-member {
+        display: none;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .analytics-container {
+        padding: 0 0.5rem;
+      }
+
+      .header-content {
+        padding-bottom: 0.875rem;
+      }
+
+      .page-title {
+        font-size: 1.25rem;
+      }
+
+      .kpi-grid {
+        gap: 0.625rem;
+        margin-bottom: 1rem;
+      }
+
+      .kpi-card {
+        padding: 0.75rem;
+      }
+
+      .kpi-label {
+        font-size: 0.65rem;
+      }
+
+      .kpi-value {
+        font-size: 1.25rem;
+      }
+
+      .kpi-icon {
+        width: 28px;
+        height: 28px;
+      }
+
+      .chart-card,
+      .balance-card {
+        padding: 0.75rem;
+      }
+
+      .chart-title,
+      .section-title {
+        font-size: 0.9rem;
+      }
+
+      .charts-grid,
+      .balances-grid {
+        gap: 1rem;
+      }
+
+      .table-section {
+        margin: 0 -0.5rem;
+        padding: 0 0.5rem;
+      }
+
+      .table-section .section-title {
+        font-size: 1rem;
+      }
+
+      .table-section .section-subtitle {
+        font-size: 0.7rem;
+      }
+
+      .table-controls {
+        gap: 0.5rem;
+      }
+
+      .table-controls .groupby-select,
+      .table-controls .export-button {
+        padding: 0.5rem 0.875rem;
+        font-size: 0.85rem;
+      }
+
+      .export-button svg {
+        width: 16px;
+        height: 16px;
+      }
+
+      .data-table {
+        min-width: 520px;
+        font-size: 0.8rem;
+      }
+
+      .data-table thead th,
+      .data-table tbody td,
+      .data-table tfoot td {
+        padding: 0.5rem 0.625rem;
+        font-size: 0.75rem;
+      }
+
+      .detail-content {
+        padding: 0.625rem;
+      }
+
+      .transactions-section h4 {
+        font-size: 0.65rem;
+        margin-bottom: 0.625rem;
+      }
+
+      .transaction-item {
+        display: flex;
+        flex-direction: column;
+        gap: 0.375rem;
+        padding: 0.5rem;
+      }
+
+      .txn-date {
+        font-size: 0.7rem;
+        color: var(--text-tertiary);
+        order: 1;
+      }
+
+      .txn-description {
+        font-size: 0.85rem;
+        font-weight: 500;
+        order: 2;
+        display: flex;
+        align-items: center;
+        gap: 0.375rem;
+      }
+
+      .category-dot {
+        order: 2;
+        margin-right: 0.25rem;
+      }
+
+      .txn-category {
+        font-size: 0.7rem;
+        order: 3;
+      }
+
+      .txn-amount {
+        font-size: 0.9rem;
+        font-weight: 600;
+        order: 2;
+        margin-left: auto;
+      }
+
+      .txn-member {
+        display: none;
       }
     }
   `]
@@ -1046,16 +2054,80 @@ export class BusinessAnalyticsComponent implements OnInit {
   loading = signal(true);
   selectedPeriod = 'month';
 
+  // Table state
+  tableGroupBy = signal<'week' | 'month' | 'year'>('month');
+  tableData = signal<TimeSeriesDataPoint[]>([]);
+  tableLoading = signal(false);
+  sortColumn = signal<'period' | 'revenue' | 'expenses' | 'netProfit'>('period');
+  sortDirection = signal<'asc' | 'desc'>('desc');
+
+  // Expandable row state
+  expandedPeriods = signal<Set<string>>(new Set());
+  expandedTransactions = signal<Map<string, { expenses: BusinessExpense[]; incomes: BusinessIncome[] }>>(new Map());
+  expandedLoading = signal(false);
+
   // Use context
   business = this.businessContext.business;
   businessId = this.businessContext.businessId;
   currency = this.businessContext.currency;
+
+  // Computed signals for table
+  sortedTableData = computed(() => {
+    const data = [...this.tableData()];
+    const column = this.sortColumn();
+    const direction = this.sortDirection();
+
+    data.sort((a, b) => {
+      let aVal: any, bVal: any;
+
+      switch (column) {
+        case 'period':
+          aVal = new Date(a.date).getTime();
+          bVal = new Date(b.date).getTime();
+          break;
+        case 'revenue':
+          aVal = parseDecimal(a.revenue);
+          bVal = parseDecimal(b.revenue);
+          break;
+        case 'expenses':
+          aVal = parseDecimal(a.expenses);
+          bVal = parseDecimal(b.expenses);
+          break;
+        case 'netProfit':
+          aVal = parseDecimal(a.revenue) - parseDecimal(a.expenses);
+          bVal = parseDecimal(b.revenue) - parseDecimal(b.expenses);
+          break;
+      }
+
+      return direction === 'asc' ? aVal - bVal : bVal - aVal;
+    });
+
+    return data;
+  });
+
+  tableTotals = computed(() => {
+    const data = this.tableData();
+    let totalRevenue = 0;
+    let totalExpenses = 0;
+
+    data.forEach(point => {
+      totalRevenue += parseDecimal(point.revenue);
+      totalExpenses += parseDecimal(point.expenses);
+    });
+
+    return {
+      revenue: totalRevenue.toFixed(2),
+      expenses: totalExpenses.toFixed(2),
+      netProfit: (totalRevenue - totalExpenses).toFixed(2)
+    };
+  });
 
   ngOnInit() {
     const id = this.businessId();
     if (id) {
       this.loadAnalytics();
       this.loadLedger();
+      this.loadTableData();
     }
   }
 
@@ -1130,5 +2202,230 @@ export class BusinessAnalyticsComponent implements OnInit {
   formatDateLabel(dateStr: string): string {
     const date = new Date(dateStr);
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  }
+
+  // Table methods
+  loadTableData() {
+    this.tableLoading.set(true);
+    const groupBy = this.tableGroupBy();
+
+    // If year grouping, fetch monthly data and aggregate on frontend
+    const apiGroupBy = groupBy === 'year' ? 'month' : groupBy;
+
+    this.businessService.getAnalytics(this.businessId(), {
+      period: this.selectedPeriod as any,
+      groupBy: apiGroupBy as any
+    }).subscribe({
+      next: (analytics) => {
+        let data = analytics.timeSeries || [];
+
+        // If year grouping, aggregate months into years
+        if (groupBy === 'year') {
+          data = this.aggregateByYear(data);
+        }
+
+        this.tableData.set(data);
+        this.tableLoading.set(false);
+      },
+      error: (err) => {
+        console.error('Failed to load table data:', err);
+        this.tableLoading.set(false);
+      }
+    });
+  }
+
+  aggregateByYear(data: TimeSeriesDataPoint[]): TimeSeriesDataPoint[] {
+    const yearMap = new Map<string, { revenue: number; expenses: number }>();
+
+    data.forEach(point => {
+      const year = new Date(point.date).getFullYear().toString();
+      const existing = yearMap.get(year) || { revenue: 0, expenses: 0 };
+
+      existing.revenue += parseDecimal(point.revenue);
+      existing.expenses += parseDecimal(point.expenses);
+
+      yearMap.set(year, existing);
+    });
+
+    return Array.from(yearMap.entries()).map(([year, values]) => ({
+      date: `${year}-01-01`,
+      revenue: values.revenue.toFixed(2),
+      expenses: values.expenses.toFixed(2),
+      netProfit: (values.revenue - values.expenses).toFixed(2)
+    }));
+  }
+
+  onTableGroupByChange(groupBy: 'week' | 'month' | 'year') {
+    this.tableGroupBy.set(groupBy);
+    // Reset expansion state when changing grouping
+    this.expandedPeriods.set(new Set());
+    this.expandedTransactions.set(new Map());
+    this.loadTableData();
+  }
+
+  // Expandable row methods
+  toggleRowExpansion(date: string) {
+    const periods = this.expandedPeriods();
+    const newPeriods = new Set(periods);
+
+    if (newPeriods.has(date)) {
+      // Collapse if already expanded
+      newPeriods.delete(date);
+    } else {
+      // Expand and load data if not cached
+      newPeriods.add(date);
+
+      const cached = this.expandedTransactions().get(date);
+      if (!cached) {
+        this.loadTransactionsForPeriod(date);
+      }
+    }
+
+    this.expandedPeriods.set(newPeriods);
+  }
+
+  isRowExpanded(date: string): boolean {
+    return this.expandedPeriods().has(date);
+  }
+
+  getPeriodDateRange(date: string, groupBy: 'week' | 'month' | 'year'): { startDate: string; endDate: string } {
+    const d = new Date(date);
+
+    if (groupBy === 'week') {
+      // Week: date is Sunday, add 6 days
+      const start = new Date(d);
+      const end = new Date(d);
+      end.setDate(end.getDate() + 6);
+      return {
+        startDate: start.toISOString().split('T')[0],
+        endDate: end.toISOString().split('T')[0]
+      };
+    } else if (groupBy === 'month') {
+      // Month: first day to last day
+      const start = new Date(d.getFullYear(), d.getMonth(), 1);
+      const end = new Date(d.getFullYear(), d.getMonth() + 1, 0);
+      return {
+        startDate: start.toISOString().split('T')[0],
+        endDate: end.toISOString().split('T')[0]
+      };
+    } else {
+      // Year: Jan 1 to Dec 31
+      return {
+        startDate: `${d.getFullYear()}-01-01`,
+        endDate: `${d.getFullYear()}-12-31`
+      };
+    }
+  }
+
+  loadTransactionsForPeriod(date: string) {
+    const { startDate, endDate } = this.getPeriodDateRange(date, this.tableGroupBy());
+    this.expandedLoading.set(true);
+
+    forkJoin({
+      expenses: this.businessService.getExpenses(this.businessId(), {
+        startDate,
+        endDate,
+        limit: 1000,
+        sortBy: 'transactionDate',
+        sortOrder: 'desc'
+      }),
+      incomes: this.businessService.getIncomes(this.businessId(), {
+        startDate,
+        endDate,
+        limit: 1000,
+        sortBy: 'transactionDate',
+        sortOrder: 'desc'
+      })
+    }).subscribe({
+      next: (result) => {
+        const current = this.expandedTransactions();
+        const newMap = new Map(current);
+        newMap.set(date, {
+          expenses: result.expenses.expenses,
+          incomes: result.incomes.incomes
+        });
+        this.expandedTransactions.set(newMap);
+        this.expandedLoading.set(false);
+      },
+      error: (err) => {
+        console.error('Failed to load transactions:', err);
+        this.expandedLoading.set(false);
+      }
+    });
+  }
+
+  getExpandedData(date: string): { expenses: BusinessExpense[]; incomes: BusinessIncome[] } | undefined {
+    return this.expandedTransactions().get(date);
+  }
+
+  formatTransactionDate(dateStr: string): string {
+    const date = new Date(dateStr);
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  }
+
+  sortBy(column: 'period' | 'revenue' | 'expenses' | 'netProfit') {
+    if (this.sortColumn() === column) {
+      this.sortDirection.set(this.sortDirection() === 'asc' ? 'desc' : 'asc');
+    } else {
+      this.sortColumn.set(column);
+      this.sortDirection.set('desc');
+    }
+  }
+
+  formatPeriodLabel(dateStr: string, groupBy: 'week' | 'month' | 'year'): string {
+    const date = new Date(dateStr);
+
+    switch (groupBy) {
+      case 'week': {
+        const weekEnd = new Date(date);
+        weekEnd.setDate(weekEnd.getDate() + 6);
+        const startStr = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        const endStr = weekEnd.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        return `${startStr} - ${endStr}`;
+      }
+      case 'month':
+        return date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+      case 'year':
+        return date.getFullYear().toString();
+      default:
+        return dateStr;
+    }
+  }
+
+  exportTableData() {
+    const data = this.sortedTableData();
+    const totals = this.tableTotals();
+    const groupBy = this.tableGroupBy();
+
+    // Build CSV
+    let csv = 'Period,Revenue,Expenses,Net Profit\n';
+
+    data.forEach(point => {
+      const period = this.formatPeriodLabel(point.date, groupBy);
+      const revenue = this.formatAmount(point.revenue);
+      const expenses = this.formatAmount(point.expenses);
+      const netProfit = this.formatAmount(
+        (parseDecimal(point.revenue) - parseDecimal(point.expenses)).toFixed(2)
+      );
+
+      csv += `"${period}",${revenue},${expenses},${netProfit}\n`;
+    });
+
+    // Add totals row
+    csv += `TOTAL,${this.formatAmount(totals.revenue)},${this.formatAmount(totals.expenses)},${this.formatAmount(totals.netProfit)}\n`;
+
+    // Download
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+
+    const filename = `analytics-${groupBy}-${new Date().toISOString().split('T')[0]}.csv`;
+    link.setAttribute('href', url);
+    link.setAttribute('download', filename);
+    link.style.visibility = 'hidden';
+
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   }
 }

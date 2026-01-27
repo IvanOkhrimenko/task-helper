@@ -807,6 +807,22 @@
       "expenses": "Витрати",
       "topExpenses": "Найбільші витрати",
       "recentTransactions": "Останні транзакції",
+      "noData": "Немає даних за цей період",
+      "periodBreakdown": "Деталізація по періодах",
+      "detailedFinancialData": "Детальні фінансові дані по періодах",
+      "groupBy": {
+        "week": "Тиждень",
+        "month": "Місяць",
+        "year": "Рік"
+      },
+      "period": "Період",
+      "periodBreakdown": "Деталізація по періодах",
+      "detailedFinancialData": "Детальні фінансові дані по періодах",
+      "revenue": "Доходи",
+      "expenses": "Витрати",
+      "netProfit": "Чистий прибуток",
+      "total": "Всього",
+      "export": "Експортувати CSV",
       "noData": "Немає даних за цей період"
     },
     "transactions": {

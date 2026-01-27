@@ -807,7 +807,23 @@
       "expenses": "Expenses",
       "topExpenses": "Top Expenses",
       "recentTransactions": "Recent Transactions",
-      "noData": "No data available for this period"
+      "noData": "No data available for this period",
+      "periodBreakdown": "Period Breakdown",
+      "detailedFinancialData": "Detailed financial data by period",
+      "groupBy": {
+        "week": "Week",
+        "month": "Month",
+        "year": "Year"
+      },
+      "period": "Period",
+      "periodBreakdown": "Period Breakdown",
+      "detailedFinancialData": "Detailed financial data by periods",
+      "revenue": "Revenue",
+      "expenses": "Expenses",
+      "netProfit": "Net Profit",
+      "total": "Total",
+      "export": "Export CSV",
+      "noData": "No data for this period"
     },
     "transactions": {
       "title": "Transactions",
