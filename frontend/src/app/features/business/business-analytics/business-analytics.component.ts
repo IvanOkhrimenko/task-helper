@@ -441,8 +441,6 @@ import {
     </div>
   `,
   styles: [`
-    @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Sora:wght@400;500;600;700&display=swap');
-
     :host {
       /* Map global theme variables to component variables */
       --terminal-bg: var(--color-bg);
@@ -466,8 +464,8 @@ import {
       --accent-purple: var(--color-purple);
       --accent-purple-dim: rgba(175, 82, 222, 0.15);
 
-      --font-mono: 'JetBrains Mono', monospace;
-      --font-display: 'Sora', sans-serif;
+      --font-mono: var(--font-mono);
+      --font-display: var(--font-display);
 
       --radius-sm: 4px;
       --radius-md: 8px;
